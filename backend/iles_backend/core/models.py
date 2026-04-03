@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 #1. Custom User Model
 class User(AbstractUser):
+    email = models.EmailField(unique=True)
     ROLE_CHOICES = (
         ('student', 'Student'),
         ('academic_supervisor', 'Academic Supervisor'),
@@ -20,25 +21,32 @@ class InternshipPlacement(models.Model):
 
 #3. weekly log model
 class WeeklyLog(models.Model):
-    STATUS_CHOICES = (
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    week_number = models.IntegerField()     
+    STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('submitted', 'Submitted'),
         ('reviewed', 'Reviewed'),
         ('approved', 'Approved'),
-    )
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
-    week_number = models.IntegerField()
-    content = models.TextField()
+        ('rejected', 'Rejected'),   
+    ]
+
+    content = models.TextField(null=False, blank=False) 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+
+#**Meta class to ensure a student can only have one log per week
+class Meta:
+    unique_together = ('student', 'week_number')
 
 #4. Evaluation Criteria model
 class EvaluationCriteria(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
+    max_score = models.IntegerField(default=10)
     description = models.TextField()
 
 #5. Evaluation model
 class Evaluation(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     criteria = models.ForeignKey(EvaluationCriteria, on_delete=models.CASCADE)
-    score = models.IntegerField()
+    score = models.IntegerField(null=False)
     feedback = models.TextField()    
