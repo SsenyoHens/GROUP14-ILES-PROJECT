@@ -3,14 +3,22 @@ from django.contrib.auth.models import AbstractUser
 #1. Custom User Model
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    ROLE_CHOICES = (
+    ROLE_CHOICES = [
         ('student', 'Student'),
         ('academic_supervisor', 'Academic Supervisor'),
         ('workplace_supervisor', 'Workplace Supervisor'),
         ('admin', 'Admin'),
         
-    )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    ]
+    role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='student')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    def __str__(self):
+        return self.email
 # Internship placement model
 class InternshipPlacement(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)
