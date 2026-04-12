@@ -1,5 +1,6 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './Navbar.css'
+import { useAuth } from '../context/AuthContext'
 
 const navLinks = [
   { path: '/dashboard', label: 'Dashboard' },
@@ -10,6 +11,13 @@ const navLinks = [
 
 function Navbar() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <nav className="navbar">
@@ -32,8 +40,11 @@ function Navbar() {
       </ul>
 
       <div className="navbar-user">
-        <span className="user-role">Admin</span>
+        <span className="user-role">{user?.name || 'Admin'}</span>
         <div className="avatar">AD</div>
+        <button className="logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
       </div>
     </nav>
   )

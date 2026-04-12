@@ -80,3 +80,19 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+.logout-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #a8c4df;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.logout-btn:hover {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+}
