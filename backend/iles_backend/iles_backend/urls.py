@@ -16,12 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-]
-
-from .views import (
+from core.views import (
     supervisor_dashboard,
     create_weekly_log,
     review_weekly_logs,
@@ -29,6 +24,8 @@ from .views import (
 )
 
 urlpatterns = [
+    path('admin/', admin.site.urls),
+    
     path('supervisor-dashboard/', supervisor_dashboard),
     path('weekly-log/create/', create_weekly_log),
     path('weekly-log/review/', review_weekly_logs),
