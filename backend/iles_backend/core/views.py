@@ -3,7 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 
 #api view for registration. 
-from core.models import User
+from core.models import CustomUser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes

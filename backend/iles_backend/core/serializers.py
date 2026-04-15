@@ -1,7 +1,7 @@
 
 #Registering Serializer
 from rest_framework import serializers
-from .models import User
+from .models import CustomUserUser
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -9,7 +9,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=5)
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = ['email', 'username', 'password', 'role']
 
     def validate_role(self, value):
