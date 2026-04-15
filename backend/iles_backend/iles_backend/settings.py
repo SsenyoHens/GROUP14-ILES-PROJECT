@@ -152,7 +152,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-AUTH_USER_MODEL = 'core.User'
+
+AUTH_USER_MODEL = 'core.CustomUser'
 
 #Adding Logging Config
 LOGGING = {
@@ -167,3 +168,5 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+AUTH_USER_MODEL = 'core.CustomUser'
