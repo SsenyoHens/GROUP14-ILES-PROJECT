@@ -25,28 +25,33 @@ def register_view(request):
 def login_view(request):
     serializer = LoginSerializer(data=request.data)
 
-    if serializer.is_valid():
-        email = serializer.validated_data['email']
-        password = serializer.validated_data['password']
+    if not serializer.is_valid():
+        print(serializer.errors)
+        return Response(serializer.errors, status=400)
+    
+    email = serializer.validated_data['email']
+    password = serializer.validated_data['password']
 
-        user = authenticate(username=email, password=password)
+    if not email or not password:
+        return Response({'error': 'Email and password are required'}, status=400)
+    
+    user = authenticate(username=email, password=password)
 
-        if user:
-            refresh = RefreshToken.for_user(user)
+    if user:
+        refresh = RefreshToken.for_user(user)
 
-            logger.info(f"User {email} logged in successfully")
+        logger.info(f"User {email} logged in successfully")
 
-            return Response({
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-                "email": user.email,
-                "role": user.role
-            })
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "email": user.email,
+            "role": user.role
+        })
 
-        logger.warning(f"Failed login attempt for {email}")
-        return Response({'error': 'Invalid credentials'}, status=401)
-
-    return Response(serializer.errors, status=400)
+    logger.warning(f"Failed login attempt for {email}")
+    return Response({'error': 'Invalid credentials'}, status=401)
+    
 
 #Get Current User API view
 from rest_framework.permissions import IsAuthenticated
