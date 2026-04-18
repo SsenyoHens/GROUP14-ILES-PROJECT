@@ -14,7 +14,7 @@ const Students = () => {
           <tr>
             <th>Name</th>
             <th>Email</th>
-            <th>Student ID</th>
+            <th>Student NO</th>
             <th>Actions</th>
           </tr>
         </thead>
