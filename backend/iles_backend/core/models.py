@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 #1. Custom User Model
 class CustomUser(AbstractUser):
@@ -37,7 +38,7 @@ class InternshipPlacement(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name='academic_supervised_students',
-        limit_choices_to={'role': 'academic_supervisor'}
+        limit_choices_to={'user__role': 'academic_supervisor'}
     )
 
     workplace_supervisor = models.ForeignKey(
@@ -45,7 +46,7 @@ class InternshipPlacement(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         related_name='workplace_supervised_students',
-        limit_choices_to={'role': 'workplace_supervisor'}
+        limit_choices_to={'user__role': 'workplace_supervisor'}
     )
 
     company_name = models.CharField(max_length=255)
@@ -61,7 +62,7 @@ class InternshipPlacement(models.Model):
         #Overlap Check
         overlapping = InternshipPlacement.objects.filter(student=self.student
                                                          ).filter(
-                                                             Q(start_date_lt=self.end_date) & 
+                                                             Q(start_date__lt=self.end_date) & 
                                                              Q(end_date__gt=self.start_date)
                                                          )
         if self.pk:
@@ -162,8 +163,9 @@ class StudentProfile(models.Model):
 
     registration_number = models.CharField(max_length=20, unique=True)
     course = models.CharField(max_length=100)
-    year_of_study = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
-    phone_number = models.CharField(max_length=25, blank=False, null=False)
+    year_of_study = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], 
+    null=True, blank=True)
+    phone_number = models.CharField(max_length=25, blank=True, null=True)
 
     def __str__(self):
         return self.user.email
@@ -192,8 +194,8 @@ class WorkplaceSupervisorProfile(models.Model):
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         if instance.role == 'student':
-            StudentProfile.objects.create(user=instance)
+            StudentProfile.objects.get_or_create(user=instance)
         elif instance.role == 'academic_supervisor':
-            AcademicSupervisorProfile.objects.create(user=instance)
+            AcademicSupervisorProfile.objects.get_or_create(user=instance)
         elif instance.role == 'workplace_supervisor':
-            WorkplaceSupervisorProfile.objects.create(user=instance)
+            WorkplaceSupervisorProfile.objects.get_or_create(user=instance)
