@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError 
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.core.exceptions import ValidationError
 
 #1. Custom User Model
 class CustomUser(AbstractUser):
@@ -51,6 +52,29 @@ class InternshipPlacement(models.Model):
     position = models.CharField(max_length=255)
     start_date = models.DateField()
     end_date = models.DateField()
+    
+    #Date Validation esuring that end date is greater than start date
+    def clean(self):
+        if self.start_date>=self.end_date:
+            raise ValidationError("End date must be after start date")
+        
+        #Overlap Check
+        overlapping = InternshipPlacement.objects.filter(student=self.student
+                                                         ).filter(
+                                                             Q(start_date_lt=self.end_date) & 
+                                                             Q(end_date__gt=self.start_date)
+                                                         )
+        if self.pk:
+            overlapping=overlapping.exclude(pk=self.pk)
+        if overlapping.exists():
+            raise ValidationError("This placement overlaps with an existing one")
+        
+    #Forcing validation here
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+        
     def __str__(self):
         return f'{self.student} at {self.company_name}'
 
