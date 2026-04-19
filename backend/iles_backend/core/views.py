@@ -1,6 +1,13 @@
 from django.shortcuts import render
 
-# Create your views here.
+# Create your views here.from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.contrib.auth import authenticate
+from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import LoginSerializer, StudentProfileSerializer
+import logging
+from rest_framework.parsers import JSONParser
 
 #api view for registration. 
 from core.models import CustomUser
@@ -8,6 +15,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+
 
 #API register_view
 @api_view(['POST'])
@@ -67,15 +75,22 @@ def get_current_user(request):
         "created_at": request.user.created_at
     })
 
-
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from django.contrib.auth import authenticate
-from rest_framework import status
-from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import LoginSerializer
-import logging
-
 logger = logging.getLogger(__name__)
 
+#API update Student Profile
+@api_view(['GET', 'PUT'])
+def update_student_profile(request):
+    profile = request.user.studentprofile
 
+    if request.method == 'GET':
+        serializer = StudentProfileSerializer(profile)
+        return Response(serializer.data)
+
+    if request.method == 'PUT':
+        serializer = StudentProfileSerializer(profile, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=400)
