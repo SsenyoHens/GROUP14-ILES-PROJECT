@@ -3,6 +3,7 @@
 from rest_framework import serializers
 from .models import CustomUser
 from .models import Evaluation
+from .models import StudentProfile
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -33,7 +34,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 #Login Serializer
 class LoginSerializer(serializers.Serializer):
     email=serializers.EmailField(required=True)
-    username = serializers.CharField()
     password = serializers.CharField(required=True)
 
 #Evaluation Serializer
@@ -45,3 +45,9 @@ class EvaluationSerializer(serializers.ModelSerializer):
         if value<0 or value>100:
             raise serializers.ValidationError("Score must be between 0 and 100")
         return value
+    
+#Student Profile Serializer
+class StudentProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentProfile
+        fields = ['registration_number', 'course', 'year_of_study', 'phone_number']
