@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext.jsx'
 import App from './App.jsx'
 import theme from './theme.js'
 
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ChakraProvider theme={theme}>
