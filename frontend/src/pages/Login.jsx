@@ -1,21 +1,21 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link as RouterLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useForm } from 'react-hook-form'
 import {
   Box, Flex, VStack, Heading, Text, FormControl,
   FormLabel, Input, Button, FormErrorMessage,
   Alert, AlertIcon, InputGroup, InputRightElement,
-  IconButton,
+  IconButton, Link
 } from '@chakra-ui/react'
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons'
 
 function Login() {
-  const { login }  = useAuth()
-  const navigate   = useNavigate()
-  const [showPw, setShowPw]   = useState(false)
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const [showPw, setShowPw] = useState(false)
   const [apiError, setApiError] = useState('')
-  const [loading, setLoading]  = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const { register, handleSubmit, formState: { errors } } = useForm()
 
@@ -55,11 +55,9 @@ function Login() {
         <Box mt={10} p={4} borderRadius="lg"
           bg="rgba(52,196,144,0.08)" border="1px solid rgba(52,196,144,0.2)">
           <Text fontSize="xs" color="brand.300" fontWeight="600" mb={1}>
-            ADMIN / REGISTRAR PORTAL
+            LOGIN/ REGISTRAR PORTAL
           </Text>
-          <Text fontSize="xs" color="gray.400">
-            School-side management only. Students and supervisors use separate portals.
-          </Text>
+          
         </Box>
       </Flex>
 
@@ -130,6 +128,13 @@ function Login() {
               >
                 Sign In
               </Button>
+
+              <Text fontSize="sm" color="gray.500" textAlign="center" mt={2}>
+                Don't have an account?{' '}
+                <Link as={RouterLink} to="/register" color="brand.600" fontWeight="600">
+                  Register here
+                </Link>
+              </Text>
             </VStack>
           </form>
         </Box>
