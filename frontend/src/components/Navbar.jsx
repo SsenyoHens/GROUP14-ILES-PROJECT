@@ -48,7 +48,7 @@ function Navbar({ minimal = false }) {
             </Text>
             <Text fontSize="xs" color="gray.400"
               display={{ base: 'none', md: 'block' }}>
-              Internship Learning & Evaluation System
+              Internship logging & Evaluation System
             </Text>
           </HStack>
         ) : (
