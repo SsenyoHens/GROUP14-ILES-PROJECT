@@ -10,6 +10,7 @@ import Placements   from './pages/admin/Placements'
 import Evaluations  from './pages/admin/Evaluations'
 import Reports      from './pages/admin/Reports'
 import UserAccounts from './pages/admin/UserAccounts'
+import Register from './pages/Register'
 
 function AdminLayout({ children }) {
   return (
@@ -37,6 +38,11 @@ function App() {
           <ProtectedRoute>
             <AdminLayout>
               <Routes>
+                {/* Public — register */}
+                <Route
+                 path="/register"
+                 element={user ? <Navigate to={ROLE_HOME[user?.role] || '/login'} replace /> : <Register />}
+                 />
                 <Route path="/"             element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard"    element={<Dashboard />} />
                 <Route path="/students"     element={<Students />} />
