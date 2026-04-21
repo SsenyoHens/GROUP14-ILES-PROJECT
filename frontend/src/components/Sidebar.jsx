@@ -9,8 +9,8 @@ import {
 } from 'react-icons/md'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
-
-// npm install react-icons
+import { Link as RouterLink } from 'react-router-dom'
+import { Link } from '@chakra-ui/react'
 
 const navItems = [
   { label: 'Dashboard',          path: '/dashboard',   icon: MdDashboard    },
