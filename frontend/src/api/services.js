@@ -6,7 +6,7 @@ export const authService = {
   logout:  ()      => api.post('/auth/logout'),
   me:      ()      => api.get('/auth/me'),
   register: (data) => api.post('/auth/register', data),
-]
+}
 
 // ── Dashboard ─────────────────────────────────────────
 export const dashboardService = {
