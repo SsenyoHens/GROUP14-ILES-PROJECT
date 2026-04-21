@@ -2,23 +2,20 @@ import {
   Box, VStack, Text, Flex, Icon, Tooltip,
   Divider, Avatar, HStack, Badge,
 } from '@chakra-ui/react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   MdDashboard, MdPeople, MdWork, MdAssignment,
   MdBarChart, MdManageAccounts, MdLogout,
 } from 'react-icons/md'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
-import { Link as RouterLink } from 'react-router-dom'
-import { Link } from '@chakra-ui/react'
 
 const navItems = [
-  { label: 'Dashboard',          path: '/dashboard',   icon: MdDashboard    },
-  { label: 'Student Registration', path: '/students',  icon: MdPeople       },
-  { label: 'Placements',         path: '/placements',  icon: MdWork         },
-  { label: 'Evaluations',        path: '/evaluations', icon: MdAssignment   },
-  { label: 'Reports',            path: '/reports',     icon: MdBarChart     },
-  { label: 'User Accounts',      path: '/users',       icon: MdManageAccounts },
+  { label: 'Dashboard',           path: '/dashboard',   icon: MdDashboard      },
+  { label: 'Student Registration', path: '/students',   icon: MdPeople         },
+  { label: 'Placements',          path: '/placements',  icon: MdWork           },
+  { label: 'Evaluations',         path: '/evaluations', icon: MdAssignment     },
+  { label: 'Reports',             path: '/reports',     icon: MdBarChart       },
+  { label: 'User Accounts',       path: '/users',       icon: MdManageAccounts },
 ]
 
 function NavItem({ item, isActive }) {
