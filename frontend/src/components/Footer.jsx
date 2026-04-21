@@ -11,10 +11,10 @@ function Footer() {
             <HStack spacing={2} mb={3}>
               <Text fontSize="15px" fontWeight="500" letterSpacing="widest" color="blue.600">ILES</Text>
               <Box w="1px" h="14px" bg="gray.200" />
-              <Text fontSize="12px" color="gray.400">Internship Learning & Evaluation System</Text>
+              <Text fontSize="12px" color="gray.400">Internship logging & Evaluation System</Text>
             </HStack>
             <Text fontSize="13px" color="gray.500" lineHeight="1.75" mb={5} maxW="300px">
-              A platform that connects students, academic supervisors, and workplace
+              A platform that connects students, internship administator, academic supervisors, and workplace
               supervisors to streamline internship management and evaluation.
             </Text>
             <HStack spacing={2} flexWrap="wrap">

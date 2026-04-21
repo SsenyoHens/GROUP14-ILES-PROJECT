@@ -65,7 +65,7 @@ function Sidebar() {
           ILES
         </Text>
         <Text fontSize="10px" color="sidebar.text" mt={1} textTransform="uppercase" letterSpacing="wider">
-          Admin / Registrar Portal
+          login / Registrar Portal
         </Text>
       </Box>
 
