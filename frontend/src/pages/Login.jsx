@@ -46,7 +46,7 @@ function Login() {
           ILES
         </Text>
         <Heading size="lg" color="white" fontFamily="heading" mb={3} lineHeight="1.3">
-          Internship Learning &<br />Evaluation System
+          Internship Logging &<br />Evaluation System
         </Heading>
         <Text color="gray.400" fontSize="sm" maxW="320px" lineHeight="1.8">
           Manage student internship registrations, workplace placements,
@@ -68,7 +68,7 @@ function Login() {
             Sign In
           </Heading>
           <Text fontSize="sm" color="gray.500" mb={8}>
-            Enter your institutional credentials to continue
+            Enter your  credentials to continue
           </Text>
 
           <form onSubmit={handleSubmit(onSubmit)}>

@@ -6,13 +6,11 @@ import {
   Box, Flex, VStack, HStack, Heading, Text, FormControl,
   FormLabel, Input, Button, FormErrorMessage, Alert, AlertIcon,
   Select, InputGroup, InputRightElement, IconButton,
-  Progress, Step, StepIndicator, StepStatus, StepIcon,
-  StepNumber, StepTitle, StepSeparator, Stepper, useSteps,
-  Link, Grid, GridItem, Badge,
+  Progress, useSteps, Link, Grid, GridItem, Badge,
 } from '@chakra-ui/react'
 import { ViewIcon, ViewOffIcon, CheckCircleIcon } from '@chakra-ui/icons'
 import {
-  MdSchool, MdAdminPanelSettings, MdBusiness,
+  MdSchool, MdAdminPanelSettings, MdBusiness, MdSupervisorAccount
 } from 'react-icons/md'
 
 // ── Role cards ─────────────────────────────────────────
@@ -41,6 +39,14 @@ const ROLES = [
     color:   'blue',
     badge:   'Employer',
   },
+  {
+    value:   'internship_administrator',
+    label:   'Internship Administrator',
+    icon:    MdSupervisorAccount,
+    desc:    'Overall system and placement coordinator',
+    color:   'orange',
+    badge:   'Admin',
+  },
 ]
 
 // ── Step 1: Role selection ─────────────────────────────
@@ -49,11 +55,9 @@ function RoleStep({ selected, onSelect }) {
     <VStack spacing={4} w="100%">
       <Box textAlign="center" mb={2}>
         <Heading size="md" color="gray.800" fontFamily="heading" mb={1}>
-          Who are you?
+          Select your role to continue 
         </Heading>
-        <Text fontSize="sm" color="gray.500">
-          Select your role to see the right registration form
-        </Text>
+        
       </Box>
 
       {ROLES.map((role) => {
@@ -245,6 +249,24 @@ function FieldsStep({ role, register, errors, showPw, setShowPw, showConfirm, se
           </FormControl>
         </>}
 
+        {/* ── Internship Administrator fields (Using common fields like Department) ── */}
+        {role === 'internship_administrator' && <>
+          <GridItem colSpan={2}>
+            <FormControl isInvalid={!!errors.officeLocation}>
+              <FormLabel fontSize="xs" color="gray.600" textTransform="uppercase" letterSpacing="wide">
+                Office/Unit Location
+              </FormLabel>
+              <Input
+                size="sm" borderRadius="lg" bg="gray.50"
+                placeholder="e.g. Main Admin Block, Room 12"
+                _focus={{ bg: 'white', borderColor: 'brand.400' }}
+                {...register('officeLocation', { required: 'Office location is required' })}
+              />
+              <FormErrorMessage fontSize="xs">{errors.officeLocation?.message}</FormErrorMessage>
+            </FormControl>
+          </GridItem>
+        </>}
+
         {/* ── Common: Email ── */}
         <GridItem colSpan={2}>
           <FormControl isInvalid={!!errors.email}>
@@ -256,6 +278,7 @@ function FieldsStep({ role, register, errors, showPw, setShowPw, showConfirm, se
               placeholder={
                 role === 'student'              ? 'student@institution.ac.ug' :
                 role === 'academic_supervisor'  ? 'staff@institution.ac.ug'   :
+                role === 'internship_administrator' ? 'admin@institution.ac.ug' :
                 'supervisor@company.com'
               }
               _focus={{ bg: 'white', borderColor: 'brand.400' }}
@@ -377,9 +400,9 @@ function SuccessStep({ role }) {
       <Alert status="info" borderRadius="lg" fontSize="xs" textAlign="left">
         <AlertIcon />
         {role === 'student'
-          ? 'Your account is pending approval. You will be notified once activated.'
-          : role === 'academic_supervisor'
-          ? 'Admin accounts require approval before you can access the system.'
+          ? 'Your account is pending approval from the administration.'
+          : (role === 'academic_supervisor' || role === 'internship_administrator')
+          ? 'Staff accounts require manual verification before full system access is granted.'
           : 'Your account is active. Sign in to start supervising interns.'}
       </Alert>
       <Button
@@ -418,7 +441,6 @@ function Register() {
     setLoading(true)
     setApiError('')
     try {
-      // Send role + all fields to API
       const { confirmPassword, ...payload } = data
       await authService.register({ ...payload, role: selectedRole })
       setActiveStep(2)
@@ -455,11 +477,10 @@ function Register() {
         </Heading>
 
         <Text color="gray.400" fontSize="sm" maxW="320px" lineHeight="1.9">
-          Join the Internship Learning & Evaluation System. Select your role
+          Join the Internship Logging & Evaluation System. Select your role
           and fill in your details to get started.
         </Text>
 
-        {/* Steps preview */}
         <Box mt={10}>
           {STEPS.map((step, i) => (
             <Flex key={step} align="center" gap={3} mb={4}>
