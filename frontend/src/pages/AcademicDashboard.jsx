@@ -11,8 +11,8 @@ import {
   MdNotifications, MdCheckCircle, MdSchedule,
   MdTrendingUp, MdBusiness, MdSchool, MdAdd,
 } from 'react-icons/md'
-import { useAuth } from '../../context/AuthContext'
-import api from '../../api'
+import { useAuth } from '../context/AuthContext'
+import api from '../api/axiosInstance'
 
 // ── Status / urgency config (display only) ───────────────
 const STATUS_CONFIG = {
