@@ -14,92 +14,96 @@ import Navbar  from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import Footer  from './components/Footer'
 
-// ── Public pages ──────────────────────────────────────
-import Login     from './pages/Login'
-import Register  from './pages/Register'
-import NotFound  from './pages/NotFound'
+// ── Public / Guest pages ──────────────────────────────
+import Home     from './pages/Home'
+import Login    from './pages/Login'
+import Register from './pages/Register'
+import NotFound from './pages/NotFound'
 
-// ── Admin pages ───────────────────────────────────────
-import Dashboard    from './pages/admin/Dashboard'
-import Students     from './pages/admin/Students'
-import Placements   from './pages/admin/Placements'
-import Evaluations  from './pages/admin/Evaluations'
-import Reports      from './pages/admin/Reports'
-import UserAccounts from './pages/admin/UserAccounts'
+// ── Admin & Academic Supervisor pages ─────────────────
+import AdminDashboard    from './pages/admin/AdminDashboard'
+import AcademicDashboard from './pages/admin/AcademicDashboard'
+import Students          from './pages/admin/Students'
+import Placements        from './pages/admin/Placements'
+import Evaluations       from './pages/admin/Evaluations'
+import Reports           from './pages/admin/Reports'
+import UserAccounts      from './pages/admin/UserAccounts'
 
 // ─────────────────────────────────────────────────────
-// PUBLIC LAYOUT
-// Navbar (minimal) → page content → Footer
-// Used by: Login, Register
+// PUBLIC LAYOUT  (Login / Register)
+// Minimal Navbar → content → Footer
 // ─────────────────────────────────────────────────────
 function PublicLayout({ children }) {
   return (
     <Flex direction="column" minH="100vh" bg="gray.50">
       <Navbar minimal />
-      <Box flex={1}>
-        {children}
-      </Box>
+      <Box flex={1}>{children}</Box>
       <Footer minimal />
     </Flex>
   )
 }
 
 // ─────────────────────────────────────────────────────
-// ADMIN LAYOUT
-// ┌──────────┬───────────────────────────┐
-// │          │  Navbar (breadcrumb)      │
-// │ Sidebar  ├───────────────────────────┤
-// │          │  Page content             │
-// │          ├───────────────────────────┤
-// │          │  Footer                   │
-// └──────────┴───────────────────────────┘
+// ADMIN LAYOUT  (Internship Admin + Academic Supervisor)
+// ┌──────────┬────────────────────────┐
+// │ Sidebar  │ Navbar                 │
+// │          ├────────────────────────┤
+// │          │ Page content           │
+// │          ├────────────────────────┤
+// │          │ Footer                 │
+// └──────────┴────────────────────────┘
 // ─────────────────────────────────────────────────────
 function AdminLayout({ children }) {
   return (
     <Flex minH="100vh" bg="gray.50">
-
-      {/* Left sidebar — fixed height, sticky */}
       <Sidebar />
-
-      {/* Right side — navbar + scrollable content + footer */}
-      <Flex
-        direction="column"
-        flex={1}
-        minW={0}         /* prevents flex child overflow */
-        overflowX="hidden"
-      >
-        {/* Top navbar with breadcrumb */}
+      <Flex direction="column" flex={1} minW={0} overflowX="hidden">
         <Navbar />
-
-        {/* Scrollable page area */}
-        <Box
-          flex={1}
-          overflowY="auto"
-          p={6}
-          bg="gray.50"
-        >
+        <Box flex={1} overflowY="auto" p={6} bg="gray.50">
           <Box maxW="1200px" w="100%">
             {children}
           </Box>
         </Box>
-
-        {/* Footer pinned to bottom of content area */}
         <Footer />
       </Flex>
-
     </Flex>
   )
 }
 
 // ─────────────────────────────────────────────────────
 // ROOT REDIRECT
-// Sends logged-in users to their role's home page
+// / → Home page if not logged in
+// / → role home if logged in
 // ─────────────────────────────────────────────────────
 function RootRedirect() {
   const { user } = useAuth()
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <Navigate to="/home" replace />
   const home = ROLE_HOME[user.role] || '/login'
   return <Navigate to={home} replace />
+}
+
+// ─────────────────────────────────────────────────────
+// DASHBOARD REDIRECT
+// /dashboard → correct dashboard based on role
+// ─────────────────────────────────────────────────────
+function DashboardRedirect() {
+  const { user } = useAuth()
+  if (!user) return <Navigate to="/login" replace />
+
+  if (user.role === 'academic_supervisor') {
+    return (
+      <ProtectedRoute allowedRoles={ADMIN_ROLES}>
+        <AdminLayout><AcademicDashboard /></AdminLayout>
+      </ProtectedRoute>
+    )
+  }
+
+  // internship_administrator / admin
+  return (
+    <ProtectedRoute allowedRoles={ADMIN_ROLES}>
+      <AdminLayout><AdminDashboard /></AdminLayout>
+    </ProtectedRoute>
+  )
 }
 
 // ─────────────────────────────────────────────────────
@@ -117,47 +121,43 @@ function App() {
     <Router>
       <Routes>
 
-        {/* ── Root ── */}
+        {/* ── Root → Home or role dashboard ── */}
         <Route path="/" element={<RootRedirect />} />
 
-        {/* ── Public pages (Login / Register) ──
-            If already logged in → redirect to their dashboard
-            If not logged in → show page wrapped in PublicLayout  */}
+        {/* ── Home / landing page for guests ── */}
+        <Route
+          path="/home"
+          element={publicRedirect ?? <Home />}
+        />
+
+        {/* ── Login ── */}
         <Route
           path="/login"
           element={
             publicRedirect ?? (
-              <PublicLayout>
-                <Login />
-              </PublicLayout>
-            )
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            publicRedirect ?? (
-              <PublicLayout>
-                <Register />
-              </PublicLayout>
+              <PublicLayout><Login /></PublicLayout>
             )
           }
         />
 
-        {/* ── Admin / Academic Supervisor routes ──
-            ProtectedRoute blocks non-admins and shows AccessDenied  */}
+        {/* ── Register ── */}
         <Route
-          path="/dashboard"
+          path="/register"
           element={
-            <ProtectedRoute allowedRoles={ADMIN_ROLES}>
-              <AdminLayout><Dashboard /></AdminLayout>
-            </ProtectedRoute>
+            publicRedirect ?? (
+              <PublicLayout><Register /></PublicLayout>
+            )
           }
         />
+
+        {/* ── Dashboard — routes to correct one by role ── */}
+        <Route path="/dashboard" element={<DashboardRedirect />} />
+
+        {/* ── Internship Administrator only ── */}
         <Route
           path="/students"
           element={
-            <ProtectedRoute allowedRoles={ADMIN_ROLES}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <AdminLayout><Students /></AdminLayout>
             </ProtectedRoute>
           }
@@ -165,11 +165,21 @@ function App() {
         <Route
           path="/placements"
           element={
-            <ProtectedRoute allowedRoles={ADMIN_ROLES}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <AdminLayout><Placements /></AdminLayout>
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminLayout><UserAccounts /></AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ── Both Admin + Academic Supervisor ── */}
         <Route
           path="/evaluations"
           element={
@@ -186,16 +196,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/users"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminLayout><UserAccounts /></AdminLayout>
-            </ProtectedRoute>
-          }
-        />
 
-        {/* ── 404 — catch everything else ── */}
+        {/* ── 404 ── */}
         <Route path="*" element={<NotFound />} />
 
       </Routes>
