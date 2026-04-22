@@ -65,6 +65,7 @@ export const ROUTES = {
 export const ROLE_HOME = {
   [ROLES.ADMIN]:               ROUTES.DASHBOARD,
   [ROLES.ACADEMIC_SUPERVISOR]: ROUTES.DASHBOARD,
+   internship_administrator:    ROUTES.DASHBOARD,  
   [ROLES.STUDENT]:             '/student/dashboard',
   [ROLES.WORKPLACE_SUPERVISOR]:'/supervisor/dashboard',
 }
