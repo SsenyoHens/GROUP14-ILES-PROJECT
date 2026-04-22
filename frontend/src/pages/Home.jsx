@@ -7,6 +7,7 @@ import {
   MdSchool, MdBusiness, MdAdminPanelSettings, MdSupervisorAccount,
   MdCheckCircle, MdArrowForward, MdLock,
 } from 'react-icons/md'
+import Footer from '../components/Footer'
 
 const FEATURES = [
   { icon: MdSchool,             label: 'Student Tracking',      desc: 'Monitor intern progress, logs and attendance in real time.'        },
@@ -176,21 +177,7 @@ function Home() {
       </Box>
 
       {/* ── Footer ── */}
-      <Flex
-        px={{ base: 5, md: 10 }} py={5}
-        borderTop="1px solid rgba(255,255,255,0.05)"
-        justify="space-between" align="center" flexWrap="wrap" gap={3}
-      >
-        <Text fontSize="12px" color="gray.600">
-          © {new Date().getFullYear()} ILES · Group 14 · Session 2025/26
-        </Text>
-        <HStack spacing={4}>
-          <Link as={RouterLink} to="/login" fontSize="12px" color="gray.600"
-            _hover={{ color: 'brand.300' }}>Sign In</Link>
-          <Link as={RouterLink} to="/register" fontSize="12px" color="gray.600"
-            _hover={{ color: 'brand.300' }}>Register</Link>
-        </HStack>
-      </Flex>
+      <Footer />
 
     </Flex>
   )
