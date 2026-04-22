@@ -21,8 +21,8 @@ import Register from './pages/Register'
 import NotFound from './pages/NotFound'
 
 // ── Admin & Academic Supervisor pages ─────────────────
-import AdminDashboard    from './pages/admin/AdminDashboard'
-import AcademicDashboard from './pages/admin/AcademicDashboard'
+import AdminDashboard    from './pages/admin/Dashboard'
+import AcademicDashboard from './pages/AcademicDashboard'
 import Students          from './pages/admin/Students'
 import Placements        from './pages/admin/Placements'
 import Evaluations       from './pages/admin/Evaluations'
@@ -43,16 +43,7 @@ function PublicLayout({ children }) {
   )
 }
 
-// ─────────────────────────────────────────────────────
-// ADMIN LAYOUT  (Internship Admin + Academic Supervisor)
-// ┌──────────┬────────────────────────┐
-// │ Sidebar  │ Navbar                 │
-// │          ├────────────────────────┤
-// │          │ Page content           │
-// │          ├────────────────────────┤
-// │          │ Footer                 │
-// └──────────┴────────────────────────┘
-// ─────────────────────────────────────────────────────
+
 function AdminLayout({ children }) {
   return (
     <Flex minH="100vh" bg="gray.50">
