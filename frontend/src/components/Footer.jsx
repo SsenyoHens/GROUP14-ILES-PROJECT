@@ -1,4 +1,5 @@
-import { Box, Flex, Text, HStack, Link } from '@chakra-ui/react'
+import { Box, Flex, Text, HStack, Link, Grid, VStack } from '@chakra-ui/react'
+
 function Footer() {
   return (
     <Box as="footer" bg="white" borderTop="0.5px solid" borderColor="gray.100" pt={10}>
