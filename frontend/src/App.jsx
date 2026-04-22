@@ -43,7 +43,6 @@ function PublicLayout({ children }) {
   )
 }
 
-
 function AdminLayout({ children }) {
   return (
     <Flex minH="100vh" bg="gray.50">
