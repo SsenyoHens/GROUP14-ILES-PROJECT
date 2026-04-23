@@ -7,22 +7,28 @@ from datetime import timedelta
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
-#1. Custom User Model
+# 1. Custom User Model
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
+
     ROLE_CHOICES = (
         ('student', 'Student'),
         ('academic_supervisor', 'Academic Supervisor'),
         ('workplace_supervisor', 'Workplace Supervisor'),
         ('admin', 'Admin'),
-        
     )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
-# Internship placement model
-class InternshipPlacement(models.Model):
-    student = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
 
-    #Add both supervisor roles. that were defined under customuser
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
+
+
+# 2. Internship Placement Model
+class InternshipPlacement(models.Model):
+    student = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'student'}
+    )
+
     academic_supervisor = models.ForeignKey(
         CustomUser,
         on_delete=models.SET_NULL,
@@ -43,72 +49,98 @@ class InternshipPlacement(models.Model):
     position = models.CharField(max_length=255)
     start_date = models.DateField()
     end_date = models.DateField()
-     
-#3. weekly log model
+
+    def __str__(self):
+        return f"{self.student.username} - {self.company_name}"
+
+
+# 3. Weekly Log Model
+from django.conf import settings
 class WeeklyLog(models.Model):
 
-    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    week_number = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(52)])   #Ensuring no zero weeks and negative weeks and more than 52 weeks  
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    
+    date = models.DateField(auto_now_add=True)
+    week_number = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(52)]
+    )
+
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('submitted', 'Submitted'),
         ('reviewed', 'Reviewed'),
         ('approved', 'Approved'),
-        ('rejected', 'Rejected'),   
+        ('rejected', 'Rejected'),
     ]
 
-    content = models.TextField() 
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
-    submitted_at = models.DateTimeField(null=True, blank=True)
+    content = models.TextField()
 
-#**Meta class to ensure a student can only have one log per week
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='draft'
+    )
+
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     
+       
     class Meta:
         unique_together = ('student', 'week_number')
         constraints = [
-        models.CheckConstraint(
-            check=Q(week_number__gte=1) & Q(week_number__lte=52),
-            name="week_number_valid_range"
-        )
+            models.CheckConstraint(
+                condition=Q(week_number__gte=1) & Q(week_number__lte=52),
+                name="week_number_valid_range"
+            )
         ]
-    
-    #Rule 1 Lock afetr approval: A student cannot edit log after it has been approved
+
     def clean(self):
+        old = None
         if self.pk:
-            old=WeeklyLog.objects.get(pk=self.pk)
+            old = WeeklyLog.objects.filter(pk=self.pk).first()
+
+        # 🔒 Rule 1: Lock after approval
+        if old:
             if old.status == "approved":
                 raise ValidationError("Approved logs cannot be edited.")
-            
-            # Prevent revert
+
             if old.status == "submitted" and self.status == "draft":
                 raise ValidationError("Submitted logs cannot be reverted to draft.")
-            
-    #Rule 2: Deadline for submission: A student cannot submit a log for a week that has already passed
+
+        # ⏰ Rule 2: Submission deadline
         if self.status == "submitted":
-            
-            deadline = self.submitted_at + timedelta(days=7)
-            if timezone.now() > deadline:
-                raise ValidationError("Submission Deadline Passed!")
+            if self.created_at:
+                deadline = self.created_at + timedelta(days=7)
 
-            
+                if timezone.now() > deadline:
+                    raise ValidationError("Submission deadline passed!")
+
     def save(self, *args, **kwargs):
-
-        #auto set submited time
+        # auto set submitted time
         if self.status == "submitted" and not self.submitted_at:
             self.submitted_at = timezone.now()
 
         self.full_clean()
         super().save(*args, **kwargs)
 
-#4. Evaluation Criteria model
+    def __str__(self):
+        return f"{self.student.username} - Week {self.week_number}"
+
+
+# 4. Evaluation Criteria Model
 class EvaluationCriteria(models.Model):
     name = models.CharField(max_length=255, unique=True)
     max_score = models.IntegerField(default=10)
     description = models.TextField()
 
-#5. Evaluation model
+    def __str__(self):
+        return self.name
+
+
+# 5. Evaluation Model
 class Evaluation(models.Model):
     student = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+
     evaluator = models.ForeignKey(
         CustomUser,
         on_delete=models.SET_NULL,
@@ -118,6 +150,14 @@ class Evaluation(models.Model):
             'role__in': ['academic_supervisor', 'workplace_supervisor']
         }
     )
+
     criteria = models.ManyToManyField(EvaluationCriteria)
-    score = models.IntegerField(null=False)
-    feedback = models.TextField()    
+
+    score = models.IntegerField(
+        validators=[MinValueValidator(0)]
+    )
+
+    feedback = models.TextField()
+
+    def __str__(self):
+        return f"{self.student.username} - Score: {self.score}"
