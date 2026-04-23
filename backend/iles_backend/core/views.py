@@ -84,4 +84,57 @@ def delete_log(request, pk):
         return Response({"error": "Log not found"}, status=404)
 
     log.delete()
-    return Response({"message": "Deleted successfully"})   
+    return Response({"message": "Deleted successfully"})  
+
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+#ADDED so i can use email for login while keeping the USERNAME
+from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+@api_view(['POST'])
+def register_user(request):
+    data = request.data
+
+    if User.objects.filter(email=data.get('email')).exists():
+        return Response({"error": "Email already exists"}, status=400)
+
+    user = User.objects.create_user(
+        username=data.get('username'),
+        email=data.get('email'),
+        password=data.get('password'),
+        role=data.get('role', 'student')
+    )
+
+    return Response({"message": "User created successfully"})
+    
+from django.contrib.auth import authenticate
+
+@api_view(['POST'])
+def login_user(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
+
+    try:
+        user_obj = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({"error": "Invalid credentials"}, status=401)
+
+    user = authenticate(request, username=user_obj.username, password=password)
+
+    if user:
+        return Response({
+            "message": "Login successful",
+            "user_id": user.id,
+            "email": user.email,
+            "role": user.role
+        })
+
+    return Response({"error": "Invalid credentials"}, status=401)    
