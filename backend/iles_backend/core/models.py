@@ -91,7 +91,7 @@ class WeeklyLog(models.Model):
             models.CheckConstraint(
                 condition=Q(week_number__gte=1) & Q(week_number__lte=52),
                 name="week_number_valid_range"
-            )
+            )    
         ]
 
     def clean(self):

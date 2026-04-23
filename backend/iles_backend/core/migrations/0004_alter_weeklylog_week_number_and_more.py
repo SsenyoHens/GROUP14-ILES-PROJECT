@@ -18,8 +18,15 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='weeklylog',
             constraint=models.CheckConstraint(
+<<<<<<< HEAD
                 condition=models.Q(week_number__gte=1) & models.Q(week_number__lte=52),
                 name='week_number_valid_range'
             )
         )
     ]     
+=======
+                condition=models.Q(week_number__gte=1) & models.Q(week_number__lte=52), 
+                name='week_number_valid_range'),
+        ),
+    ]
+>>>>>>> develop
