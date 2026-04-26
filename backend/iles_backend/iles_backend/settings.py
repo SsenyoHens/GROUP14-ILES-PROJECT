@@ -1,10 +1,14 @@
 import environ
 from pathlib import Path
 
-# Base directory
+# ==================================
+# 📁 BASE DIRECTORY
+# ==================================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Initialize django-environ
+# ==================================
+# 🔐 ENVIRONMENT SETUP
+# ==================================
 env = environ.Env()
 environ.Env.read_env(BASE_DIR / '.env')
 
@@ -87,6 +91,7 @@ DATABASES = {
     'default': env.db()
 }
 
+# Ensures each request is wrapped in a transaction
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 
@@ -112,16 +117,19 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # ==================================
-# 📡 DRF (API SETTINGS)
+# 📡 DJANGO REST FRAMEWORK
 # ==================================
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
-    )
+    ),
 }
 
 

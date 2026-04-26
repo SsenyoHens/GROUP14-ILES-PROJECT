@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Core app APIs
+    # All app APIs live here
     path('api/', include('core.urls')),
 
     # JWT token refresh
