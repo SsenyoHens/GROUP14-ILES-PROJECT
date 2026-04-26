@@ -1,13 +1,15 @@
-
-#Registering Serializer
 from rest_framework import serializers
-from .models import CustomUser
-from .models import Evaluation
-from .models import StudentProfile
+from .models import (
+    CustomUser,
+    Evaluation,
+    StudentProfile,
+    InternshipPlacement,
+    WeeklyLog
+)
 
 
+# 1. Register Serializer
 class RegisterSerializer(serializers.ModelSerializer):
-
     password = serializers.CharField(write_only=True, min_length=5)
 
     class Meta:
@@ -21,7 +23,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        user = User(
+        user = CustomUser(
             email=validated_data['email'],
             username=validated_data['username'],
             role=validated_data.get('role', 'student')
@@ -29,25 +31,51 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
-    
 
-#Login Serializer
+
+# 2. Login Serializer
 class LoginSerializer(serializers.Serializer):
-    email=serializers.EmailField(required=True)
+    email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True)
 
-#Evaluation Serializer
-class EvaluationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Evaluation
-        fields = '__all__'
-    def validate_score(self, value):
-        if value<0 or value>100:
-            raise serializers.ValidationError("Score must be between 0 and 100")
-        return value
-    
-#Student Profile Serializer
+
+# 3. Student Profile Serializer
 class StudentProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentProfile
         fields = ['registration_number', 'course', 'year_of_study', 'phone_number']
+
+
+# 4. Evaluation Serializer
+class EvaluationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Evaluation
+        fields = ['student', 'evaluator', 'feedback']
+
+
+# 5. Internship Placement Serializer
+class PlacementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InternshipPlacement
+        fields = '__all__'
+
+    def validate(self, data):
+        start = data.get('start_date')
+        end = data.get('end_date')
+
+        if start and end and start > end:
+            raise serializers.ValidationError("Start date cannot be after end date.")
+
+        return data
+
+
+# 6. Weekly Log Serializer
+class WeeklyLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WeeklyLog
+        fields = ['id', 'week_number', 'content', 'status']
+
+    def validate(self, data):
+        if data.get('status') == 'submitted' and not data.get('content'):
+            raise serializers.ValidationError("Cannot submit empty log.")
+        return data
