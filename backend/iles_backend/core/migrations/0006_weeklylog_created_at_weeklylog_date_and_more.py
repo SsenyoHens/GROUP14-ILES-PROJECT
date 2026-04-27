@@ -26,11 +26,11 @@ class Migration(migrations.Migration):
             field=models.DateField(auto_now_add=True, default=django.utils.timezone.now),
             preserve_default=False,
         ),
-        migrations.AlterField(
-            model_name='evaluation',
-            name='score',
-            field=models.IntegerField(validators=[django.core.validators.MinValueValidator(0)]),
-        ),
+        #migrations.AlterField(
+            #model_name='evaluation',
+            #name='score',
+            #field=models.IntegerField(validators=[django.core.validators.MinValueValidator(0)]),
+        #),
         migrations.AlterField(
             model_name='internshipplacement',
             name='student',
