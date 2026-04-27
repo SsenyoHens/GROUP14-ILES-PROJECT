@@ -8,18 +8,49 @@ from django.utils import timezone
 from datetime import timedelta
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.auth.models import BaseUserManager
 
+
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("The Email field must be set")
+
+        email = self.normalize_email(email)
+
+        if 'username' not in extra_fields or not extra_fields['username']:
+            extra_fields['username'] = email
+
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+
+        return self.create_user(email, password, **extra_fields)
 
 # 1. Custom User Model
 class CustomUser(AbstractUser):
+    objects = CustomUserManager()
     email = models.EmailField(unique=True)
-
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
     ROLE_CHOICES = (
         ('student', 'Student'),
         ('academic_supervisor', 'Academic Supervisor'),
         ('workplace_supervisor', 'Workplace Supervisor'),
         ('admin', 'Admin'),
     )
+    
+    username = models.CharField(max_length=150, unique=True)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
     role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='student')
 
@@ -27,10 +58,19 @@ class CustomUser(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
-
+    
+    def save(self, *args, **kwargs):
+        if not self.username:
+          self.username = self.email   # auto-fill username
+        super().save(*args, **kwargs)
+        
     def __str__(self):
-        return self.email
+        full_name = f"{self.first_name} {self.last_name}".strip()
+
+        if full_name:
+            return f"{full_name} ({self.role.title()})"
+
+        return f"{self.email} ({self.role.title()})"    
 
 
 # 2. Student Profile
@@ -119,12 +159,19 @@ class InternshipPlacement(models.Model):
 
     def __str__(self):
         return f"{self.student.user.email} at {self.company_name}"
+        return f"{self.student.first_name} {self.student.last_name} - {self.company_name}"
 
 
 # 6. Weekly Log
 class WeeklyLog(models.Model):
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
+    
 
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'student'}
+    )
+    
     date = models.DateField(auto_now_add=True)
 
     week_number = models.IntegerField(
@@ -184,7 +231,7 @@ class WeeklyLog(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.student.user.email} - Week {self.week_number}"
+        return f"{self.student.first_name} {self.student.last_name} - Week {self.week_number}"
 
 
 # 7. Evaluation Criteria
@@ -199,7 +246,12 @@ class EvaluationCriteria(models.Model):
 
 # 8. Evaluation
 class Evaluation(models.Model):
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
+    weekly_log = models.ForeignKey(WeeklyLog, on_delete=models.CASCADE, null=True, blank=True)
+    student = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        limit_choices_to={'role': 'student'}
+    )
 
     evaluator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -221,9 +273,9 @@ class Evaluation(models.Model):
 
     class Meta:
         unique_together = ('student', 'evaluator')
-
+        
     def __str__(self):
-        return f"Evaluation for {self.student.user.email}"
+        return f"Evaluation for {self.student.first_name} {self.student.last_name}"
 
 
 # 9. Evaluation Score (Through Table)
