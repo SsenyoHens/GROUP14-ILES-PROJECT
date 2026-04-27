@@ -1,3 +1,5 @@
+from tabnanny import check
+
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -201,7 +203,7 @@ class WeeklyLog(models.Model):
         unique_together = ('student', 'week_number')
         constraints = [
             models.CheckConstraint(
-                condition=Q(week_number__gte=1) & Q(week_number__lte=52),
+                check=Q(week_number__gte=1) & Q(week_number__lte=52),
                 name="week_number_valid_range"
             )
         ]

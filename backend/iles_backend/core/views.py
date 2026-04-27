@@ -183,3 +183,13 @@ def delete_log(request, pk):
 
     log.delete()
     return Response({"message": "Deleted successfully"})
+
+#Get current user
+@api_view(['GET'])
+def get_current_user(request):
+    User = request.user
+    return Response({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+    })
