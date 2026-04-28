@@ -191,7 +191,6 @@ def delete_log(request, pk):
 
     log.delete()
     return Response({"message": "Deleted successfully"})
-    
 @api_view(['GET'])
 def weekly_log_summary(request):
     summary = WeeklyLog.objects.values(
@@ -205,8 +204,9 @@ def weekly_log_summary(request):
         rejected_logs=Count('id', filter=Q(status='rejected')),
     )
 
-    return Response(summary)    
-    
+    return Response(summary)
+
+
 @api_view(['GET'])
 def evaluation_summary(request):
     summary = Evaluation.objects.values(
@@ -218,7 +218,7 @@ def evaluation_summary(request):
 
     return Response(summary)
 
-#added
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def weekly_log_stats(request):
@@ -230,4 +230,15 @@ def weekly_log_stats(request):
     )
 
     serializer = WeeklyLogStatsSerializer(stats)
-    return Response(serializer.data)    
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_current_user(request):
+    user = request.user
+    return Response({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+    })
