@@ -207,38 +207,28 @@ def weekly_log_summary(request):
     return Response(summary)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def evaluation_summary(request):
-    summary = Evaluation.objects.values(
-        'student__first_name',
-        'student__last_name'
-    ).annotate(
-        total_evaluations=Count('id')
+    stats = Evaluation.objects.aggregate(
+        total_evaluations=Count("id")
     )
 
-    return Response(summary)
+    return Response(stats)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def weekly_log_stats(request):
     stats = WeeklyLog.objects.aggregate(
-        total_logs=Count('id'),
-        approved_logs=Count('id', filter=Q(status='approved')),
-        pending_logs=Count('id', filter=Q(status='pending')),
-        rejected_logs=Count('id', filter=Q(status='rejected')),
+        total_logs=Count("id")
     )
 
-    serializer = WeeklyLogStatsSerializer(stats)
-    return Response(serializer.data)
+    submitted_logs = WeeklyLog.objects.filter(status="submitted").count()
+    pending_logs = WeeklyLog.objects.filter(status="pending").count()
 
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_current_user(request):
-    user = request.user
     return Response({
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
+        "total_logs": stats["total_logs"],
+        "submitted_logs": submitted_logs,
+        "pending_logs": pending_logs,
     })

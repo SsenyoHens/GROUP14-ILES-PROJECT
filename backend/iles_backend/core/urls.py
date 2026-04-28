@@ -29,7 +29,7 @@ urlpatterns = [
     path('student-profile/', update_student_profile, name='update_student_profile'),
 
     # 📊 WEEKLY LOG AGGREGATION / STATS
-    path('weeklylog/stats/', weekly_log_stats, name='weeklylog-stats'),
+    path("weeklylog/stats/", weekly_log_stats, name="weeklylog-stats"),
 
     # 🏢 INTERNSHIP PLACEMENTS
     path('placements/', view_placements, name='view_placements'),
@@ -44,5 +44,5 @@ urlpatterns = [
 
     # 📈 SUMMARIES
     path('logs/summary/', weekly_log_summary, name='weekly-log-summary'),
-    path('evaluations/summary/', evaluation_summary, name='evaluation-summary'),
+    path("evaluations/summary/", evaluation_summary, name="evaluation-summary"),
 ]
