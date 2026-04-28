@@ -3,8 +3,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import WeeklyLog, Evaluation
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from .serializers import WeeklyLogStatsSerializer
 from rest_framework import status
 
 from django.contrib.auth import authenticate
@@ -38,6 +40,7 @@ logger = logging.getLogger(__name__)
 # =========================
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def register_view(request):
     serializer = RegisterSerializer(data=request.data)
 
@@ -49,6 +52,7 @@ def register_view(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login_view(request):
     serializer = LoginSerializer(data=request.data)
 
@@ -209,9 +213,21 @@ def evaluation_summary(request):
         'student__first_name',
         'student__last_name'
     ).annotate(
-        total_evaluations=Count('id'),
-        average_score=Avg('score'),
-        total_score=Sum('score')
+        total_evaluations=Count('id')
     )
 
-    return Response(summary)    
+    return Response(summary)
+
+#added
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def weekly_log_stats(request):
+    stats = WeeklyLog.objects.aggregate(
+        total_logs=Count('id'),
+        approved_logs=Count('id', filter=Q(status='approved')),
+        pending_logs=Count('id', filter=Q(status='pending')),
+        rejected_logs=Count('id', filter=Q(status='rejected')),
+    )
+
+    serializer = WeeklyLogStatsSerializer(stats)
+    return Response(serializer.data)    
