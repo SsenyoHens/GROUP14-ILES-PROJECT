@@ -1,5 +1,6 @@
 import environ
 from pathlib import Path
+import os
 
 # ==================================
 # 📁 BASE DIRECTORY
@@ -16,10 +17,14 @@ environ.Env.read_env(BASE_DIR / '.env')
 # ==================================
 # 🔐 SECURITY SETTINGS
 # ==================================
-SECRET_KEY = env('SECRET_KEY')
-DEBUG = env.bool('DEBUG', default=False)
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ["yourdomain.com", "127.0.0.1", "localhost"]
+
+#Secure cookies
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 
 # ==================================
