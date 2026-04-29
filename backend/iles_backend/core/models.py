@@ -70,7 +70,7 @@ class CustomUser(AbstractUser):
 class StudentProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    registration_number = models.CharField(max_length=20, unique=True)
+    registration_number = models.CharField(max_length=20, unique=True, null=True, blank=True)
     course = models.CharField(max_length=100)
     year_of_study = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], null=True, blank=True)
     phone_number = models.CharField(max_length=25, blank=True, null=True)
