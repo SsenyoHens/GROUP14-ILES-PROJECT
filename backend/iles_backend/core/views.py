@@ -137,7 +137,7 @@ def update_placement(request, pk):
         serializer.save()
         return Response(serializer.data)
 
-    return Response(serializer.errors)
+    return Response(serializer.errors, status=400)
 
 
 # =========================
@@ -191,7 +191,9 @@ def delete_log(request, pk):
 
     log.delete()
     return Response({"message": "Deleted successfully"})
+    
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def weekly_log_summary(request):
     summary = WeeklyLog.objects.values(
         'student__first_name',
