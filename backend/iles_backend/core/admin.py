@@ -2,7 +2,15 @@ from django.contrib import admin
 from django import forms
 from .models import WeeklyLog, WeeklyLogHistory, CustomUser, InternshipPlacement, EvaluationCriteria, Evaluation    
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, InternshipPlacement, WeeklyLog, EvaluationCriteria, Evaluation
+from .models import (
+    CustomUser,
+    WeeklyLog,
+    EvaluationCriteria,
+    Evaluation,
+    InternshipPlacement,
+)
+#CustomUserCreationForm
+
 
 
 class CustomUserAdmin(UserAdmin):
