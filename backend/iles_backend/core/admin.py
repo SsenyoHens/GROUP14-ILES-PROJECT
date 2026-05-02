@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django import forms
+from .forms import CustomUserCreationForm
 from .models import WeeklyLog, WeeklyLogHistory, CustomUser, InternshipPlacement, EvaluationCriteria, Evaluation    
 from django.contrib.auth.admin import UserAdmin
 from .models import (
@@ -87,7 +88,7 @@ class WeeklyLogAdmin(admin.ModelAdmin):
 
 
 
-aadmin.site.register(CustomUser, CustomUserAdmin)
+admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(WeeklyLog, WeeklyLogAdmin)
 admin.site.register(Evaluation, EvaluationAdmin)
 admin.site.register(EvaluationCriteria)
