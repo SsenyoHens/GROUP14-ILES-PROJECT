@@ -5,7 +5,9 @@ from .models import (
     Evaluation,
     StudentProfile,
     InternshipPlacement,
-    WeeklyLog
+    WeeklyLog, 
+    EvaluationScore,
+    WeeklyLogHistory,
 )
 
 
@@ -73,6 +75,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         ]
 
 
+<<<<<<< HEAD
 # =========================
 # EVALUATION
 # =========================
@@ -87,6 +90,19 @@ class EvaluationSerializer(serializers.ModelSerializer):
             'evaluator',
             'feedback'
         ]
+=======
+class EvaluationScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EvaluationScore
+        fields = ['criteria', 'score']
+        read_only_fields = ['total_score', 'grade', 'status']
+# 4. Evaluation Serializer
+class EvaluationSerializer(serializers.ModelSerializer):
+    scores = EvaluationScoreSerializer(many=True, source='evaluationscore_set', read_only=True)   
+    class Meta:
+        model = Evaluation
+        fields = ['student', 'evaluator', 'feedback', 'scores']
+>>>>>>> edb29e6 (modified:   core/views.py, modified:   core/urls.py, modified:   core/serializers.py, modified:   core/models.py, new file:   core/migrations/0002_evaluation_grade_evaluation_status_and_more.py)
 
 
 # =========================
@@ -114,6 +130,7 @@ class WeeklyLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = WeeklyLog
 
+<<<<<<< HEAD
         fields = [
             'id',
             'student',
@@ -162,3 +179,17 @@ class SupervisorSerializer(serializers.ModelSerializer):
             'department',
             'role'
         ]
+=======
+    def validate(self, data):
+        if data.get('status') == 'submitted' and not data.get('content'):
+            raise serializers.ValidationError("Cannot submit empty log.")
+        return data
+    
+
+# 7. Evaluation Score Serializer
+'''class EvaluationScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EvaluationScore
+        fields = ['criteria', 'score']
+        read_only_fields = ['total_score', 'grade', 'status']'''
+>>>>>>> edb29e6 (modified:   core/views.py, modified:   core/urls.py, modified:   core/serializers.py, modified:   core/models.py, new file:   core/migrations/0002_evaluation_grade_evaluation_status_and_more.py)
