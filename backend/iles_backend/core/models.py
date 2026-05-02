@@ -428,26 +428,30 @@ class Evaluation(models.Model):
     # -------------------------
     # CORE VALIDATION LOGIC
     # -------------------------
+
     def clean(self):
         errors = {}
 
-        # 1. Must have evaluator
-        if not self.evaluator:
-            errors['evaluator'] = "Evaluator is required."
+        # 1) Require weekly_log explicitly (avoid RelatedObjectDoesNotExist)
+        if not self.weekly_log_id:
+            errors['weekly_log'] = "Weekly log is required."
 
-        # 2. Student must match weekly log
-        if self.weekly_log and self.student != self.weekly_log.student:
-            errors['student'] = "Student must match the weekly log."
+        # 2) Only compare when both exist (safe access)
+        if self.weekly_log_id and self.student_id:
+            # fetch only if needed
+            wl = self.weekly_log
+            if wl and self.student != wl.student:
+                errors['student'] = "Student must match the weekly log."
 
-        # 3. Prevent editing after submission
+        # 3) Lock after submission
         if self.pk:
-            old = Evaluation.objects.get(pk=self.pk)
+            old = type(self).objects.get(pk=self.pk)
             if old.status != 'draft':
                 errors['status'] = "Cannot modify submitted or approved evaluation."
 
         if errors:
             raise ValidationError(errors)
-
+        
     # -------------------------
     # SCORE LOGIC
     # -------------------------
