@@ -328,23 +328,17 @@ class EvaluationScore(models.Model):
     def clean(self):
         errors = {}
 
-        # Ensure weekly_log exists BEFORE accessing it
-        if not self.weekly_log:
-            errors['weekly_log'] = "Weekly log is required."
+        # Prevent editing if evaluation is locked
+        if self.evaluation and self.evaluation.status != 'draft':
+            errors['evaluation'] = "Cannot modify scores after submission."
 
-        # Only compare if both exist
-        if self.weekly_log and self.student:
-            if self.student != self.weekly_log.student:
-                errors['student'] = "Student must match the weekly log."
+        # Score range validation
+        if self.criteria:
+            if self.score < 0 or self.score > self.criteria.max_score:
+                errors['score'] = f"Score must be between 0 and {self.criteria.max_score}"
 
-        # Prevent editing after submission
-        if self.pk:
-            old = Evaluation.objects.get(pk=self.pk)
-            if old.status != 'draft':
-                errors['status'] = "Cannot modify submitted or approved evaluation."
-
-    if errors:
-        raise ValidationError(errors)
+        if errors:
+            raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
         self.full_clean()
