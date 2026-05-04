@@ -23,6 +23,30 @@ from .permissions import (
     IsAdmin
 )
 
+@api_view(['POST'])
+def login_view(request):
+    serializer = LoginSerializer(data=request.data)
+
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
+
+        user = authenticate(email=email, password=password)
+
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "role": user.role
+            })
+
+        return Response({"error": "Invalid credentials"}, status=400)
+
+    return Response(serializer.errors, status=400)
+    
+    
 #@admin.register(CustomUser)
 #class CustomUserAmin(admin.ModelAdmin):
     #list_display = ('email', 'role', 'is_staff')
@@ -86,7 +110,7 @@ def create_log(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_logs(request):
-    logs = WeeklyLog.objects.all()
+    logs = WeeklyLog.objects.filter(student=request.user)
     serializer = WeeklyLogSerializer(logs, many=True)
     return Response(serializer.data)
 
