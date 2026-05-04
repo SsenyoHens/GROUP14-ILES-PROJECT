@@ -49,6 +49,13 @@ class CustomUser(AbstractUser):
         ('admin', 'Admin'),
     )
 
+    '''full_name = models.CharField(max_length=225)       #These fields are needed in the registration form
+    registration_number = models.CharField(maxi_length = 50, unique=True)
+    phone_number = models.IntegerField()
+    department = models.CharField(max_length=150)
+    year_of_study = models.PositiveIntegerField()
+    course_program = models.CharField(max_length=150)
+    '''
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=150, unique=True)
 
@@ -177,11 +184,12 @@ class WeeklyLog(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('submitted', 'Submitted'),
+        ('reviewed', 'Reviewed'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
     ]
 
-         
+     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
 
     submitted_at = models.DateTimeField(null=True, blank=True)
@@ -212,6 +220,7 @@ class WeeklyLog(models.Model):
         #if user.is_superuser:
             #return  # Superusers can bypass all validations
 
+                    
         if not user:
             raise ValidationError("Current user must be provided for validation.")
         if user.role != "student":
@@ -463,7 +472,24 @@ class Evaluation(models.Model):
         elif total >= 50:
             return 'D'
         return 'F'
+    #Prevent submission of logs with missing creteria scores    
+    def calculate_total_score(self):
+        expected = self.criteria.count()
+        actual = self.evaluationscore_set.count()
+        
+        if expected != actual:
+            raise ValidationError("All criteria must be scored before submission.")
+        return sum(score.score for score in self.evaluationscore_set.all()) 
 
+        #Normalize total score to percentage(100%) based on max possible score
+        scores = self.evaluationscore_set.all()
+        total = sum(s.score for s in scores)
+        max_total = sum(s.criteria.max_score for s in scores)
+
+        if max_total == 0:
+            return 0
+        
+        return (total / max_total) * 100    
     # -------------------------
     # SAVE OVERRIDE
     # -------------------------

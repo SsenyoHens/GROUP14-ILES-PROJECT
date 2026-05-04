@@ -100,7 +100,12 @@ class WeeklyLogAdminForm(forms.ModelForm):
             self.instance._current_user = self.request.user  # Set current user for validation
         return cleaned_data
         
-       
+
+# admin.py
+class WeeklyLogAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        obj._request_user = request.user
+        super().save_model(request, obj, form, change)       
             
 class WeeklyLogAdmin(admin.ModelAdmin):
     form = WeeklyLogAdminForm

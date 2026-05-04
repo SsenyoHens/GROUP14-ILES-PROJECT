@@ -1,5 +1,9 @@
 from rest_framework import serializers
+<<<<<<< HEAD
 
+=======
+from core.models import Evaluation, EvaluationScore
+>>>>>>> 29b8afa (Modified admin, models and serializers)
 from .models import (
     CustomUser,
     Evaluation,
@@ -16,11 +20,15 @@ from .models import (
 # =========================
 
 class RegisterSerializer(serializers.ModelSerializer):
+<<<<<<< HEAD
 
     password = serializers.CharField(
         write_only=True,
         min_length=5
     )
+=======
+    password = serializers.CharField(write_only=True, min_length=8)
+>>>>>>> 29b8afa (Modified admin, models and serializers)
 
     class Meta:
         model = CustomUser
@@ -101,8 +109,16 @@ class EvaluationSerializer(serializers.ModelSerializer):
     scores = EvaluationScoreSerializer(many=True, source='evaluationscore_set', read_only=True)   
     class Meta:
         model = Evaluation
+<<<<<<< HEAD
         fields = ['student', 'evaluator', 'feedback', 'scores']
 >>>>>>> edb29e6 (modified:   core/views.py, modified:   core/urls.py, modified:   core/serializers.py, modified:   core/models.py, new file:   core/migrations/0002_evaluation_grade_evaluation_status_and_more.py)
+=======
+        fields = ['id', 'student', 'evaluator', 
+                  'weekly_log', 'status', 'total_score', 
+                  'grade', 'feedback', 'scores', 'created_at', 'updated_at']
+        
+
+>>>>>>> 29b8afa (Modified admin, models and serializers)
 
 
 # =========================
