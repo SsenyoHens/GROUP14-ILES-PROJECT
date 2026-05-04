@@ -1,6 +1,37 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { authService } from '../api/services'
 
+import axios from "axios";
+
+export const login = async (data) => {
+  try {
+    const res = await axios.post(
+      "http://127.0.0.1:8000/login/",
+      {
+        email: data.email,
+        password: data.password,
+      }
+    );
+
+    // 🔥 Save token
+    localStorage.setItem("token", res.data.access);
+
+    return res.data;
+
+  } catch (error) {
+    throw error;
+  }
+};
+
+const token = localStorage.getItem("token");
+
+axios.get("http://127.0.0.1:8000/logs/", {
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+})
+.then(res => console.log(res.data));
+
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {

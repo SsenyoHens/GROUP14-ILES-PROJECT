@@ -26,7 +26,7 @@ function Login() {
       await login(data)
       navigate('/dashboard')
     } catch (err) {
-      setApiError(err.response?.data?.message || 'Login failed. Check your credentials.')
+      setApiError(err.response?.data?.error || 'Login failed. Check your credentials.')
     } finally {
       setLoading(false)
     }
