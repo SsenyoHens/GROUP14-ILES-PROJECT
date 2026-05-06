@@ -70,7 +70,7 @@ class PlacementSerializer(serializers.ModelSerializer):
 
 
 # 6. Weekly Log Serializer
-class WeeklyLogSerializer(serializers.ModelSerializer):
+class WeeklyLogSerializer(serializers.ModelSerializer): 
     class Meta:
         model = WeeklyLog
         fields = ['id', 'week_number', 'content', 'status']
@@ -78,4 +78,11 @@ class WeeklyLogSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data.get('status') == 'submitted' and not data.get('content'):
             raise serializers.ValidationError("Cannot submit empty log.")
-        return data
+        return data     
+
+
+class WeeklyLogStatsSerializer(serializers.Serializer):
+    total_logs = serializers.IntegerField()
+    approved_logs = serializers.IntegerField()
+    pending_logs = serializers.IntegerField()
+    rejected_logs = serializers.IntegerField()        

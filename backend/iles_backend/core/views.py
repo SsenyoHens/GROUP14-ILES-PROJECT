@@ -1,6 +1,12 @@
-from rest_framework.decorators import api_view, permission_classes
+from django.db.models import Count, Avg, Sum, Q
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from .models import WeeklyLog, Evaluation
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from .serializers import WeeklyLogStatsSerializer
 from rest_framework import status
 
 from django.contrib.auth import authenticate, get_user_model
@@ -23,6 +29,15 @@ from .permissions import (
     IsAdmin
 )
 
+User = get_user_model()
+
+# =========================
+# 🔐 AUTH
+# =========================
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -144,6 +159,46 @@ def delete_log(request, pk):
 
     log.delete()
     return Response({"message": "Deleted successfully"})
+@api_view(['GET'])
+def weekly_log_summary(request):
+    summary = WeeklyLog.objects.values(
+        'student__first_name',
+        'student__last_name'
+    ).annotate(
+        total_logs=Count('id'),
+        draft_logs=Count('id', filter=Q(status='draft')),
+        submitted_logs=Count('id', filter=Q(status='submitted')),
+        approved_logs=Count('id', filter=Q(status='approved')),
+        rejected_logs=Count('id', filter=Q(status='rejected')),
+    )
+
+    return Response(summary)
+
+
+@api_view(['GET'])
+def evaluation_summary(request):
+    summary = Evaluation.objects.values(
+        'student__first_name',
+        'student__last_name'
+    ).annotate(
+        total_evaluations=Count('id')
+    )
+
+    return Response(summary)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def weekly_log_stats(request):
+    stats = WeeklyLog.objects.aggregate(
+        total_logs=Count('id'),
+        approved_logs=Count('id', filter=Q(status='approved')),
+        pending_logs=Count('id', filter=Q(status='pending')),
+        rejected_logs=Count('id', filter=Q(status='rejected')),
+    )
+
+    serializer = WeeklyLogStatsSerializer(stats)
+    return Response(serializer.data)
 
 
 # =========================
@@ -161,3 +216,4 @@ def get_current_user(request):
         "email": user.email,
         "role": user.role
     })
+
