@@ -1,5 +1,6 @@
 import environ
 from pathlib import Path
+import os
 
 # ==================================
 # 📁 BASE DIRECTORY
@@ -16,10 +17,22 @@ environ.Env.read_env(BASE_DIR / '.env')
 # ==================================
 # 🔐 SECURITY SETTINGS
 # ==================================
-SECRET_KEY = env('SECRET_KEY')
-DEBUG = env.bool('DEBUG', default=False)
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
+DEBUG = False
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+#Secure cookies
+#SESSION_COOKIE_SECURE = True
+#CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+
+#if frontend uses another port
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
 
 
 # ==================================

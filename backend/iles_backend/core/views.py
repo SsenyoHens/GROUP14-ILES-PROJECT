@@ -1,27 +1,22 @@
 from django.db.models import Count, Avg, Sum, Q
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .models import WeeklyLog, Evaluation
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import WeeklyLogStatsSerializer
 from rest_framework import status
 
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import InternshipPlacement, WeeklyLog
+from .models import InternshipPlacement, WeeklyLog, Evaluation
 from .serializers import (
     PlacementSerializer,
     WeeklyLogSerializer,
     RegisterSerializer,
     LoginSerializer,
-    StudentProfileSerializer
+    StudentProfileSerializer,
+    WeeklyLogStatsSerializer
 )
-from rest_framework.decorators import permission_classes
-from rest_framework.permissions import IsAuthenticated
+
 from .permissions import (
     IsStudent,
     IsAcademicSupervisor,
@@ -38,6 +33,14 @@ User = get_user_model()
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_view(request):
+    serializer = RegisterSerializer(data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -62,11 +65,11 @@ def login_view(request):
         return Response({"error": "Invalid credentials"}, status=400)
 
     return Response(serializer.errors, status=400)
-    
-    
-#@admin.register(CustomUser)
-#class CustomUserAmin(admin.ModelAdmin):
-    #list_display = ('email', 'role', 'is_staff')
+
+
+# =========================
+# 🏢 INTERNSHIP PLACEMENTS
+# =========================
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsStudent])
@@ -76,7 +79,7 @@ def create_placement(request):
     if serializer.is_valid():
         serializer.save(student=request.user, user=request.user)
         return Response(serializer.data)
-        
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -117,7 +120,7 @@ def create_log(request):
     if serializer.is_valid():
         serializer.save(
             student=request.user,
-            user=request.user   # 🔥 VERY IMPORTANT (for model.clean)
+            user=request.user
         )
         return Response(serializer.data)
 
@@ -143,7 +146,7 @@ def update_log(request, pk):
     serializer = WeeklyLogSerializer(log, data=request.data, partial=True)
 
     if serializer.is_valid():
-        serializer.save(student=request.user, user=request.user)    
+        serializer.save(student=request.user, user=request.user)
         return Response(serializer.data)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -159,7 +162,14 @@ def delete_log(request, pk):
 
     log.delete()
     return Response({"message": "Deleted successfully"})
+
+
+# =========================
+# 📊 AGGREGATION / SUMMARY
+# =========================
+
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def weekly_log_summary(request):
     summary = WeeklyLog.objects.values(
         'student__first_name',
@@ -175,30 +185,31 @@ def weekly_log_summary(request):
     return Response(summary)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def evaluation_summary(request):
-    summary = Evaluation.objects.values(
-        'student__first_name',
-        'student__last_name'
-    ).annotate(
-        total_evaluations=Count('id')
+    stats = Evaluation.objects.aggregate(
+        total_evaluations=Count("id")
     )
 
-    return Response(summary)
+    return Response(stats)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def weekly_log_stats(request):
     stats = WeeklyLog.objects.aggregate(
-        total_logs=Count('id'),
-        approved_logs=Count('id', filter=Q(status='approved')),
-        pending_logs=Count('id', filter=Q(status='pending')),
-        rejected_logs=Count('id', filter=Q(status='rejected')),
+        total_logs=Count("id")
     )
 
-    serializer = WeeklyLogStatsSerializer(stats)
-    return Response(serializer.data)
+    submitted_logs = WeeklyLog.objects.filter(status="submitted").count()
+    pending_logs = WeeklyLog.objects.filter(status="pending").count()
+
+    return Response({
+        "total_logs": stats["total_logs"],
+        "submitted_logs": submitted_logs,
+        "pending_logs": pending_logs,
+    })
 
 
 # =========================
