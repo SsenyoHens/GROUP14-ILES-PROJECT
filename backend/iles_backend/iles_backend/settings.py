@@ -8,6 +8,12 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ==================================
+# 📁 STATIC FILES
+# ==================================
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# ==================================
 # 🔐 ENVIRONMENT SETUP
 # ==================================
 env = environ.Env()
@@ -18,7 +24,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 # 🔐 SECURITY SETTINGS
 # ==================================
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 #Secure cookies
@@ -136,24 +142,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # 📡 DJANGO REST FRAMEWORK
 # ==================================
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    ),
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
 }
-
-
-# ==================================
-# 📁 STATIC FILES
-# ==================================
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # ==================================

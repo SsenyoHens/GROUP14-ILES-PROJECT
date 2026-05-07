@@ -4,12 +4,16 @@ from .views import (
     login_view,
     register_view,
     get_current_user,
-    update_student_profile,
+    #update_student_profile,
 
     # 🏢 Placement
     create_placement,
     view_placements,
     update_placement,
+    view_supervisors,
+    create_supervisor,
+    delete_supervisor,
+    update_supervisor,
 
     # 📘 Weekly Logs
     create_log,
@@ -28,11 +32,21 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('register/', register_view, name='register'),
     path('user/', get_current_user, name='get_current_user'),
-    path('student-profile/', update_student_profile, name='update_student_profile'),
-
+    #path('student-profile/', update_student_profile, name='update_student_profile'),
+    path('supervisors/', view_supervisors, name='view_supervisors'),
     # 📊 WEEKLY LOG AGGREGATION / STATS
     path("weeklylog/stats/", weekly_log_stats, name="weeklylog-stats"),
-
+    path('supervisors/create/', create_supervisor, name='create_supervisor'),
+    path(
+        'supervisors/delete/<int:pk>/',
+        delete_supervisor,
+        name='delete_supervisor'
+    ),
+    path(
+        'supervisors/update/<int:pk>/',
+        update_supervisor,
+        name='update_supervisor'
+    ),
     # 🏢 INTERNSHIP PLACEMENTS
     path('placements/', view_placements, name='view_placements'),
     path('placements/create/', create_placement, name='create_placement'),

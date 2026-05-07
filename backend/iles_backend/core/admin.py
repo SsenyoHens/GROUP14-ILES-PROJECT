@@ -18,21 +18,58 @@ class CustomUserAdmin(UserAdmin):
     model = CustomUser
     add_form = CustomUserCreationForm
 
-    list_display = ('first_name', 'last_name', 'email', 'role')
+    list_display = (
+        'first_name',
+        'last_name',
+        'email',
+        'role',
+        'phone',
+        'organization',
+        'department',
+    )
+
     search_fields = ('first_name', 'last_name', 'email')
     ordering = ('last_name', 'first_name')
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal Info', {'fields': ('first_name', 'last_name')}),
-        ('Permissions', {'fields': ('is_staff', 'is_superuser', 'is_active')}),
+
+        ('Personal Info', {
+            'fields': (
+                'first_name',
+                'last_name',
+                'phone',
+                'organization',
+                'department',
+            )
+        }),
+
+        ('Permissions', {
+            'fields': (
+                'is_staff',
+                'is_superuser',
+                'is_active',
+            )
+        }),
+
         ('Role', {'fields': ('role',)}),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'first_name', 'last_name', 'password1', 'password2', 'role'),
+
+            'fields': (
+                'email',
+                'first_name',
+                'last_name',
+                'phone',
+                'organization',
+                'department',
+                'password1',
+                'password2',
+                'role',
+            ),
         }),
     )
 

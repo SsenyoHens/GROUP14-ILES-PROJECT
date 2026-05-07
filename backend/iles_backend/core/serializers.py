@@ -87,4 +87,19 @@ class WeeklyLogStatsSerializer(serializers.Serializer):
     total_logs = serializers.IntegerField()
     approved_logs = serializers.IntegerField()
     pending_logs = serializers.IntegerField()
-    rejected_logs = serializers.IntegerField()        
+    rejected_logs = serializers.IntegerField()      
+
+class SupervisorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            'id',
+            'first_name',
+            'last_name',
+            'email',
+            'phone',
+            'organization',
+            'department',
+            'role'
+        ]    

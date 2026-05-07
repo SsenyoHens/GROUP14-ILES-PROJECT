@@ -51,7 +51,10 @@ class CustomUser(AbstractUser):
     username = models.CharField(max_length=150, unique=True)
 
     role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='student')
-
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    organization = models.CharField(max_length=255, blank=True, null=True)
+    department = models.CharField(max_length=255, blank=True, null=True)
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
