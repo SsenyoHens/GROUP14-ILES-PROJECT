@@ -2,12 +2,17 @@ import {
   Box, VStack, Text, Flex, Icon, Tooltip,
   Divider, Avatar, HStack, Badge,
 } from '@chakra-ui/react'
+<<<<<<< HEAD
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+=======
+import { Link, useLocation } from 'react-router-dom'
+>>>>>>> workplace-supervisor
 import {
   MdDashboard, MdPeople, MdWork, MdAssignment,
   MdBarChart, MdManageAccounts, MdLogout,
 } from 'react-icons/md'
 import { useAuth } from '../context/AuthContext'
+<<<<<<< HEAD
 
 const navItems = [
   { label: 'Dashboard',           path: '/dashboard',   icon: MdDashboard      },
@@ -16,6 +21,19 @@ const navItems = [
   { label: 'Evaluations',         path: '/evaluations', icon: MdAssignment     },
   { label: 'Reports',             path: '/reports',     icon: MdBarChart       },
   { label: 'User Accounts',       path: '/users',       icon: MdManageAccounts },
+=======
+import { useNavigate } from 'react-router-dom'
+
+// npm install react-icons
+
+const navItems = [
+  { label: 'Dashboard',          path: '/dashboard',   icon: MdDashboard    },
+  { label: 'Student Registration', path: '/students',  icon: MdPeople       },
+  { label: 'Placements',         path: '/placements',  icon: MdWork         },
+  { label: 'Evaluations',        path: '/evaluations', icon: MdAssignment   },
+  { label: 'Reports',            path: '/reports',     icon: MdBarChart     },
+  { label: 'User Accounts',      path: '/users',       icon: MdManageAccounts },
+>>>>>>> workplace-supervisor
 ]
 
 function NavItem({ item, isActive }) {
@@ -65,7 +83,11 @@ function Sidebar() {
           ILES
         </Text>
         <Text fontSize="10px" color="sidebar.text" mt={1} textTransform="uppercase" letterSpacing="wider">
+<<<<<<< HEAD
           login / Registrar Portal
+=======
+          Admin / Registrar Portal
+>>>>>>> workplace-supervisor
         </Text>
       </Box>
 

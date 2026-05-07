@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import {
@@ -114,3 +115,8 @@ function UserModal({ isOpen, onClose, onSave, user }) {
 }
 
 export default UserModal
+=======
+export { default as SupervisorFilters } from './SupervisorFilters'
+export { default as SupervisorTable } from './SupervisorTable'
+export { default as SupervisorModal } from './SupervisorModal'
+>>>>>>> workplace-supervisor
