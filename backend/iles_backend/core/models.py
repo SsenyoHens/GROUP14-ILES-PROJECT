@@ -12,6 +12,7 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save
 
 
+
 # =========================
 # 1. Custom User Manager
 # =========================
@@ -257,15 +258,21 @@ class WeeklyLog(models.Model):
                         raise ValidationError("Supervisors cannot edit their own logs.")
                     
                     #Accessing student's placement
-                    placement = getattr(self.student, 'internshipplacement', None)
+                    placement = getattr(self.student.studentprofile, 'internshipplacement', None)
                     
                     if not placement:
                         raise ValidationError("Student must have an internship placement to submit logs.")  
         
                     #Checking supervisor Ownership
-                    if user not in [placement.academic_supervisor, placement.workplace_supervisor] and user.role in ["academic_supervisor", "workplace_supervisor"]:
-                        raise ValidationError("Your are not assigned to this student!")
+                    if user.role=="academic_supervisor":
+                        if placement.academic_supervisor.user !=user:
+                            raise ValidationError("You are not assigned to this student.")
                     
+                    elif user.role == "workplace_supervisor":
+                        if placement.workplace_supervisor.user != user:
+                            raise ValidationError("You are not assigned to this student.")
+                        
+                                        
                     if old.status =='draft':
                         raise ValidationError("Supervisors cannot edit draft logs.")
                     
@@ -277,8 +284,8 @@ class WeeklyLog(models.Model):
                 else:
                     raise ValidationError("Only students and supervisors can edit logs/Unauhorized role.")           
                         
-        if self.score < 0 or self.score > self.criteria.max_score:
-            raise ValidationError("Score must be within allowed range")
+        #if self.score < 0 or self.score > self.criteria.max_score:
+            #raise ValidationError("Score must be within allowed range")
             
         #Rule 2: Deadline for submission: A student cannot submit a log for a week that has already passed
         if self.status == "submitted":
@@ -428,9 +435,9 @@ class Evaluation(models.Model):
     def __str__(self):
         return f"Evaluation - {self.student.email}"
 
-    # -------------------------
+    # -------------------------#
     # CORE VALIDATION LOGIC
-    # -------------------------
+    # -------------------------#
 
     def clean(self):
         errors = {}
@@ -456,12 +463,7 @@ class Evaluation(models.Model):
             raise ValidationError(errors)
         
     # -------------------------
-    # SCORE LOGIC
-    # -------------------------
-    def calculate_total_score(self):
-        scores = self.evaluationscore_set.all()
-        return sum(score.score for score in scores)
-
+    
     def compute_grade(self, total):
         if total >= 80:
             return 'A'
@@ -473,33 +475,34 @@ class Evaluation(models.Model):
             return 'D'
         return 'F'
     #Prevent submission of logs with missing creteria scores    
+    # SCORE LOGIC
+    # -------------------------
     def calculate_total_score(self):
-        expected = self.criteria.count()
-        actual = self.evaluationscore_set.count()
-        
-        if expected != actual:
-            raise ValidationError("All criteria must be scored before submission.")
-        return sum(score.score for score in self.evaluationscore_set.all()) 
-
-        #Normalize total score to percentage(100%) based on max possible score
         scores = self.evaluationscore_set.all()
+
+        expected = self.criteria.count()
+        actual = scores.count()
+
+        if expected != actual:
+            raise ValidationError(
+                "All criteria must be scored before submission."
+            )
+
         total = sum(s.score for s in scores)
         max_total = sum(s.criteria.max_score for s in scores)
 
         if max_total == 0:
             return 0
-        
+
         return (total / max_total) * 100    
-    # -------------------------
+       
+   
     # SAVE OVERRIDE
-    # -------------------------
     def save(self, *args, **kwargs):
         self.full_clean()  # 🔥 Always enforce validation
         super().save(*args, **kwargs)
 
-    # -------------------------
     # WORKFLOW METHODS
-    # -------------------------
     def submit(self):
         if self.status != 'draft':
             raise ValidationError("Only draft evaluations can be submitted.")
@@ -517,89 +520,14 @@ class Evaluation(models.Model):
         self.status = 'approved'
         self.save()
 
-'''class Evaluation(models.Model):
-    weekly_log = models.ForeignKey(WeeklyLog, on_delete=models.CASCADE, null=True, blank=True)
-
-    student = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        limit_choices_to={'role': 'student'}
-    )
-
-    evaluator = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='evaluations_given',
-        limit_choices_to={
-            'role__in': ['academic_supervisor', 'workplace_supervisor']
-        }
-    )
-
-    feedback = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    criteria = models.ManyToManyField(
-        EvaluationCriteria,
-        through='EvaluationScore'
-    )
-
-    total_score = models.FloatField(null =True, blank = True, default=0)
-    grade= models.CharField(max_length=2, null=True, blank=True)    
-
-    STATUS_CHOICES = [
-        ('draft', 'Draft'),
-        ('submitted', 'Submitted'),
-        ('reviewed', 'Reviewed'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected'),
-    ]
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
-
-    def calculate_total_score(self):
-        scores = self.evaluationscore_set.all()
-        return sum(score.score for score in scores)
-
-    def compute_grade(self):
-        if self.total_score is None:
-            return None
-        if self.total_score >= 80:
-            return 'A'
-        elif self.total_score >= 70:
-            return 'B'
-        elif self.total_score >= 60:
-            return 'C'
-        elif self.total_score >= 50:
-            return 'D'
-        else:
-            return 'F'
-        
-    #def clean(self):
-        #if self.pk:
-            #old 
-
-    def submit(self):
-         if self.status != 'draft':
-             raise ValidationError("Only draft evaluations can be submitted")
-
-         self.total_score = self.calculate_total_score()
-         self.grade = self.compute_grade(self.total_score)
-
-         self.status = 'submitted'
-         self.save()
-
-    def approve(self):
+    def reject(self):
         if self.status != 'submitted':
-            raise ValidationError("Only submitted evaluations can be approved")
+            raise ValidationError("Only submitted evaluations can be rejected.")
 
-        self.status = 'approved'
+        self.status = 'draft'  # Revert to draft for resubmission
         self.save()
-
-    def __str__(self):
-        return f"Evaluation - {self.student.email}"'''
-
-
-'''class EvaluationScore(models.Model):
+        
+class EvaluationScore(models.Model):
     evaluation = models.ForeignKey(Evaluation, on_delete=models.CASCADE)
     criteria = models.ForeignKey(EvaluationCriteria, on_delete=models.CASCADE)
 
@@ -614,7 +542,7 @@ class Evaluation(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.criteria.name}: {self.score}"'''
+        return f"{self.criteria.name}: {self.score}"
 
 
 # =========================
