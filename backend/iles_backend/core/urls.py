@@ -18,6 +18,7 @@ from .views import (
     # 📘 Weekly Logs
     create_log,
     view_logs,
+    #get_logs,
     update_log,
     delete_log,
     weekly_log_summary,
