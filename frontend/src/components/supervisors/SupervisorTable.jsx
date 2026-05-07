@@ -1,7 +1,11 @@
 import { Box, Table, Thead, Tbody, Tr, Th, Td, Badge, HStack, Button } from '@chakra-ui/react'
 import { EditIcon, DeleteIcon } from '@chakra-ui/icons'
 
-function SupervisorTable({ supervisors, onEdit, onDelete }) {
+function SupervisorTable({
+    supervisors,
+    handleDelete,
+    handleEdit
+}) {
     return (
         <Box bg="white" borderRadius="xl" overflow="hidden"
             border="1px solid" borderColor="gray.100" boxShadow="sm">
@@ -40,7 +44,7 @@ function SupervisorTable({ supervisors, onEdit, onDelete }) {
                                             variant="ghost"
                                             colorScheme="blue"
                                             leftIcon={<EditIcon />}
-                                            onClick={() => onEdit(supervisor)}
+                                            onClick={() => handleEdit(supervisor)}
                                         >
                                             Edit
                                         </Button>
@@ -49,7 +53,7 @@ function SupervisorTable({ supervisors, onEdit, onDelete }) {
                                             variant="ghost"
                                             colorScheme="red"
                                             leftIcon={<DeleteIcon />}
-                                            onClick={() => onDelete(supervisor.id)}
+                                            onClick={() => handleDelete(supervisor.id)}
                                         >
                                             Delete
                                         </Button>

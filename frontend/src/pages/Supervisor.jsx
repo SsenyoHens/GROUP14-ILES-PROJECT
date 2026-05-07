@@ -1,173 +1,276 @@
-import { useEffect, useState } from 'react'
-import {
-    Box, Spinner, Center, Alert, AlertIcon, useToast, useDisclosure,
-} from '@chakra-ui/react'
-import PageHeader from '../components/PageHeader'
-import { supervisorService } from '../api/services'
-import { SupervisorFilters, SupervisorTable, SupervisorModal } from '../components/supervisors'
+import Navbar from '../components/Navbar'
 
-/*Dashboard for Supervisor*/
+import {
+    Box,
+    Heading,
+    Spinner,
+    Center,
+    Input,
+    Button,
+    SimpleGrid
+} from '@chakra-ui/react'
+
+import {
+    SupervisorFilters,
+    SupervisorTable
+} from '../components/supervisors'
+
+import { useEffect, useState } from 'react'
+
+import { supervisorService } from '../api/services'
+
 function Supervisors() {
-    const { isOpen, onOpen, onClose } = useDisclosure()
-    const toast = useToast()
-    const [supervisors, setSupervisors] = useState([])
+
     const [loading, setLoading] = useState(true)
-    const [error, setError] = useState('')
-    const [searchTerm, setSearchTerm] = useState('')
-    const [filterDept, setFilterDept] = useState('')
+
+    const [supervisors, setSupervisors] = useState([])
+
     const [editingId, setEditingId] = useState(null)
+
+    const [searchTerm, setSearchTerm] = useState('')
+
+    const [departmentFilter, setDepartmentFilter] = useState('')
+
+    const user = JSON.parse(localStorage.getItem('user'))
+
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
         email: '',
+        password: '',
+        role: 'academic_supervisor',
         phone: '',
-        department: '',
         organization: '',
+        department: '',
     })
 
-    useEffect(() => {
-        fetchSupervisors()
-    }, [])
+    const handleChange = (e) => {
+
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        })
+    }
+
+    const handleSubmit = async () => {
+
+        try {
+
+            if (editingId) {
+
+                await supervisorService.update(
+                    editingId,
+                    formData
+                )
+
+                alert('Supervisor updated successfully')
+
+            } else {
+
+                await supervisorService.create(formData)
+
+                alert('Supervisor created successfully')
+            }
+
+            await fetchSupervisors()
+
+            setFormData({
+                first_name: '',
+                last_name: '',
+                email: '',
+                password: '',
+                role: 'academic_supervisor',
+                phone: '',
+                organization: '',
+                department: '',
+            })
+
+            setEditingId(null)
+
+        } catch (error) {
+
+            console.error(error)
+
+            alert('Operation failed')
+        }
+    }
 
     const fetchSupervisors = async () => {
-        setLoading(true)
+
         try {
-            const res = await supervisorService.getAll()
-            setSupervisors(res.data)
-            setError('')
-        } catch (err) {
-            setError('Failed to load supervisors')
-            console.error(err)
+
+            const response = await supervisorService.getAll()
+
+            setSupervisors(response.data)
+
+        } catch (error) {
+
+            console.error(error)
+
         } finally {
+
             setLoading(false)
         }
     }
 
-    const handleAdd = () => {
-        setEditingId(null)
-        setFormData({
-            first_name: '',
-            last_name: '',
-            email: '',
-            phone: '',
-            department: '',
-            organization: '',
-        })
-        onOpen()
+    useEffect(() => {
+
+        fetchSupervisors()
+
+    }, [])
+
+    const handleDelete = async (id) => {
+
+        try {
+
+            await supervisorService.delete(id)
+
+            await fetchSupervisors()
+
+        } catch (error) {
+
+            console.error(error)
+        }
     }
 
     const handleEdit = (supervisor) => {
+
+        setFormData({
+            first_name: supervisor.first_name || '',
+            last_name: supervisor.last_name || '',
+            email: supervisor.email || '',
+            password: '',
+            role: supervisor.role || 'academic_supervisor',
+            phone: supervisor.phone || '',
+            organization: supervisor.organization || '',
+            department: supervisor.department || '',
+        })
+
         setEditingId(supervisor.id)
-        setFormData(supervisor)
-        onOpen()
     }
 
-    const handleSave = async () => {
-        try {
-            if (editingId) {
-                await supervisorService.update(editingId, formData)
-                toast({
-                    title: 'Success',
-                    description: 'Supervisor updated successfully',
-                    status: 'success',
-                    duration: 3000,
-                })
-            } else {
-                await supervisorService.create(formData)
-                toast({
-                    title: 'Success',
-                    description: 'Supervisor created successfully',
-                    status: 'success',
-                    duration: 3000,
-                })
-            }
-            onClose()
-            fetchSupervisors()
-        } catch (err) {
-            toast({
-                title: 'Error',
-                description: err.response?.data?.message || 'Failed to save supervisor',
-                status: 'error',
-                duration: 3000,
-            })
-        }
-    }
+    const filteredSupervisors = supervisors.filter((supervisor) => {
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this supervisor?')) {
-            try {
-                await supervisorService.delete(id)
-                toast({
-                    title: 'Success',
-                    description: 'Supervisor deleted successfully',
-                    status: 'success',
-                    duration: 3000,
-                })
-                fetchSupervisors()
-            } catch (err) {
-                toast({
-                    title: 'Error',
-                    description: 'Failed to delete supervisor',
-                    status: 'error',
-                    duration: 3000,
-                })
-            }
-        }
-    }
+        const fullName =
+            `${supervisor.first_name} ${supervisor.last_name}`.toLowerCase()
 
-    const filteredSupervisors = supervisors.filter(sup => {
-        const matchesSearch = `${sup.first_name} ${sup.last_name} ${sup.email}`.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesDept = !filterDept || sup.department === filterDept
-        return matchesSearch && matchesDept
+        const matchesSearch =
+            fullName.includes(searchTerm.toLowerCase()) ||
+            supervisor.email.toLowerCase().includes(searchTerm.toLowerCase())
+
+        const matchesDepartment =
+            departmentFilter === '' ||
+            supervisor.department === departmentFilter
+
+        return matchesSearch && matchesDepartment
     })
 
     if (loading) {
+
         return (
             <Center h="60vh">
-                <Spinner size="xl" color="brand.500" thickness="3px" />
+                <Spinner size="xl" />
             </Center>
         )
     }
 
     return (
-        <Box>
-            <PageHeader
-                title="Workplace Supervisors"
-                subtitle="Manage supervisors from internship host organizations"
-            />
 
-            {error && (
-                <Alert status="error" borderRadius="lg" mb={4}>
-                    <AlertIcon />{error}
-                </Alert>
-            )}
+        <>
+            <Navbar />
 
-            {/* Filters and Actions */}
-            <SupervisorFilters
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                filterDept={filterDept}
-                setFilterDept={setFilterDept}
-                onAdd={handleAdd}
-            />
+            <Box p={5}>
 
-            {/* Supervisors Table */}
-            <SupervisorTable
-                supervisors={filteredSupervisors}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-            />
+                <Heading mb={5}>
+                    Supervisor Dashboard
+                </Heading>
 
-            {/* Add/Edit Modal */}
-            <SupervisorModal
-                isOpen={isOpen}
-                onClose={onClose}
-                editingId={editingId}
-                formData={formData}
-                setFormData={setFormData}
-                onSave={handleSave}
-            />
-        </Box>
+                <SupervisorFilters
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    departmentFilter={departmentFilter}
+                    setDepartmentFilter={setDepartmentFilter}
+                />
+
+                {user?.role === 'admin' && (
+
+                    <Box mb={5}>
+
+                        <SimpleGrid columns={2} spacing={4}>
+
+                            <Input
+                                placeholder="First Name"
+                                name="first_name"
+                                value={formData.first_name}
+                                onChange={handleChange}
+                            />
+
+                            <Input
+                                placeholder="Last Name"
+                                name="last_name"
+                                value={formData.last_name}
+                                onChange={handleChange}
+                            />
+
+                            <Input
+                                placeholder="Email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                            />
+
+                            <Input
+                                placeholder="Password"
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                            />
+
+                            <Input
+                                placeholder="Phone"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                            />
+
+                            <Input
+                                placeholder="Organization"
+                                name="organization"
+                                value={formData.organization}
+                                onChange={handleChange}
+                            />
+
+                            <Input
+                                placeholder="Department"
+                                name="department"
+                                value={formData.department}
+                                onChange={handleChange}
+                            />
+
+                        </SimpleGrid>
+
+                        <Button
+                            mt={4}
+                            colorScheme="blue"
+                            onClick={handleSubmit}
+                        >
+                            {editingId
+                                ? 'Update Supervisor'
+                                : 'Add Supervisor'}
+                        </Button>
+
+                    </Box>
+                )}
+
+                <SupervisorTable
+                    supervisors={filteredSupervisors}
+                    handleDelete={handleDelete}
+                    handleEdit={handleEdit}
+                />
+
+            </Box>
+        </>
     )
 }
 
