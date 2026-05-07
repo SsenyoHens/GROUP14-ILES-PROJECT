@@ -1,59 +1,52 @@
-import Login from './pages/Login'
-import Dashboard from './pages/admin/Dashboard'
-//import Students     from './pages/admin/Students'
-//import Placements   from './pages/admin/Placements'
-//import Evaluations  from './pages/admin/Evaluations'
-//import Reports      from './pages/admin/Reports'
-//import UserAccounts from './pages/admin/UserAccounts'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { useState } from 'react'
 
-function AdminLayout({ children }) {
-  return (
-    <Flex minH="100vh">
-      <Sidebar />
-      <Flex flex={1} direction="column" bg="gray.50" overflowY="auto">
-        <Flex flex={1} p={6} direction="column" maxW="1200px" w="100%">
-          {children}
-        </Flex>
-      </Flex>
-    </Flex>
-  )
-}
+import Dashboard from './components/student_intern/Dashboard'
+import Logbook from './components/student_intern/Logbook'
+import MyEvaluations from './components/student_intern/MyEvaluations'
+import MyPlacement from './components/student_intern/MyPlacement'
+import MyProfile from './components/student_intern/MyProfile'
+
+import './App.css'
 
 function App() {
-  const { user } = useAuth()
+  const [isLoggedIn, setIsLoggedIn] = useState(true)
+
+  if (!isLoggedIn) {
+    return <div>Please log in</div>
+  }
 
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/login"
-          element={user ? <Navigate to="/dashboard" replace /> : <Login />}
-        />
+    <BrowserRouter>
+      <div className="app-container">
 
-        <Route
-          path="/*"
-          element={
-            <ProtectedRoute>
-              <AdminLayout>
-                <Routes>
-                  <Route
-                    path="/"
-                    element={<Navigate to="/dashboard" replace />}
-                  />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/students" element={<Students />} />
-                  <Route path="/students/:id" element={<Students />} />
-                  <Route path="/placements" element={<Placements />} />
-                  <Route path="/evaluations" element={<Evaluations />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/users" element={<UserAccounts />} />
-                </Routes>
-              </AdminLayout>
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </Router>
+        <nav className="sidebar">
+          <div className="nav-header">
+            <h2>ILES Portal</h2>
+          </div>
+
+          <ul className="nav-links">
+            <li><Link to="/dashboard">Dashboard</Link></li>
+            <li><Link to="/logbook">Logbook</Link></li>
+            <li><Link to="/evaluations">My Evaluations</Link></li>
+            <li><Link to="/placement">My Placement</Link></li>
+            <li><Link to="/profile">My Profile</Link></li>
+          </ul>
+        </nav>
+
+        <main className="main-content">
+          <Routes>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/logbook" element={<Logbook />} />
+            <Route path="/evaluations" element={<MyEvaluations />} />
+            <Route path="/placement" element={<MyPlacement />} />
+            <Route path="/profile" element={<MyProfile />} />
+            <Route path="/" element={<Dashboard />} />
+          </Routes>
+        </main>
+
+      </div>
+    </BrowserRouter>
   )
 }
 

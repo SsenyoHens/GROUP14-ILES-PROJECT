@@ -1,20 +1,99 @@
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Arial, sans-serif;
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f0f2f5;
-  color: #1a1a2e;
+  background: #f4f6f8;
 }
 
-h1, h2, h3 {
-  font-weight: 600;
+/* APP LAYOUT */
+.app-container {
+  display: flex;
+  height: 100vh;
 }
 
-a {
+/* SIDEBAR */
+.sidebar {
+  width: 250px;
+  background: #0f172a;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-header {
+  margin-bottom: 30px;
+}
+
+.nav-header h2 {
+  font-size: 22px;
+}
+
+.nav-links {
+  list-style: none;
+  flex: 1;
+}
+
+.nav-links li {
+  margin: 10px 0;
+}
+
+.nav-links a {
+  color: white;
   text-decoration: none;
-  color: inherit;
+  display: block;
+  padding: 10px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.nav-links a:hover {
+  background: #1e293b;
+}
+
+/* ACTIVE LINK */
+.nav-links a.active {
+  background: #38bdf8;
+  color: #0f172a;
+  font-weight: bold;
+}
+
+/* LOGOUT BUTTON */
+.sidebar button {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #ef4444;
+  color: white;
+  margin-top: 20px;
+}
+
+/* MAIN AREA */
+.main-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+/* CARD STYLE */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* HEADINGS */
+h1 {
+  margin-bottom: 10px;
+}
+
+h2 {
+  margin-top: 20px;
 }
