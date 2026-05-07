@@ -100,7 +100,12 @@ class WeeklyLogAdminForm(forms.ModelForm):
             self.instance._current_user = self.request.user  # Set current user for validation
         return cleaned_data
         
-       
+
+# admin.py
+class WeeklyLogAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        obj._request_user = request.user
+        super().save_model(request, obj, form, change)       
             
 class WeeklyLogAdmin(admin.ModelAdmin):
     form = WeeklyLogAdminForm
@@ -123,10 +128,15 @@ class WeeklyLogAdmin(admin.ModelAdmin):
             kwargs["queryset"] = CustomUser.objects.filter(role="student")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-
+@admin.register(WeeklyLog)
+class WeeklyLogAdmin(admin.ModelAdmin):
+    list_display = ['student', 'week_number', 'status', 'created_at']
+    list_filter = ['status', 'week_number']
+    search_fields = ['^student__first_name', '^student__last_name', '^student__email']
+    list_select_related = ['student']  # Optimize queries by selecting related student
+    form = WeeklyLogAdminForm
 
 admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(WeeklyLog, WeeklyLogAdmin)
 admin.site.register(Evaluation, EvaluationAdmin)
 admin.site.register(EvaluationCriteria)
 admin.site.register(InternshipPlacement)

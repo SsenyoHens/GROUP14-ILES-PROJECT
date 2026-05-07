@@ -1,3 +1,5 @@
+from xml.parsers.expat import errors
+
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
@@ -179,19 +181,169 @@ class WeeklyLog(models.Model):
         ('rejected', 'Rejected'),
     ]
 
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default='submitted'
-    )
+         
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    date = models.DateField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'week_number')
+        constraints = [
+            models.CheckConstraint(
+                check=Q(week_number__gte=1) & Q(week_number__lte=52),
+                name="week_number_valid_range"
+            )
+        ]
+    
+    #Rule 1 Lock afetr approval: A student cannot edit log after it has been approved
+    def clean(self):
+        allowed_transitions = {
+        "draft": ["submitted"],
+        "submitted": ["reviewed"],
+        "reviewed": ["approved", "rejected"],
+        "approved": [],
+        "rejected": ["draft"],  # optional (allow resubmission)
+}
+        
+        user = getattr(self, '_current_user', None)
+        
+        #if user.is_superuser:
+            #return  # Superusers can bypass all validations
+
+        if not user:
+            raise ValidationError("Current user must be provided for validation.")
+        if user.role != "student":
+            raise ValidationError("Only students can create or edit logs.") 
+
+        if self.pk:
+            old=WeeklyLog.objects.filter(pk=self.pk).first()
+
+            if old:
+                if self.status != old.status:
+                    if self.status not in allowed_transitions.get(old.status, []):
+                        raise ValidationError(f"Invalid status transition from {old.status} to {self.status}.") 
+
+                #Lock approved logs
+                if old.status == "approved" and self.status != "approved":
+                    raise ValidationError("Approved logs cannot be edited.")
+            
+                # Prevent revert
+                if old.status == "submitted" and self.status == "draft":
+                    raise ValidationError("Submitted logs cannot be reverted to draft.")
+                
+                #ROLE BASED RESTRICTION: 
+                #STUDENT RESTRICTION: Only the student who created the log can edit it, and only if it's not approved
+                if user.role == "student":
+                    if self.student != user:
+                        raise ValidationError("Students can only edit their own logs.") 
+                    if self.status in ["approved", "reviewed", "rejected"]:
+                        raise ValidationError("Students cannot review or approve logs.")
+                    
+                    
+                #SUPERVISOR RESTRICTION: Supervisors can only review logs that are in "submitted" status and cannot edit the content
+                elif user.role in ["academic_supervisor", "workplace_supervisor"]:
+                    if self.student==user:
+                        raise ValidationError("Supervisors cannot edit their own logs.")
+                    
+                    #Accessing student's placement
+                    placement = getattr(self.student, 'internshipplacement', None)
+                    
+                    if not placement:
+                        raise ValidationError("Student must have an internship placement to submit logs.")  
+        
+                    #Checking supervisor Ownership
+                    if user not in [placement.academic_supervisor, placement.workplace_supervisor] and user.role in ["academic_supervisor", "workplace_supervisor"]:
+                        raise ValidationError("Your are not assigned to this student!")
+                    
+                    if old.status =='draft':
+                        raise ValidationError("Supervisors cannot edit draft logs.")
+                    
+                    if self.status == "submitted":
+                        raise ValidationError("Supervisors cannot submit logs.")
+                        #if placement is linked
+                        #if self.student.internshipplacement.academic_supervisor != user and self.student.internshipplacement.workplace_supervisor != user:
+                            #raise ValidationError("Supervisors can only review logs of their assigned students.")  
+                else:
+                    raise ValidationError("Only students and supervisors can edit logs/Unauhorized role.")           
+                        
+        if self.score < 0 or self.score > self.criteria.max_score:
+            raise ValidationError("Score must be within allowed range")
+            
+        #Rule 2: Deadline for submission: A student cannot submit a log for a week that has already passed
+        if self.status == "submitted":
+            base_time = self.submitted_at or timezone.now()
+            
+            deadline = base_time + timedelta(days=7)
+            if timezone.now() > deadline:
+                raise ValidationError("Submission Deadline Passed!")
+        
+        
+            
+    def save(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        user = kwargs.pop('user', None) #Store current user
+        self._curent_user = user #attach user to model 
+        
+        #auto set submited time
+        if self.status == "submitted" and not self.submitted_at:
+            self.submitted_at = timezone.now()
+
+        #Capture old data
+        old_status = None
+        if self.pk:
+            old = WeeklyLog.objects.filter(pk=self.pk).first()
+            if old:
+                old_status = old.status
+
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+        #Creating history record after saving
+        if old_status and old_status !=self.status:
+            WeeklyLogHistory.objects.create(
+                log=self,
+                changed_by=user,
+                old_status=old_status,
+                new_status=self.status
+            )   
+
+#EvaluationScore model
+class EvaluationScore(models.Model):
+    evaluation = models.ForeignKey('Evaluation', on_delete=models.CASCADE)
+    criteria = models.ForeignKey('EvaluationCriteria', on_delete=models.CASCADE)
+
+    score = models.FloatField()
+
+    class Meta:
+        unique_together = ['evaluation', 'criteria']
 
     def __str__(self):
+        return f"{self.criteria.name}: {self.score}"
 
-        return f"{self.student.email} - Week {self.week_number}"
+    # -------------------------
+    # 🔒 VALIDATION
+    # -------------------------
+
+    def clean(self):
+        errors = {}
+
+        if self.score < 0:
+            errors['score'] = "Score cannot be negative."
+
+        if self.score > self.criteria.max_score:
+            errors['score'] = "Score exceeds maximum allowed score."
+
+        if errors:
+            raise ValidationError(errors)
+    
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+
 
 #Weekly Log History
 class WeeklyLogHistory(models.Model):
@@ -212,10 +364,23 @@ class EvaluationCriteria(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def clean(self):
+        if self.max_score <= 0:
+            raise ValidationError("Max score must be greater than 0.")
 
-
+#Evaluation model
 class Evaluation(models.Model):
-    weekly_log = models.ForeignKey(WeeklyLog, on_delete=models.CASCADE, null=True, blank=True)
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('submitted', 'Submitted'),
+        ('approved', 'Approved'),
+    ]
+
+    weekly_log = models.ForeignKey(
+        'WeeklyLog',
+        on_delete=models.CASCADE
+    )
 
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -233,34 +398,97 @@ class Evaluation(models.Model):
         }
     )
 
-    feedback = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    feedback = models.TextField(blank=True)
+
+    total_score = models.FloatField(null=True, blank=True)
+    grade = models.CharField(max_length=2, null=True, blank=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
 
     criteria = models.ManyToManyField(
-        EvaluationCriteria,
+        'EvaluationCriteria',
         through='EvaluationScore'
     )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['weekly_log', 'evaluator']
 
     def __str__(self):
         return f"Evaluation - {self.student.email}"
 
-
-class EvaluationScore(models.Model):
-    evaluation = models.ForeignKey(Evaluation, on_delete=models.CASCADE)
-    criteria = models.ForeignKey(EvaluationCriteria, on_delete=models.CASCADE)
-
-    score = models.FloatField(validators=[MinValueValidator(0)])
+    # -------------------------
+    # CORE VALIDATION LOGIC
+    # -------------------------
 
     def clean(self):
-        if self.score > self.criteria.max_score:
-            raise ValidationError(f"Max allowed is {self.criteria.max_score}")
+        errors = {}
 
+        # 1) Require weekly_log explicitly (avoid RelatedObjectDoesNotExist)
+        if not self.weekly_log_id:
+            errors['weekly_log'] = "Weekly log is required."
+
+        # 2) Only compare when both exist (safe access)
+        if self.weekly_log_id and self.student_id:
+            # fetch only if needed
+            wl = self.weekly_log
+            if wl and self.student != wl.student:
+                errors['student'] = "Student must match the weekly log."
+
+        # 3) Lock after submission
+        if self.pk:
+            old = type(self).objects.get(pk=self.pk)
+            if old.status != 'draft':
+                errors['status'] = "Cannot modify submitted or approved evaluation."
+
+        if errors:
+            raise ValidationError(errors)
+        
+    # -------------------------
+    # SCORE LOGIC
+    # -------------------------
+    def calculate_total_score(self):
+        scores = self.evaluationscore_set.all()
+        return sum(score.score for score in scores)
+
+    def compute_grade(self, total):
+        if total >= 80:
+            return 'A'
+        elif total >= 70:
+            return 'B'
+        elif total >= 60:
+            return 'C'
+        elif total >= 50:
+            return 'D'
+        return 'F'
+
+    # -------------------------
+    # SAVE OVERRIDE
+    # -------------------------
     def save(self, *args, **kwargs):
-        self.full_clean()
+        self.full_clean()  # 🔥 Always enforce validation
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"{self.criteria.name}: {self.score}"
+    # -------------------------
+    # WORKFLOW METHODS
+    # -------------------------
+    def submit(self):
+        if self.status != 'draft':
+            raise ValidationError("Only draft evaluations can be submitted.")
+
+        self.total_score = self.calculate_total_score()
+        self.grade = self.compute_grade(self.total_score)
+
+        self.status = 'submitted'
+        self.save()
+
+    def approve(self):
+        if self.status != 'submitted':
+            raise ValidationError("Only submitted evaluations can be approved.")
+
+        self.status = 'approved'
+        self.save()
 
 
 # =========================
