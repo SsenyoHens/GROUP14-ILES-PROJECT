@@ -137,7 +137,6 @@ class WeeklyLogAdmin(admin.ModelAdmin):
     form = WeeklyLogAdminForm
 
 admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(WeeklyLog, WeeklyLogAdmin)
 admin.site.register(Evaluation, EvaluationAdmin)
 admin.site.register(EvaluationCriteria)
 admin.site.register(InternshipPlacement)

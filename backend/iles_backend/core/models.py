@@ -526,8 +526,8 @@ class Evaluation(models.Model):
 
         self.status = 'draft'  # Revert to draft for resubmission
         self.save()
-        
-class EvaluationScore(models.Model):
+
+'''class EvaluationScore(models.Model):
     evaluation = models.ForeignKey(Evaluation, on_delete=models.CASCADE)
     criteria = models.ForeignKey(EvaluationCriteria, on_delete=models.CASCADE)
 
@@ -542,7 +542,7 @@ class EvaluationScore(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.criteria.name}: {self.score}"
+        return f"{self.criteria.name}: {self.score}"'''
 
 
 # =========================

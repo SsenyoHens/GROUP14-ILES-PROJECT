@@ -1,5 +1,16 @@
 from django.urls import path
-from .views import (
+
+from core.views.user_views import get_current_user
+from core.views.login_views import login_view
+from core.views.register_views import register_view
+from core.views.profile_views import (update_student_profile,
+)
+from core.views.weeklylog_views import weekly_log_stats
+from core.views.placement_views import (view_placements, create_placement, update_placement)
+from core.views.weeklylog_views import (view_logs, create_log, update_log, delete_log, weekly_log_summary, weekly_log_stats)
+from core.views.evaluation_views import evaluation_summary
+
+'''from .views import (
     # 🔐 Auth
     login_view,
     register_view,
@@ -26,7 +37,7 @@ from .views import (
 
     # 📊 Evaluations
     evaluation_summary,
-)
+)'''
 
 urlpatterns = [
     # 🔐 AUTH
