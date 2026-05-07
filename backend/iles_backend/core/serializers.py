@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from core.models import Evaluation, EvaluationScore
 
-from core.models import (
+from .models import (
+    CustomUser,
     Evaluation,
     EvaluationScore,
     StudentProfile,
@@ -42,6 +44,15 @@ class RegisterSerializer(serializers.ModelSerializer):
     # Workplace supervisor fields
     organization = serializers.CharField(required=False)
     job_title = serializers.CharField(required=False)
+
+
+    password = serializers.CharField(
+        write_only=True,
+        min_length=5
+    )
+
+    password = serializers.CharField(write_only=True, min_length=8)
+
 
     class Meta:
         model = User
@@ -117,6 +128,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
 
+
         # STUDENT PROFILE
         if user.role == 'student':
 
@@ -155,7 +167,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 # 2. LOGIN SERIALIZER
 # =========================================================
 
+# =========================
+# LOGIN SERIALIZER
+# =========================
+
 class LoginSerializer(serializers.Serializer):
+
 
     email = serializers.EmailField(required=True)
 
@@ -171,20 +188,42 @@ class LoginSerializer(serializers.Serializer):
 
 class StudentProfileSerializer(serializers.ModelSerializer):
 
+
     class Meta:
         model = StudentProfile
 
+
         fields = [
+            
             'registration_number',
+           
             'course',
+           
             'year_of_study',
-            'phone_number',
+           
+            'phone_number'
+        ,
         ]
 
 
 # =========================================================
 # 4. EVALUATION SCORE SERIALIZER
 # =========================================================
+
+# =========================
+# EVALUATION
+# =========================
+
+class EvaluationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Evaluation
+
+        fields = [
+            'student',
+            'evaluator',
+            'feedback'
+        ]
 
 class EvaluationScoreSerializer(serializers.ModelSerializer):
 
@@ -245,8 +284,11 @@ class EvaluationSerializer(serializers.ModelSerializer):
 
 class PlacementSerializer(serializers.ModelSerializer):
 
+
     class Meta:
         model = InternshipPlacement
+
+
         fields = '__all__'
 
     def validate(self, data):
@@ -326,4 +368,4 @@ class WeeklyLogHistorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WeeklyLogHistory
-        fields = '__all__'
+        fields = '_init__'
