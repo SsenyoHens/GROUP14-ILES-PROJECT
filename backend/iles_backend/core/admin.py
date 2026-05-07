@@ -132,7 +132,9 @@ class WeeklyLogAdmin(admin.ModelAdmin):
 class WeeklyLogAdmin(admin.ModelAdmin):
     list_display = ['student', 'week_number', 'status', 'created_at']
     list_filter = ['status', 'week_number']
-    search_fields = ['student__first_name', 'student__last_name', 'student__email']
+    search_fields = ['^student__first_name', '^student__last_name', '^student__email']
+    list_select_related = ['student']  # Optimize queries by selecting related student
+    form = WeeklyLogAdminForm
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(WeeklyLog, WeeklyLogAdmin)
