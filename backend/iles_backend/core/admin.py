@@ -128,7 +128,11 @@ class WeeklyLogAdmin(admin.ModelAdmin):
             kwargs["queryset"] = CustomUser.objects.filter(role="student")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-
+@admin.register(WeeklyLog)
+class WeeklyLogAdmin(admin.ModelAdmin):
+    list_display = ['student', 'week_number', 'status', 'created_at']
+    list_filter = ['status', 'week_number']
+    search_fields = ['student__first_name', 'student__last_name', 'student__email']
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(WeeklyLog, WeeklyLogAdmin)
