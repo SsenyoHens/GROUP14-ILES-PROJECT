@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import { useEffect, useState } from 'react'
 import {
   Box, Grid, GridItem, Text, Select, HStack,
@@ -129,7 +129,6 @@ function Reports() {
   )
 }
 
-=======
 function Reports() {
   return (
     <div>
@@ -138,5 +137,5 @@ function Reports() {
     </div>
   )
 }
->>>>>>> workplace-supervisor
+
 export default Reports

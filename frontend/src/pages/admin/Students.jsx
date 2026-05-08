@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import { useEffect, useState, useCallback } from 'react'
 import {
   Box, HStack, Button, Input, InputGroup, InputLeftElement,
@@ -158,7 +158,7 @@ function Students() {
   )
 }
 
-=======
+
 function Students() {
   return (
     <div>
@@ -167,5 +167,5 @@ function Students() {
     </div>
   )
 }
->>>>>>> workplace-supervisor
+
 export default Students

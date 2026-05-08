@@ -1,7 +1,7 @@
-<<<<<<< HEAD
 import { Box, Flex, Text, HStack, Link, Grid, VStack } from '@chakra-ui/react'
 
-function Footer({ minimal = false }) {
+function Footer({ minimal = false }) 
+{}
 
   // ── Dark footer for Home page (no prop needed — auto-detected via minimal=false)
   // ── Light footer for admin pages (minimal=true passed from PublicLayout/AdminLayout)
@@ -26,7 +26,7 @@ function Footer({ minimal = false }) {
       borderTop="1px solid"
       borderColor={borderColor}
       pt={minimal ? 6 : 10}
-    >
+    ></Box>)
       <Box maxW="1100px" mx="auto" px={8}>
 
         {!minimal && (
@@ -116,25 +116,3 @@ function Footer({ minimal = false }) {
             ))}
           </HStack>
         </Flex>
-
-      </Box>
-=======
-import { Box, Flex, Text } from '@chakra-ui/react'
-
-function Footer() {
-  return (
-    <Box bg="brand.700" px={7} py={3}>
-      <Flex justify="space-between" align="center">
-        <Text fontSize="xs" color="blue.300">
-          ILES — Internship Learning & Evaluation System
-        </Text>
-        <Text fontSize="xs" color="blue.400">
-          © {new Date().getFullYear()} Admin Panel • 
-        </Text>
-      </Flex>
->>>>>>> workplace-supervisor
-    </Box>
-  )
-}
-
-export default Footer

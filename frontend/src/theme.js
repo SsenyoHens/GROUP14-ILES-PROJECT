@@ -3,7 +3,7 @@ import { extendTheme } from '@chakra-ui/react'
 const theme = extendTheme({
   colors: {
     brand: {
-<<<<<<< HEAD
+
       50:  '#edfdf6',
       100: '#d0f7e7',
       200: '#a3edd0',
@@ -32,32 +32,13 @@ const theme = extendTheme({
     global: {
       body: { bg: '#f4f6f9', color: '#1a2535' },
       '*':  { boxSizing: 'border-box' },
-=======
-      50:  '#e6f0fb',
-      100: '#b5d4f4',
-      200: '#85b7eb',
-      500: '#1560a8',
-      700: '#0f2d52',
-      800: '#0a1f3a',
-      900: '#060f1d',
-    },
-  },
-  fonts: {
-    heading: `'Segoe UI', sans-serif`,
-    body:    `'Segoe UI', sans-serif`,
-  },
-  styles: {
-    global: {
-      body: {
-        bg: 'gray.50',
-        color: 'gray.800',
-      },
->>>>>>> workplace-supervisor
+
+
     },
   },
   components: {
     Button: {
-<<<<<<< HEAD
+
       variants: {
         solid: {
           bg: 'brand.600',
@@ -66,9 +47,7 @@ const theme = extendTheme({
           _active: { bg: 'brand.800' },
         },
       },
-=======
-      defaultProps: { colorScheme: 'blue' },
->>>>>>> workplace-supervisor
+
     },
   },
 })

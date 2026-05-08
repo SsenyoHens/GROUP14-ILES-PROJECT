@@ -2,17 +2,14 @@ import {
   Box, VStack, Text, Flex, Icon, Tooltip,
   Divider, Avatar, HStack, Badge,
 } from '@chakra-ui/react'
-<<<<<<< HEAD
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-=======
+
 import { Link, useLocation } from 'react-router-dom'
->>>>>>> workplace-supervisor
 import {
   MdDashboard, MdPeople, MdWork, MdAssignment,
   MdBarChart, MdManageAccounts, MdLogout,
 } from 'react-icons/md'
 import { useAuth } from '../context/AuthContext'
-<<<<<<< HEAD
 
 const navItems = [
   { label: 'Dashboard',           path: '/dashboard',   icon: MdDashboard      },
@@ -21,8 +18,7 @@ const navItems = [
   { label: 'Evaluations',         path: '/evaluations', icon: MdAssignment     },
   { label: 'Reports',             path: '/reports',     icon: MdBarChart       },
   { label: 'User Accounts',       path: '/users',       icon: MdManageAccounts },
-=======
-import { useNavigate } from 'react-router-dom'
+  import { useNavigate } from 'react-router-dom']
 
 // npm install react-icons
 
@@ -33,7 +29,6 @@ const navItems = [
   { label: 'Evaluations',        path: '/evaluations', icon: MdAssignment   },
   { label: 'Reports',            path: '/reports',     icon: MdBarChart     },
   { label: 'User Accounts',      path: '/users',       icon: MdManageAccounts },
->>>>>>> workplace-supervisor
 ]
 
 function NavItem({ item, isActive }) {
@@ -68,7 +63,7 @@ function Sidebar() {
     await logout()
     navigate('/login')
   }
-
+}
   return (
     <Box
       w="240px" minH="100vh" flexShrink={0}
@@ -76,18 +71,18 @@ function Sidebar() {
       borderRight="1px solid" borderColor="sidebar.border"
       display="flex" flexDirection="column"
       position="sticky" top={0} h="100vh" overflowY="auto"
-    >
+    ></Box>)
       {/* Logo */}
       <Box px={5} py={6} borderBottom="1px solid" borderColor="sidebar.border">
         <Text fontSize="xl" fontWeight="800" color="brand.300" letterSpacing="widest" fontFamily="heading">
           ILES
         </Text>
         <Text fontSize="10px" color="sidebar.text" mt={1} textTransform="uppercase" letterSpacing="wider">
-<<<<<<< HEAD
+
           login / Registrar Portal
-=======
+
           Admin / Registrar Portal
->>>>>>> workplace-supervisor
+
         </Text>
       </Box>
 
@@ -131,7 +126,5 @@ function Sidebar() {
         </Flex>
       </Box>
     </Box>
-  )
-}
-
+  
 export default Sidebar
