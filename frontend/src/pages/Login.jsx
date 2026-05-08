@@ -1,118 +1,87 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useContext, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-function Login() {
-  const { login } = useAuth()
-  const navigate = useNavigate()
+export default function Login() {
+  const { loginUser } = useContext(AuthContext);
 
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-  })
+  const navigate = useNavigate();
 
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    })
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    setError('')
-  }
+    const success = await loginUser(email, password);
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-
-    if (!form.email || !form.password) {
-      setError('Please fill in all fields.')
-      return
+    if (success) {
+      navigate("/dashboard");
+    } else {
+      alert("Invalid credentials");
     }
-
-    setLoading(true)
-
-    // Simulate delay
-    setTimeout(() => {
-      const result = login(form)
-
-      if (result.success) {
-        navigate('/dashboard')
-      } else {
-        setError(result.message)
-        setLoading(false)
-      }
-    }, 800)
-  }
+  };
 
   return (
-    <div className="login-page">
-      <div className="login-card">
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#f4f4f4",
+      }}
+    >
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          background: "white",
+          padding: "40px",
+          borderRadius: "10px",
+          width: "350px",
+        }}
+      >
+        <h2>Login</h2>
 
-        <div className="login-header">
-          <div className="login-logo">ILES</div>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "15px",
+          }}
+        />
 
-          <h2>Admin Portal</h2>
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "15px",
+          }}
+        />
 
-          <p>Internship Learning & Evaluation System</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="login-form">
-
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-
-            <input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="admin@iles.ac.ug"
-              value={form.email}
-              onChange={handleChange}
-              autoComplete="email"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-
-            <input
-              id="password"
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              value={form.password}
-              onChange={handleChange}
-              autoComplete="current-password"
-            />
-          </div>
-
-          {error && (
-            <div className="login-error">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className="login-btn"
-            disabled={loading}
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-
-        </form>
-
-        <div className="login-hint">
-          <strong>Demo credentials:</strong>
-          <br />
-          admin@iles.ac.ug / admin123
-        </div>
-
-      </div>
+        <button
+          type="submit"
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "20px",
+            background: "#1e40af",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+          }}
+        >
+          Login
+        </button>
+      </form>
     </div>
-  )
+  );
 }
-
-export default Login

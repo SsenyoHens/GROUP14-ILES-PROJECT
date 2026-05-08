@@ -1,5 +1,6 @@
 import { Routes, Route, Link } from "react-router-dom";
 
+import Login from "./pages/Login";
 import Dashboard from "./pages/student_intern/Dashboard";
 import Logbook from "./pages/student_intern/Logbook";
 import MyEvaluation from "./pages/student_intern/MyEvaluation";
@@ -78,6 +79,7 @@ function App() {
           }}
         >
           <Routes>
+		    <Route path="/login" element={<Login />} />
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/logbook" element={<Logbook />} />
