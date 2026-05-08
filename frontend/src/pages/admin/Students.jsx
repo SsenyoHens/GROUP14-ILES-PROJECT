@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> 859f3d0f9ae3d2c8f4964c50d8ca901ab960b5cd
 import { useEffect, useState, useCallback } from 'react'
 import {
   Box, HStack, Button, Input, InputGroup, InputLeftElement,
@@ -157,4 +161,17 @@ function Students() {
   )
 }
 
+<<<<<<< HEAD
+=======
+
+function Students() {
+  return (
+    <div>
+      <h2 style={{ color: '#0f2d52', marginBottom: '8px' }}>Students</h2>
+      <p style={{ color: '#6b7280', fontSize: '13px' }}>Student management — coming Week 2</p>
+    </div>
+  )
+}
+
+>>>>>>> 859f3d0f9ae3d2c8f4964c50d8ca901ab960b5cd
 export default Students

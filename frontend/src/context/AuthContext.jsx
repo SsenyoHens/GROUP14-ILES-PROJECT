@@ -3,10 +3,14 @@ import axiosInstance from "../api/axiosInstance";
 
 export const AuthContext = createContext();
 
-export default function AuthProvider({ children }) {
+import axios from "axios";
+import api from '../api/axiosInstance';
+
+
+export default function AuthProvider({ children }) {}
   const [user, setUser] = useState(null);
 
-  const loginUser = async (email, password) => {
+  const loginUser = async (email, password) => {}
     try {
       const response = await axiosInstance.post("login/", {
         email,
@@ -19,9 +23,34 @@ export default function AuthProvider({ children }) {
       setUser(response.data);
 
       return true;
-    } catch (error) {
+    } catch (error) {}
       console.error(error);
       return false;
+const token = localStorage.getItem("token");
+
+api.get("logs/", {
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+})
+.then(res => console.log(res.data));
+
+const AuthContext = createContext(null)
+
+export function AuthProvider({ children }) {
+  const [user, setUser]       = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  // Re-hydrate user from token on page refresh
+  useEffect() => {
+    const token = localStorage.getItem('iles_token')
+    if (token) {
+      authService.me()
+        .then((res) => setUser(res.data))
+        .catch(() => localStorage.removeItem('iles_token'))
+        .finally(() => setLoading(false))
+    } else {
+      setLoading(false)
     }
   };
 

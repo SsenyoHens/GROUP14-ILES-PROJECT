@@ -1,6 +1,6 @@
 import {
   Box, VStack, Text, Flex, Icon, Tooltip,
-  Divider, Avatar, HStack, Badge,
+  Avatar, HStack,
 } from '@chakra-ui/react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../context/AuthContext'
 
 const navItems = [
-  { label: 'Dashboard',            path: '/dashboard',   icon: MdDashboard      },
+  { label: 'Dashboard',           path: '/dashboard',   icon: MdDashboard      },
   { label: 'Student Registration', path: '/students',    icon: MdPeople         },
   { label: 'Placements',           path: '/placements',  icon: MdWork           },
   { label: 'Evaluations',          path: '/evaluations', icon: MdAssignment     },
@@ -65,7 +65,7 @@ function Sidebar() {
           ILES
         </Text>
         <Text fontSize="10px" color="sidebar.text" mt={1} textTransform="uppercase" letterSpacing="wider">
-          Login / Registrar Portal
+          Admin / Registrar Portal
         </Text>
       </Box>
 

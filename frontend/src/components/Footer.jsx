@@ -1,22 +1,21 @@
 import { Box, Flex, Text, HStack, Link, Grid, VStack } from '@chakra-ui/react'
 
 function Footer({ minimal = false }) {
-
   // ── Dark footer for Home page (no prop needed — auto-detected via minimal=false)
   // ── Light footer for admin pages (minimal=true passed from PublicLayout/AdminLayout)
   const isDark = !minimal
 
-  const bg          = isDark ? '#0a1929'                        : 'white'
-  const borderColor = isDark ? 'rgba(255,255,255,0.06)'         : 'gray.100'
-  const brandColor  = isDark ? 'brand.300'                      : 'blue.600'
-  const subtitleClr = isDark ? 'rgba(255,255,255,0.35)'         : 'gray.400'
-  const bodyClr     = isDark ? 'rgba(255,255,255,0.45)'         : 'gray.500'
-  const headingClr  = isDark ? 'rgba(255,255,255,0.25)'         : 'gray.400'
-  const tagBorder   = isDark ? 'rgba(52,196,144,0.25)'          : 'gray.200'
-  const tagClr      = isDark ? 'brand.300'                      : 'gray.400'
-  const linkHover   = isDark ? 'white'                          : 'gray.800'
-  const bottomClr   = isDark ? 'rgba(255,255,255,0.25)'         : 'gray.400'
-  const bottomBdr   = isDark ? 'rgba(255,255,255,0.06)'         : 'gray.100'
+  const bg          = isDark ? '#0a1929'                         : 'white'
+  const borderColor = isDark ? 'rgba(255,255,255,0.06)'          : 'gray.100'
+  const brandColor  = isDark ? 'brand.300'                       : 'blue.600'
+  const subtitleClr = isDark ? 'rgba(255,255,255,0.35)'          : 'gray.400'
+  const bodyClr     = isDark ? 'rgba(255,255,255,0.45)'          : 'gray.500'
+  const headingClr  = isDark ? 'rgba(255,255,255,0.25)'          : 'gray.400'
+  const tagBorder   = isDark ? 'rgba(52,196,144,0.25)'           : 'gray.200'
+  const tagClr      = isDark ? 'brand.300'                       : 'gray.400'
+  const linkHover   = isDark ? 'white'                           : 'gray.800'
+  const bottomClr   = isDark ? 'rgba(255,255,255,0.25)'          : 'gray.400'
+  const bottomBdr   = isDark ? 'rgba(255,255,255,0.06)'          : 'gray.100'
 
   return (
     <Box
@@ -27,10 +26,8 @@ function Footer({ minimal = false }) {
       pt={minimal ? 6 : 10}
     >
       <Box maxW="1100px" mx="auto" px={8}>
-
         {!minimal && (
           <Grid templateColumns={{ base: '1fr', md: '2fr 1fr 1fr' }} gap={12} pb={9}>
-
             {/* Brand */}
             <Box>
               <HStack spacing={2} mb={3}>
@@ -94,7 +91,6 @@ function Footer({ minimal = false }) {
                 ))}
               </VStack>
             </Box>
-
           </Grid>
         )}
 
@@ -115,7 +111,6 @@ function Footer({ minimal = false }) {
             ))}
           </HStack>
         </Flex>
-
       </Box>
     </Box>
   )
