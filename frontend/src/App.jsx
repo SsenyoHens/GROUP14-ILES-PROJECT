@@ -15,7 +15,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Navbar            from './components/Navbar'
 import Sidebar           from './components/Sidebar'            // admin
 import StudentSidebar    from './components/StudentSidebar'     // student
-import WorkplaceSupervisorSidebar from './components/WorkplaceSupervisorSidebar'  // workplace supervisor
+import WorkplaceSupervisorSidebar from './components/WorkplacesupervisorSidebar'  // workplace supervisor
 import Footer            from './components/Footer'
 
 // ── Public pages ──────────────────────────────────────────────────
@@ -33,7 +33,7 @@ import Reports           from './pages/admin/Reports'
 import UserAccounts      from './pages/admin/UserAccounts'
 
 // ── Academic Supervisor (shares AdminLayout + some admin pages) ───
-import AcademicDashboard from './pages/AcademicDashboard'
+import InternDashboard  from './pages/internship_administrator/Dashboard'
 
 // ── Student portal pages ──────────────────────────────────────────
 import StudentDashboard from './pages/student_intern/Dashboard'
@@ -53,10 +53,10 @@ import WorkplaceSupervisorProfile   from './pages/workplace_supervisor/MyProfile
 // LAYOUTS
 // ─────────────────────────────────────────────────────────────────
 
+// No Navbar here — unauthenticated users should not see it
 function PublicLayout({ children }) {
   return (
     <Flex direction="column" minH="100vh" bg="gray.50">
-      <Navbar minimal />
       <Box flex={1}>{children}</Box>
       <Footer minimal />
     </Flex>

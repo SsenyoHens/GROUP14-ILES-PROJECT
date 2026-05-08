@@ -1,18 +1,16 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import "./index.css";
-// 1. Import the Chakra Provider (This is usually in your components/ui folder)
-//import { Provider } from "./components/ui/provider"; 
-import AuthProvider from "./context/AuthContext";
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { ChakraProvider } from '@chakra-ui/react'
+import { AuthProvider } from './context/AuthContext'   // ← add this
+import App from './App.jsx'
+import theme from './theme.js'
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    {/* 2. Wrap everything in the Chakra Provider */}
-    <Provider>
-      <AuthProvider>
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <ChakraProvider theme={theme}>
+      <AuthProvider>          {/* ← wrap App in this */}
         <App />
       </AuthProvider>
-    </Provider>
-  </React.StrictMode>
-);
+    </ChakraProvider>
+  </StrictMode>
+)
