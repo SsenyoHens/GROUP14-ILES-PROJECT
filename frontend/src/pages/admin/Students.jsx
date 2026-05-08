@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-
->>>>>>> 859f3d0f9ae3d2c8f4964c50d8ca901ab960b5cd
 import { useEffect, useState, useCallback } from 'react'
 import {
   Box, HStack, Button, Input, InputGroup, InputLeftElement,
@@ -17,12 +13,12 @@ import { studentService } from '../../api/services'
 const statusColor = { Placed: 'green', Pending: 'orange', Evaluating: 'blue', Completed: 'purple' }
 
 function Students() {
-  const [students,   setStudents]   = useState([])
-  const [loading,    setLoading]    = useState(true)
-  const [error,      setError]      = useState('')
-  const [search,     setSearch]     = useState('')
-  const [filterStatus, setFilter]   = useState('All')
-  const [selected,   setSelected]   = useState(null)
+  const [students,    setStudents]    = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [error,       setError]       = useState('')
+  const [search,      setSearch]      = useState('')
+  const [filterStatus, setFilter]     = useState('All')
+  const [selected,    setSelected]    = useState(null)
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
 
@@ -161,17 +157,4 @@ function Students() {
   )
 }
 
-<<<<<<< HEAD
-=======
-
-function Students() {
-  return (
-    <div>
-      <h2 style={{ color: '#0f2d52', marginBottom: '8px' }}>Students</h2>
-      <p style={{ color: '#6b7280', fontSize: '13px' }}>Student management — coming Week 2</p>
-    </div>
-  )
-}
-
->>>>>>> 859f3d0f9ae3d2c8f4964c50d8ca901ab960b5cd
 export default Students

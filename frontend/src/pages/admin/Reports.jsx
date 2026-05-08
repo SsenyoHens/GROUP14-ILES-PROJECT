@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-=======
-
->>>>>>> 859f3d0f9ae3d2c8f4964c50d8ca901ab960b5cd
 import { useEffect, useState } from 'react'
 import {
   Box, Grid, GridItem, Text, Select, HStack,
@@ -69,7 +65,6 @@ function Reports() {
 
       {error && <Alert status="error" borderRadius="lg" mb={4} fontSize="sm"><AlertIcon />{error}</Alert>}
 
-      {/* Summary boxes from API */}
       <Grid templateColumns={{ base: '1fr', sm: 'repeat(3,1fr)' }} gap={4} mb={4}>
         {[
           { label: 'Total Registered',  value: summary?.totalRegistered  },
@@ -132,16 +127,4 @@ function Reports() {
   )
 }
 
-<<<<<<< HEAD
-=======
-function Reports() {
-  return (
-    <div>
-      <h2 style={{ color: '#0f2d52', marginBottom: '8px' }}>Reports</h2>
-      <p style={{ color: '#6b7280', fontSize: '13px' }}>Reports & analytics — coming Week 4</p>
-    </div>
-  )
-}
-
->>>>>>> 859f3d0f9ae3d2c8f4964c50d8ca901ab960b5cd
 export default Reports
