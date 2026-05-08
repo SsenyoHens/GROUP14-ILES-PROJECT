@@ -36,18 +36,18 @@ import UserAccounts      from './pages/admin/UserAccounts'
 import AcademicDashboard from './pages/AcademicDashboard'
 
 // ── Student portal pages ──────────────────────────────────────────
-import StudentDashboard from './pages/student/Dashboard'
-import MyPlacement      from './pages/student/MyPlacement'
-import MyEvaluations    from './pages/student/MyEvaluations'
-import Logbook          from './pages/student/Logbook'
-import StudentProfile   from './pages/student/MyProfile'
+import StudentDashboard from './pages/student_intern/Dashboard'
+import MyPlacement      from './pages/student_intern/MyPlacement'
+import MyEvaluations    from './pages/student_intern/MyEvaluation'
+import Logbook          from './pages/student_intern/Logbook'
+import StudentProfile   from './pages/student_intern/MyProfile'
 
 // ── Workplace Supervisor portal pages ─────────────────────────────
-import WorkplaceSupervisorDashboard from './pages/workplace-supervisor/Dashboard'
-import MyStudents          from './pages/workplace-supervisor/MyStudents'
-import SubmitEvaluation    from './pages/workplace-supervisor/SubmitEvaluation'
-import AttendanceLog       from './pages/workplace-supervisor/AttendanceLog'
-import WorkplaceSupervisorProfile   from './pages/workplace-supervisor/MyProfile'
+import WorkplaceSupervisorDashboard from './pages/workplace_supervisor/Dashboard'
+import MyStudents          from './pages/workplace_supervisor/MyStudents'
+import SubmitEvaluation    from './pages/workplace_supervisor/SubmitEvaluation'
+import AttendanceLog       from './pages/workplace_supervisor/AttendanceLog'
+import WorkplaceSupervisorProfile   from './pages/workplace_supervisor/MyProfile'
 
 // ─────────────────────────────────────────────────────────────────
 // LAYOUTS
