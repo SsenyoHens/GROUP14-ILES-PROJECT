@@ -1,10 +1,17 @@
 import environ
 from pathlib import Path
+import os
 
 # ==================================
 # 📁 BASE DIRECTORY
 # ==================================
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# ==================================
+# 📁 STATIC FILES
+# ==================================
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # ==================================
 # 🔐 ENVIRONMENT SETUP
@@ -16,10 +23,22 @@ environ.Env.read_env(BASE_DIR / '.env')
 # ==================================
 # 🔐 SECURITY SETTINGS
 # ==================================
-SECRET_KEY = env('SECRET_KEY')
-DEBUG = env.bool('DEBUG', default=False)
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
+DEBUG = True
+ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+#Secure cookies
+#SESSION_COOKIE_SECURE = True
+#CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+
+#if frontend uses another port
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
 
 
 # ==================================
@@ -44,24 +63,29 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    "corsheaders",
     'core',
-]
+    ]
 
 
 # ==================================
 # 🔧 MIDDLEWARE
 # ==================================
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite
 ]
-
-
 # ==================================
 # 🔗 URLS & TEMPLATES
 # ==================================
@@ -121,24 +145,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # 📡 DJANGO REST FRAMEWORK
 # ==================================
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-    ),
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
 }
-
-
-# ==================================
-# 📁 STATIC FILES
-# ==================================
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # ==================================
@@ -162,3 +174,6 @@ LOGGING = {
 # 🔧 DEFAULT PRIMARY KEY
 # ==================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#for testing
+CORS_ALLOW_ALL_ORIGINS = True

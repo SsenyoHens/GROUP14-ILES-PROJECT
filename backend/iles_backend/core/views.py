@@ -1,21 +1,35 @@
+from django.db.models import Count, Avg, Sum, Q
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
-from .models import InternshipPlacement, WeeklyLog
+from .models import InternshipPlacement, WeeklyLog, Evaluation, CustomUser
+
+from .models import (
+    InternshipPlacement,
+    WeeklyLog,
+    Evaluation,
+    CustomUser,
+    AcademicSupervisorProfile,
+    WorkplaceSupervisorProfile
+)
+
 from .serializers import (
     PlacementSerializer,
     WeeklyLogSerializer,
     RegisterSerializer,
     LoginSerializer,
-    StudentProfileSerializer
+    StudentProfileSerializer,
+    WeeklyLogStatsSerializer,
+    SupervisorSerializer
 )
 
-# Custom permissions
 from .permissions import (
     IsStudent,
     IsAcademicSupervisor,
@@ -24,7 +38,6 @@ from .permissions import (
 )
 
 User = get_user_model()
-
 
 # =========================
 # 🔐 AUTH
@@ -37,7 +50,7 @@ def register_view(request):
 
     if serializer.is_valid():
         serializer.save()
-        return Response({"message": "User registered successfully"})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -47,52 +60,28 @@ def register_view(request):
 def login_view(request):
     serializer = LoginSerializer(data=request.data)
 
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    email = serializer.validated_data['email']
-    password = serializer.validated_data['password']
-
-    # Authenticate using email
-    user = authenticate(request, username=email, password=password)
-
-    if user:
-        refresh = RefreshToken.for_user(user)
-
-        return Response({
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-            "email": user.email,
-            "role": user.role
-        })
-
-    return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-
-
-# =========================
-# 👤 PROFILE
-# =========================
-
-@api_view(['GET', 'PUT'])
-@permission_classes([IsAuthenticated, IsStudent])
-def update_student_profile(request):
-    profile = request.user.studentprofile
-
-    if request.method == 'GET':
-        serializer = StudentProfileSerializer(profile)
-        return Response(serializer.data)
-
-    serializer = StudentProfileSerializer(profile, data=request.data)
-
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = authenticate(email=email, password=password)
+
+        if user is not None:
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "role": user.role
+            })
+
+        return Response({"error": "Invalid credentials"}, status=400)
+
+    return Response(serializer.errors, status=400)
 
 
 # =========================
-# 🏢 PLACEMENTS
+# 🏢 INTERNSHIP PLACEMENTS
 # =========================
 
 @api_view(['POST'])
@@ -101,7 +90,7 @@ def create_placement(request):
     serializer = PlacementSerializer(data=request.data)
 
     if serializer.is_valid():
-        serializer.save(student=request.user)
+        serializer.save(student=request.user, user=request.user)
         return Response(serializer.data)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -126,7 +115,7 @@ def update_placement(request, pk):
     serializer = PlacementSerializer(placement, data=request.data)
 
     if serializer.is_valid():
-        serializer.save()
+        serializer.save(student=request.user, user=request.user)
         return Response(serializer.data)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -137,43 +126,43 @@ def update_placement(request, pk):
 # =========================
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated, IsStudent])
+@permission_classes([IsAuthenticated])
 def create_log(request):
+
     serializer = WeeklyLogSerializer(data=request.data)
 
     if serializer.is_valid():
-        serializer.save(
-            student=request.user,
-            user=request.user   # 🔥 VERY IMPORTANT (for model.clean)
+
+        serializer.save(student=request.user)
+
+        return Response(
+            serializer.data,
+            status=201
         )
-        return Response(serializer.data)
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response(
+        serializer.errors,
+        status=400
+    )
+    
+#temporarily
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_log(request, pk):
 
-
+    return Response({
+        'message': 'Update log endpoint working'
+    })
+    
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_logs(request):
-    logs = WeeklyLog.objects.all()
+
+    logs = WeeklyLog.objects.filter(student=request.user)
+
     serializer = WeeklyLogSerializer(logs, many=True)
+
     return Response(serializer.data)
-
-
-@api_view(['PUT', 'PATCH'])
-@permission_classes([IsAuthenticated])
-def update_log(request, pk):
-    try:
-        log = WeeklyLog.objects.get(pk=pk)
-    except WeeklyLog.DoesNotExist:
-        return Response({"error": "Log not found"}, status=404)
-
-    serializer = WeeklyLogSerializer(log, data=request.data, partial=True)
-
-    if serializer.is_valid():
-        serializer.save(user=request.user)  # 🔥 pass user for validation
-        return Response(serializer.data)
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['DELETE'])
@@ -186,6 +175,54 @@ def delete_log(request, pk):
 
     log.delete()
     return Response({"message": "Deleted successfully"})
+
+
+# =========================
+# 📊 AGGREGATION / SUMMARY
+# =========================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def weekly_log_summary(request):
+    summary = WeeklyLog.objects.values(
+        'student__first_name',
+        'student__last_name'
+    ).annotate(
+        total_logs=Count('id'),
+        draft_logs=Count('id', filter=Q(status='draft')),
+        submitted_logs=Count('id', filter=Q(status='submitted')),
+        approved_logs=Count('id', filter=Q(status='approved')),
+        rejected_logs=Count('id', filter=Q(status='rejected')),
+    )
+
+    return Response(summary)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def evaluation_summary(request):
+    stats = Evaluation.objects.aggregate(
+        total_evaluations=Count("id")
+    )
+
+    return Response(stats)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def weekly_log_stats(request):
+    stats = WeeklyLog.objects.aggregate(
+        total_logs=Count("id")
+    )
+
+    submitted_logs = WeeklyLog.objects.filter(status="submitted").count()
+    pending_logs = WeeklyLog.objects.filter(status="pending").count()
+
+    return Response({
+        "total_logs": stats["total_logs"],
+        "submitted_logs": submitted_logs,
+        "pending_logs": pending_logs,
+    })
 
 
 # =========================
@@ -203,3 +240,98 @@ def get_current_user(request):
         "email": user.email,
         "role": user.role
     })
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def view_supervisors(request):
+
+    supervisors = CustomUser.objects.filter(
+        role__in=['academic_supervisor', 'workplace_supervisor']
+    )
+
+    serializer = SupervisorSerializer(supervisors, many=True)
+
+    return Response(serializer.data)
+    
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def create_supervisor(request):
+
+    serializer = SupervisorSerializer(data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=201)
+
+    return Response(serializer.errors, status=400)    
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def delete_supervisor(request, pk):
+
+    try:
+        supervisor = CustomUser.objects.get(pk=pk)
+
+        # remove placement references first
+        InternshipPlacement.objects.filter(
+            academic_supervisor__user=supervisor
+        ).update(academic_supervisor=None)
+
+        InternshipPlacement.objects.filter(
+            workplace_supervisor__user=supervisor
+        ).update(workplace_supervisor=None)
+
+        # delete profiles
+        AcademicSupervisorProfile.objects.filter(
+            user=supervisor
+        ).delete()
+
+        WorkplaceSupervisorProfile.objects.filter(
+            user=supervisor
+        ).delete()
+
+        # delete user
+        supervisor.delete()
+
+        return Response(
+            {"message": "Supervisor deleted successfully"},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+    except CustomUser.DoesNotExist:
+
+        return Response(
+            {"message": "Supervisor deleted successfully"},
+            status=status.HTTP_200_OK
+        )
+        
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def update_supervisor(request, pk):
+
+    try:
+        supervisor = CustomUser.objects.get(pk=pk)
+
+    except CustomUser.DoesNotExist:
+
+        return Response(
+            {"error": "Supervisor not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = SupervisorSerializer(
+        supervisor,
+        data=request.data,
+        partial=True
+    )
+
+    if serializer.is_valid():
+
+        serializer.save()
+
+        return Response(serializer.data)
+
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST
+    )        

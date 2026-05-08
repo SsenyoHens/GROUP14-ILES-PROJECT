@@ -1,25 +1,71 @@
-import logo from './logo.svg';
-import './App.css';
+import {
+    BrowserRouter,
+    Routes,
+    Route
+} from 'react-router-dom'
+
+import Supervisors from './pages/Supervisor'
+import Login from './pages/Login'
+
+import StudentDashboard from './pages/StudentDashboard'
+import AcademicDashboard from './pages/AcademicDashboard'
+import WeeklyLogs from './pages/WeeklyLogs'
+
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+    return (
+
+        <BrowserRouter>
+
+            <Routes>
+
+                <Route
+                    path="/login"
+                    element={<Login />}
+                />
+
+                <Route
+                    path="/"
+                    element={
+                        <ProtectedRoute>
+                            <Supervisors />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/student"
+                    element={
+                        <ProtectedRoute>
+                            <StudentDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/academic"
+                    element={
+                        <ProtectedRoute>
+                            <AcademicDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+				
+				<Route
+                    path="/weekly-logs"
+                    element={
+                        <ProtectedRoute>
+                            <WeeklyLogs />
+                        </ProtectedRoute>
+                    }
+                />
+            </Routes>
+
+        </BrowserRouter>
+
+    )
 }
 
-export default App;
+export default App
