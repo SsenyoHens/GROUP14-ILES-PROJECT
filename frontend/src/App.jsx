@@ -1,5 +1,4 @@
-import { Routes, Route, Link, Navigate } from 'react-router-dom'
-import { useState } from 'react'
+import { Routes, Route, Link } from "react-router-dom";
 
 import Dashboard from "./pages/student_intern/Dashboard";
 import Logbook from "./pages/student_intern/Logbook";
@@ -7,44 +6,91 @@ import MyEvaluation from "./pages/student_intern/MyEvaluation";
 import MyPlacement from "./pages/student_intern/MyPlacement";
 import MyProfile from "./pages/student_intern/MyProfile";
 
-import './App.css'
-
 function App() {
-  const [isLoggedIn] = useState(true)
-
-  if (!isLoggedIn) {
-    return <div>Please log in</div>
-  }
-
   return (
-    <div className="app-container">
+    
+      <div style={{ display: "flex", minHeight: "100vh" }}>
 
-      <nav className="sidebar">
-        <div className="nav-header">
+        {/* Sidebar */}
+        <div
+          style={{
+            width: "220px",
+            background: "#0b1742",
+            color: "white",
+            padding: "20px",
+          }}
+        >
           <h2>ILES Portal</h2>
+
+          <ul style={{ listStyle: "none", padding: 0 }}>
+
+            <li style={{ margin: "20px 0" }}>
+              <Link to="/" style={{ color: "white", textDecoration: "none" }}>
+                Dashboard
+              </Link>
+            </li>
+
+            <li style={{ margin: "20px 0" }}>
+              <Link
+                to="/logbook"
+                style={{ color: "white", textDecoration: "none" }}
+              >
+                Logbook
+              </Link>
+            </li>
+
+            <li style={{ margin: "20px 0" }}>
+              <Link
+                to="/evaluations"
+                style={{ color: "white", textDecoration: "none" }}
+              >
+                My Evaluations
+              </Link>
+            </li>
+
+            <li style={{ margin: "20px 0" }}>
+              <Link
+                to="/placement"
+                style={{ color: "white", textDecoration: "none" }}
+              >
+                My Placement
+              </Link>
+            </li>
+
+            <li style={{ margin: "20px 0" }}>
+              <Link
+                to="/profile"
+                style={{ color: "white", textDecoration: "none" }}
+              >
+                My Profile
+              </Link>
+            </li>
+
+          </ul>
         </div>
 
-        <ul className="nav-links">
-          <li><Link to="/dashboard">Dashboard</Link></li>
-          <li><Link to="/logbook">Logbook</Link></li>
-          <li><Link to="/evaluations">My Evaluations</Link></li>
-          <li><Link to="/placement">My Placement</Link></li>
-          <li><Link to="/profile">My Profile</Link></li>
-        </ul>
-      </nav>
+        {/* Main Content */}
+        <div
+          style={{
+            flex: 1,
+            padding: "30px",
+            background: "#f4f4f4",
+          }}
+        >
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/logbook" element={<Logbook />} />
+            <Route path="/evaluations" element={<MyEvaluation />} />
+            <Route path="/placement" element={<MyPlacement />} />
+            <Route path="/profile" element={<MyProfile />} />
+</Routes>
+        
+        </div>
 
-      <main className="main-content">
-        <Routes>
-          <Route path="/student/dashboard" element={<Dashboard />} />
-          <Route path="/student/logbook" element={<Logbook />} />
-          <Route path="/student/evaluations" element={<MyEvaluation />} />
-          <Route path="/student/placement" element={<MyPlacement />} />
-          <Route path="/student/profile" element={<MyProfile />} />
-        </Routes>
-      </main>
-
-    </div>
-  )
+      </div>
+ 
+  );
 }
 
-export default App
+export default App;
