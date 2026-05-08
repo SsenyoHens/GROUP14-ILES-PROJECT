@@ -442,7 +442,7 @@ function Register() {
     setApiError('')
     try {
       const { confirmPassword, ...payload } = data
-      await authService.register({ ...payload, role: selectedRole })
+      await authService.register({ ...payload, username: payload.email, role: selectedRole })
       setActiveStep(2)
     } catch (err) {
       setApiError(
