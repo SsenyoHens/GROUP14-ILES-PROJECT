@@ -1,4 +1,4 @@
-import { Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/student_intern/Dashboard";
@@ -9,7 +9,8 @@ import MyProfile from "./pages/student_intern/MyProfile";
 
 function App() {
   return (
-    
+    <BrowserRouter>
+
       <div style={{ display: "flex", minHeight: "100vh" }}>
 
         {/* Sidebar */}
@@ -79,19 +80,19 @@ function App() {
           }}
         >
           <Routes>
-		    <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/logbook" element={<Logbook />} />
             <Route path="/evaluations" element={<MyEvaluation />} />
             <Route path="/placement" element={<MyPlacement />} />
             <Route path="/profile" element={<MyProfile />} />
-</Routes>
-        
+          </Routes>
         </div>
 
       </div>
- 
+
+    </BrowserRouter>
   );
 }
 
