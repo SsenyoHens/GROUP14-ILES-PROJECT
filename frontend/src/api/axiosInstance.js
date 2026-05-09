@@ -7,7 +7,7 @@ const api = axios.create({
 
 // Attach token to every request automatically
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('iles_token')
+  const token = localStorage.getItem('access')  
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
@@ -17,7 +17,8 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('iles_token')
+      localStorage.removeItem('access')   
+      localStorage.removeItem('refresh')  
       window.location.href = '/login'
     }
     return Promise.reject(err)

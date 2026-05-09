@@ -4,19 +4,17 @@ import {
 } from 'react-router-dom'
 import { Box, Flex } from '@chakra-ui/react'
 import { useAuth } from './context/AuthContext'
-import {
-  ROLES, ADMIN_ROLES, ROLE_HOME, ROUTES,
-} from './constants'
 
 // ── Guards ────────────────────────────────────────────────────────
 import ProtectedRoute from './components/ProtectedRoute'
 
 // ── Layout components ─────────────────────────────────────────────
-import Navbar            from './components/Navbar'
-import Sidebar           from './components/Sidebar'            // admin
-import StudentSidebar    from './components/StudentSidebar'     // student
-import WorkplaceSupervisorSidebar from './components/WorkplacesupervisorSidebar'  // workplace supervisor
-import Footer            from './components/Footer'
+import Navbar                     from './components/Navbar'
+import Sidebar                    from './components/Sidebar'
+import StudentSidebar             from './components/StudentSidebar'
+import WorkplaceSupervisorSidebar from './components/WorkplacesupervisorSidebar'
+import AcademicSupervisorSidebar  from './components/AcademicSupervisorSidebar'
+import Footer                     from './components/Footer'
 
 // ── Public pages ──────────────────────────────────────────────────
 import Home     from './pages/Home'
@@ -24,16 +22,18 @@ import Login    from './pages/Login'
 import Register from './pages/Register'
 import NotFound from './pages/NotFound'
 
-// ── Admin pages ───────────────────────────────────────────────────
-import AdminDashboard    from './pages/admin/Dashboard'
-import Students          from './pages/admin/Students'
-import Placements        from './pages/admin/Placements'
-import Evaluations       from './pages/admin/Evaluations'
-import Reports           from './pages/admin/Reports'
-import UserAccounts      from './pages/admin/UserAccounts'
+// ── Admin (Internship Administrator) pages ────────────────────────
+import AdminDashboard from './pages/admin/Dashboard'
+import Students       from './pages/admin/Students'
+import Placements     from './pages/admin/Placements'
+import Evaluations    from './pages/admin/Evaluations'
+import Reports        from './pages/admin/Reports'
+import UserAccounts   from './pages/admin/UserAccounts'
 
-// ── Academic Supervisor (shares AdminLayout + some admin pages) ───
-import InternDashboard  from './pages/internship_administrator/Dashboard'
+// ── Academic Supervisor pages ─────────────────────────────────────
+import AcademicDashboard     from './pages/internship_administrator/Dashboard'
+import AcademicEvaluations   from './pages/admin/Evaluations'
+import AcademicReports       from './pages/admin/Reports'
 
 // ── Student portal pages ──────────────────────────────────────────
 import StudentDashboard from './pages/student_intern/Dashboard'
@@ -44,16 +44,71 @@ import StudentProfile   from './pages/student_intern/MyProfile'
 
 // ── Workplace Supervisor portal pages ─────────────────────────────
 import WorkplaceSupervisorDashboard from './pages/workplace_supervisor/Dashboard'
-import MyStudents          from './pages/workplace_supervisor/MyStudents'
-import SubmitEvaluation    from './pages/workplace_supervisor/SubmitEvaluation'
-import AttendanceLog       from './pages/workplace_supervisor/AttendanceLog'
+import MyStudents                   from './pages/workplace_supervisor/MyStudents'
+import SubmitEvaluation             from './pages/workplace_supervisor/SubmitEvaluation'
+import AttendanceLog                from './pages/workplace_supervisor/AttendanceLog'
 import WorkplaceSupervisorProfile   from './pages/workplace_supervisor/MyProfile'
+
+
+// ─────────────────────────────────────────────────────────────────
+// ROLE CONSTANTS  — must match backend ROLE_CHOICES exactly
+// ─────────────────────────────────────────────────────────────────
+const ROLES = {
+  STUDENT:              'student',
+  ACADEMIC_SUPERVISOR:  'academic_supervisor',
+  WORKPLACE_SUPERVISOR: 'workplace_supervisor',
+  ADMIN:                'admin',
+}
+
+const ADMIN_ROLES = [ROLES.ADMIN, ROLES.ACADEMIC_SUPERVISOR]
+
+// Where each role lands after login
+const ROLE_HOME = {
+  student:              '/student/dashboard',
+  academic_supervisor:  '/academic/dashboard',
+  workplace_supervisor: '/workplace/dashboard',
+  admin:                '/admin/dashboard',
+}
+
+// All route paths in one place
+const ROUTES = {
+  HOME:      '/home',
+  LOGIN:     '/login',
+  REGISTER:  '/register',
+  DASHBOARD: '/dashboard',
+
+  // Admin
+  ADMIN_DASHBOARD: '/admin/dashboard',
+  STUDENTS:        '/admin/students',
+  PLACEMENTS:      '/admin/placements',
+  EVALUATIONS:     '/admin/evaluations',
+  REPORTS:         '/admin/reports',
+  USERS:           '/admin/users',
+
+  // Academic supervisor
+  ACADEMIC_DASHBOARD:    '/academic/dashboard',
+  ACADEMIC_EVALUATIONS:  '/academic/evaluations',
+  ACADEMIC_REPORTS:      '/academic/reports',
+
+  // Student
+  STUDENT_DASHBOARD:   '/student/dashboard',
+  STUDENT_PLACEMENT:   '/student/placement',
+  STUDENT_EVALUATIONS: '/student/evaluations',
+  STUDENT_LOGBOOK:     '/student/logbook',
+  STUDENT_PROFILE:     '/student/profile',
+
+  // Workplace supervisor
+  WORKPLACE_DASHBOARD:   '/workplace/dashboard',
+  WORKPLACE_STUDENTS:    '/workplace/students',
+  WORKPLACE_EVALUATIONS: '/workplace/evaluations',
+  WORKPLACE_ATTENDANCE:  '/workplace/attendance',
+  WORKPLACE_PROFILE:     '/workplace/profile',
+}
+
 
 // ─────────────────────────────────────────────────────────────────
 // LAYOUTS
 // ─────────────────────────────────────────────────────────────────
-
-// No Navbar here — unauthenticated users should not see it
 function PublicLayout({ children }) {
   return (
     <Flex direction="column" minH="100vh" bg="gray.50">
@@ -67,6 +122,21 @@ function AdminLayout({ children }) {
   return (
     <Flex minH="100vh" bg="gray.50">
       <Sidebar />
+      <Flex direction="column" flex={1} minW={0} overflowX="hidden">
+        <Navbar />
+        <Box flex={1} overflowY="auto" p={6} bg="gray.50">
+          <Box maxW="1200px" w="100%">{children}</Box>
+        </Box>
+        <Footer />
+      </Flex>
+    </Flex>
+  )
+}
+
+function AcademicLayout({ children }) {
+  return (
+    <Flex minH="100vh" bg="gray.50">
+      <AcademicSupervisorSidebar />
       <Flex direction="column" flex={1} minW={0} overflowX="hidden">
         <Navbar />
         <Box flex={1} overflowY="auto" p={6} bg="gray.50">
@@ -93,7 +163,7 @@ function StudentLayout({ children }) {
   )
 }
 
-function WorkplaceSupervisorLayout({ children }) {
+function WorkplaceLayout({ children }) {
   return (
     <Flex minH="100vh" bg="gray.50">
       <WorkplaceSupervisorSidebar />
@@ -108,11 +178,10 @@ function WorkplaceSupervisorLayout({ children }) {
   )
 }
 
+
 // ─────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────
-
-/** Wraps a page in ProtectedRoute + its layout in one expression */
 function Protected({ roles, layout: Layout, children }) {
   return (
     <ProtectedRoute allowedRoles={roles}>
@@ -121,44 +190,18 @@ function Protected({ roles, layout: Layout, children }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────
-// ROOT REDIRECT  →  /  sends each role to their home route
-// ─────────────────────────────────────────────────────────────────
 function RootRedirect() {
   const { user } = useAuth()
-  if (!user) return <Navigate to={ROUTES.HOME} replace />
+  if (!user) return <Navigate to={ROUTES.LOGIN} replace />
   return <Navigate to={ROLE_HOME[user.role] || ROUTES.LOGIN} replace />
 }
 
-// ─────────────────────────────────────────────────────────────────
-// DASHBOARD REDIRECT  →  /dashboard resolves to correct portal
-// ─────────────────────────────────────────────────────────────────
 function DashboardRedirect() {
   const { user } = useAuth()
   if (!user) return <Navigate to={ROUTES.LOGIN} replace />
-
-  switch (user.role) {
-    case ROLES.STUDENT:
-      return <Navigate to={ROUTES.STUDENT_DASHBOARD} replace />
-
-    case ROLES.WORKPLACE_SUPERVISOR:
-      return <Navigate to={ROUTES.WORKPLACESUPERVISOR_DASHBOARD} replace />
-
-    case ROLES.ACADEMIC_SUPERVISOR:
-      return (
-        <Protected roles={ADMIN_ROLES} layout={AdminLayout}>
-          <AcademicDashboard />
-        </Protected>
-      )
-
-    default: // ROLES.ADMIN / 'internship_administrator'
-      return (
-        <Protected roles={ADMIN_ROLES} layout={AdminLayout}>
-          <AdminDashboard />
-        </Protected>
-      )
-  }
+  return <Navigate to={ROLE_HOME[user.role] || ROUTES.LOGIN} replace />
 }
+
 
 // ─────────────────────────────────────────────────────────────────
 // APP
@@ -166,7 +209,6 @@ function DashboardRedirect() {
 function App() {
   const { user } = useAuth()
 
-  // Already-logged-in users are bounced away from public pages
   const publicRedirect = user
     ? <Navigate to={ROLE_HOME[user.role] || ROUTES.DASHBOARD} replace />
     : null
@@ -178,7 +220,7 @@ function App() {
         {/* ── Root ── */}
         <Route path="/" element={<RootRedirect />} />
 
-        {/* ── Public (guest-only) pages ── */}
+        {/* ── Public pages ── */}
         <Route path={ROUTES.HOME}
           element={publicRedirect ?? <Home />}
         />
@@ -189,12 +231,19 @@ function App() {
           element={publicRedirect ?? <PublicLayout><Register /></PublicLayout>}
         />
 
-        {/* ── Universal /dashboard → role-correct portal ── */}
+        {/* ── Universal dashboard redirect ── */}
         <Route path={ROUTES.DASHBOARD} element={<DashboardRedirect />} />
 
         {/* ─────────────────────────────────────────────────────
-            INTERNSHIP ADMINISTRATOR  (role: 'admin')
+            ADMIN — Internship Administrator
         ───────────────────────────────────────────────────── */}
+        <Route path={ROUTES.ADMIN_DASHBOARD}
+          element={
+            <Protected roles={[ROLES.ADMIN]} layout={AdminLayout}>
+              <AdminDashboard />
+            </Protected>
+          }
+        />
         <Route path={ROUTES.STUDENTS}
           element={
             <Protected roles={[ROLES.ADMIN]} layout={AdminLayout}>
@@ -209,6 +258,20 @@ function App() {
             </Protected>
           }
         />
+        <Route path={ROUTES.EVALUATIONS}
+          element={
+            <Protected roles={[ROLES.ADMIN]} layout={AdminLayout}>
+              <Evaluations />
+            </Protected>
+          }
+        />
+        <Route path={ROUTES.REPORTS}
+          element={
+            <Protected roles={[ROLES.ADMIN]} layout={AdminLayout}>
+              <Reports />
+            </Protected>
+          }
+        />
         <Route path={ROUTES.USERS}
           element={
             <Protected roles={[ROLES.ADMIN]} layout={AdminLayout}>
@@ -218,25 +281,32 @@ function App() {
         />
 
         {/* ─────────────────────────────────────────────────────
-            ADMIN + ACADEMIC SUPERVISOR  (shared pages)
+            ACADEMIC SUPERVISOR
         ───────────────────────────────────────────────────── */}
-        <Route path={ROUTES.EVALUATIONS}
+        <Route path={ROUTES.ACADEMIC_DASHBOARD}
           element={
-            <Protected roles={ADMIN_ROLES} layout={AdminLayout}>
-              <Evaluations />
+            <Protected roles={[ROLES.ACADEMIC_SUPERVISOR]} layout={AcademicLayout}>
+              <AcademicDashboard />
             </Protected>
           }
         />
-        <Route path={ROUTES.REPORTS}
+        <Route path={ROUTES.ACADEMIC_EVALUATIONS}
           element={
-            <Protected roles={ADMIN_ROLES} layout={AdminLayout}>
-              <Reports />
+            <Protected roles={[ROLES.ACADEMIC_SUPERVISOR]} layout={AcademicLayout}>
+              <AcademicEvaluations />
+            </Protected>
+          }
+        />
+        <Route path={ROUTES.ACADEMIC_REPORTS}
+          element={
+            <Protected roles={[ROLES.ACADEMIC_SUPERVISOR]} layout={AcademicLayout}>
+              <AcademicReports />
             </Protected>
           }
         />
 
         {/* ─────────────────────────────────────────────────────
-            STUDENT PORTAL  (/student/*)
+            STUDENT PORTAL
         ───────────────────────────────────────────────────── */}
         <Route path={ROUTES.STUDENT_DASHBOARD}
           element={
@@ -275,39 +345,39 @@ function App() {
         />
 
         {/* ─────────────────────────────────────────────────────
-            WORKPLACE SUPERVISOR PORTAL  (/workplace-supervisor/*)
+            WORKPLACE SUPERVISOR PORTAL
         ───────────────────────────────────────────────────── */}
-        <Route path={ROUTES.WORKPLACEWORKPLACESUPERVISOR_DASHBOARD}
+        <Route path={ROUTES.WORKPLACE_DASHBOARD}
           element={
-            <Protected roles={[ROLES.WORKPLACE_SUPERVISOR]} layout={WorkplaceSupervisorLayout}>
+            <Protected roles={[ROLES.WORKPLACE_SUPERVISOR]} layout={WorkplaceLayout}>
               <WorkplaceSupervisorDashboard />
             </Protected>
           }
         />
-        <Route path={ROUTES.WORKPLACEWORKPLACESUPERVISOR_STUDENTS}
+        <Route path={ROUTES.WORKPLACE_STUDENTS}
           element={
-            <Protected roles={[ROLES.WORKPLACE_SUPERVISOR]} layout={WorkplaceSupervisorLayout}>
+            <Protected roles={[ROLES.WORKPLACE_SUPERVISOR]} layout={WorkplaceLayout}>
               <MyStudents />
             </Protected>
           }
         />
-        <Route path={ROUTES.WORKPLACEWORKPLACESUPERVISOR_EVALUATIONS}
+        <Route path={ROUTES.WORKPLACE_EVALUATIONS}
           element={
-            <Protected roles={[ROLES.WORKPLACE_SUPERVISOR]} layout={WorkplaceSupervisorLayout}>
+            <Protected roles={[ROLES.WORKPLACE_SUPERVISOR]} layout={WorkplaceLayout}>
               <SubmitEvaluation />
             </Protected>
           }
         />
-        <Route path={ROUTES.WORKPLACEWORKPLACESUPERVISOR_ATTENDANCE}
+        <Route path={ROUTES.WORKPLACE_ATTENDANCE}
           element={
-            <Protected roles={[ROLES.WORKPLACE_SUPERVISOR]} layout={WorkplaceSupervisorLayout}>
+            <Protected roles={[ROLES.WORKPLACE_SUPERVISOR]} layout={WorkplaceLayout}>
               <AttendanceLog />
             </Protected>
           }
         />
-        <Route path={ROUTES.WORKPLACEWORKPLACESUPERVISOR_PROFILE}
+        <Route path={ROUTES.WORKPLACE_PROFILE}
           element={
-            <Protected roles={[ROLES.WORKPLACE_SUPERVISOR]} layout={WorkplaceSupervisorLayout}>
+            <Protected roles={[ROLES.WORKPLACE_SUPERVISOR]} layout={WorkplaceLayout}>
               <WorkplaceSupervisorProfile />
             </Protected>
           }

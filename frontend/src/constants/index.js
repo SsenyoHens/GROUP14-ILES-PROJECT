@@ -6,44 +6,31 @@ export const ROLES = {
   WORKPLACE_SUPERVISOR:'workplace_supervisor',
 }
 
-// Roles that can access admin-side pages
-export const ADMIN_ROLES    = [ROLES.ADMIN, ROLES.ACADEMIC_SUPERVISOR]
-export const STUDENT_ROLES  = [ROLES.STUDENT]
+export const ADMIN_ROLES      = [ROLES.ADMIN, ROLES.ACADEMIC_SUPERVISOR]
+export const STUDENT_ROLES    = [ROLES.STUDENT]
 export const SUPERVISOR_ROLES = [ROLES.WORKPLACE_SUPERVISOR]
 
-// ── Student statuses ──────────────────────────────────────────────
-export const STUDENT_STATUSES = ['Pending', 'Placed', 'Evaluating', 'Completed']
-
-// ── Placement statuses ────────────────────────────────────────────
+// ── Statuses ──────────────────────────────────────────────────────
+export const STUDENT_STATUSES   = ['Pending', 'Placed', 'Evaluating', 'Completed']
 export const PLACEMENT_STATUSES = ['Pending', 'Active', 'Evaluating', 'Completed', 'Terminated']
+export const EVAL_STATUSES      = ['Draft', 'Submitted', 'Graded']
+export const GRADES             = ['A', 'B', 'C', 'D', 'F']
 
-// ── Evaluation statuses ───────────────────────────────────────────
-export const EVAL_STATUSES = ['Draft', 'Submitted', 'Graded']
-
-// ── Grades ────────────────────────────────────────────────────────
-export const GRADES = ['A', 'B', 'C', 'D', 'F']
-
-// ── Badge color maps (Chakra colorScheme) ─────────────────────────
+// ── Badge color maps ──────────────────────────────────────────────
 export const STATUS_COLORS = {
-  // student / placement
   Pending:    'orange',
   Placed:     'green',
   Active:     'green',
   Evaluating: 'blue',
   Completed:  'purple',
   Terminated: 'red',
-  // evaluation
   Draft:      'gray',
   Submitted:  'teal',
   Graded:     'green',
 }
 
 export const GRADE_COLORS = {
-  A: 'green',
-  B: 'teal',
-  C: 'blue',
-  D: 'orange',
-  F: 'red',
+  A: 'green', B: 'teal', C: 'blue', D: 'orange', F: 'red',
 }
 
 export const ROLE_COLORS = {
@@ -59,37 +46,40 @@ export const ROUTES = {
   HOME:     '/home',
   LOGIN:    '/login',
   REGISTER: '/register',
-
-  // Universal dashboard redirect (resolves per role in App.jsx)
   DASHBOARD: '/dashboard',
 
-  // Admin (internship_administrator)
-  STUDENTS:    '/students',
-  PLACEMENTS:  '/placements',
-  EVALUATIONS: '/evaluations',
-  REPORTS:     '/reports',
-  USERS:       '/users',
+  // Admin (internship administrator)
+  ADMIN_DASHBOARD: '/admin/dashboard',   // ✅ added
+  STUDENTS:        '/admin/students',    // ✅ prefixed
+  PLACEMENTS:      '/admin/placements',  // ✅ prefixed
+  EVALUATIONS:     '/admin/evaluations', // ✅ prefixed
+  REPORTS:         '/admin/reports',     // ✅ prefixed
+  USERS:           '/admin/users',       // ✅ prefixed
 
-  // Student portal  (/student/*)
+  // Academic supervisor
+  ACADEMIC_DASHBOARD:   '/academic/dashboard',   // ✅ added
+  ACADEMIC_EVALUATIONS: '/academic/evaluations', // ✅ added
+  ACADEMIC_REPORTS:     '/academic/reports',     // ✅ added
+
+  // Student portal
   STUDENT_DASHBOARD:   '/student/dashboard',
   STUDENT_PLACEMENT:   '/student/placement',
   STUDENT_EVALUATIONS: '/student/evaluations',
   STUDENT_LOGBOOK:     '/student/logbook',
   STUDENT_PROFILE:     '/student/profile',
 
-  // Workplace Supervisor portal  (/workplace-supervisor/*)
-  WORKPLACESUPERVISOR_DASHBOARD:   '/workplace-supervisor/dashboard',
-  WORKPLACESUPERVISOR_STUDENTS:    '/workplace-supervisor/students',
-  WORKPLACESUPERVISOR_EVALUATIONS: '/workplace-supervisor/evaluations',
-  WORKPLACESUPERVISOR_ATTENDANCE:  '/workplace-supervisor/attendance',
-  WORKPLACESUPERVISOR_PROFILE:     '/workplace-supervisor/profile',
+  // Workplace supervisor portal
+  WORKPLACE_DASHBOARD:   '/workplace/dashboard',   // ✅ simplified
+  WORKPLACE_STUDENTS:    '/workplace/students',
+  WORKPLACE_EVALUATIONS: '/workplace/evaluations',
+  WORKPLACE_ATTENDANCE:  '/workplace/attendance',
+  WORKPLACE_PROFILE:     '/workplace/profile',
 }
 
-// ── Role → home route after login ────────────────────────────────
+// ── Role → home route after login ─────────────────────────────────
 export const ROLE_HOME = {
-  [ROLES.ADMIN]:               ROUTES.DASHBOARD,
-  [ROLES.ACADEMIC_SUPERVISOR]: ROUTES.DASHBOARD,
-  internship_administrator:    ROUTES.DASHBOARD,   // backend alias
-  [ROLES.STUDENT]:             ROUTES.STUDENT_DASHBOARD,
-  [ROLES.WORKPLACE_SUPERVISOR]:ROUTES.WORKPLACESUPERVISOR_DASHBOARD,
+  admin:               '/admin/dashboard',    // ✅ direct paths
+  academic_supervisor: '/academic/dashboard', // ✅ direct paths
+  student:             '/student/dashboard',
+  workplace_supervisor:'/workplace/dashboard',
 }

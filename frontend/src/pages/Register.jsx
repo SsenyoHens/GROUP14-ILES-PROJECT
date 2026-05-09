@@ -16,36 +16,36 @@ import {
 // ── Role cards ─────────────────────────────────────────
 const ROLES = [
   {
-    value:   'student',
-    label:   'Student',
-    icon:    MdSchool,
-    desc:    'Register as an intern student',
-    color:   'brand',
-    badge:   'Intern',
+    value: 'student',
+    label: 'Student',
+    icon:  MdSchool,
+    desc:  'Register as an intern student',
+    color: 'brand',
+    badge: 'Intern',
   },
   {
-    value:   'academic_supervisor',
-    label:   'Academic Supervisor',
-    icon:    MdAdminPanelSettings,
-    desc:    'School-side staff managing internships',
-    color:   'purple',
-    badge:   'Staff',
+    value: 'academic_supervisor',
+    label: 'Academic Supervisor',
+    icon:  MdAdminPanelSettings,
+    desc:  'School-side staff managing internships',
+    color: 'purple',
+    badge: 'Staff',
   },
   {
-    value:   'workplace_supervisor',
-    label:   'Workplace Supervisor',
-    icon:    MdBusiness,
-    desc:    'Organisation supervisor for interns',
-    color:   'blue',
-    badge:   'Employer',
+    value: 'workplace_supervisor',
+    label: 'Workplace Supervisor',
+    icon:  MdBusiness,
+    desc:  'Organisation supervisor for interns',
+    color: 'blue',
+    badge: 'Employer',
   },
   {
-    value:   'internship_administrator',
-    label:   'Internship Administrator',
-    icon:    MdSupervisorAccount,
-    desc:    'Overall system and placement coordinator',
-    color:   'orange',
-    badge:   'Admin',
+    value: 'admin',                           
+    label: 'Internship Administrator',
+    icon:  MdSupervisorAccount,
+    desc:  'Overall system and placement coordinator',
+    color: 'orange',
+    badge: 'Admin',
   },
 ]
 
@@ -55,9 +55,8 @@ function RoleStep({ selected, onSelect }) {
     <VStack spacing={4} w="100%">
       <Box textAlign="center" mb={2}>
         <Heading size="md" color="gray.800" fontFamily="heading" mb={1}>
-          Select your role to continue 
+          Select your role to continue
         </Heading>
-        
       </Box>
 
       {ROLES.map((role) => {
@@ -218,11 +217,26 @@ function FieldsStep({ role, register, errors, showPw, setShowPw, showConfirm, se
             />
             <FormErrorMessage fontSize="xs">{errors.department?.message}</FormErrorMessage>
           </FormControl>
+
+          <GridItem colSpan={2}>
+            <FormControl isInvalid={!!errors.officeNumber}>
+              <FormLabel fontSize="xs" color="gray.600" textTransform="uppercase" letterSpacing="wide">
+                Office Number
+              </FormLabel>
+              <Input
+                size="sm" borderRadius="lg" bg="gray.50"
+                placeholder="e.g. Room 12, Block A"
+                _focus={{ bg: 'white', borderColor: 'brand.400' }}
+                {...register('officeNumber', { required: 'Office number is required' })}
+              />
+              <FormErrorMessage fontSize="xs">{errors.officeNumber?.message}</FormErrorMessage>
+            </FormControl>
+          </GridItem>
         </>}
 
         {/* ── Workplace supervisor fields ── */}
         {role === 'workplace_supervisor' && <>
-          <FormControl isInvalid={!!errors.organisation}>
+          <FormControl isInvalid={!!errors.companyName}>
             <FormLabel fontSize="xs" color="gray.600" textTransform="uppercase" letterSpacing="wide">
               Organisation / Company
             </FormLabel>
@@ -230,39 +244,39 @@ function FieldsStep({ role, register, errors, showPw, setShowPw, showConfirm, se
               size="sm" borderRadius="lg" bg="gray.50"
               placeholder="e.g. MTN Uganda"
               _focus={{ bg: 'white', borderColor: 'brand.400' }}
-              {...register('organisation', { required: 'Organisation is required' })}
+              {...register('companyName', { required: 'Organisation is required' })}
             />
-            <FormErrorMessage fontSize="xs">{errors.organisation?.message}</FormErrorMessage>
+            <FormErrorMessage fontSize="xs">{errors.companyName?.message}</FormErrorMessage>
           </FormControl>
 
-          <FormControl isInvalid={!!errors.jobTitle}>
+          <FormControl isInvalid={!!errors.position}>
             <FormLabel fontSize="xs" color="gray.600" textTransform="uppercase" letterSpacing="wide">
-              Job Title
+              Job Title / Position
             </FormLabel>
             <Input
               size="sm" borderRadius="lg" bg="gray.50"
               placeholder="e.g. IT Manager"
               _focus={{ bg: 'white', borderColor: 'brand.400' }}
-              {...register('jobTitle', { required: 'Job title is required' })}
+              {...register('position', { required: 'Position is required' })}
             />
-            <FormErrorMessage fontSize="xs">{errors.jobTitle?.message}</FormErrorMessage>
+            <FormErrorMessage fontSize="xs">{errors.position?.message}</FormErrorMessage>
           </FormControl>
         </>}
 
-        {/* ── Internship Administrator fields (Using common fields like Department) ── */}
-        {role === 'internship_administrator' && <>
+        {/* ── Admin fields ── */}
+        {role === 'admin' && <>
           <GridItem colSpan={2}>
-            <FormControl isInvalid={!!errors.officeLocation}>
+            <FormControl isInvalid={!!errors.department}>
               <FormLabel fontSize="xs" color="gray.600" textTransform="uppercase" letterSpacing="wide">
-                Office/Unit Location
+                Department / Unit
               </FormLabel>
               <Input
                 size="sm" borderRadius="lg" bg="gray.50"
-                placeholder="e.g. Main Admin Block, Room 12"
+                placeholder="e.g. Internship Coordination Office"
                 _focus={{ bg: 'white', borderColor: 'brand.400' }}
-                {...register('officeLocation', { required: 'Office location is required' })}
+                {...register('department', { required: 'Department is required' })}
               />
-              <FormErrorMessage fontSize="xs">{errors.officeLocation?.message}</FormErrorMessage>
+              <FormErrorMessage fontSize="xs">{errors.department?.message}</FormErrorMessage>
             </FormControl>
           </GridItem>
         </>}
@@ -276,10 +290,10 @@ function FieldsStep({ role, register, errors, showPw, setShowPw, showConfirm, se
             <Input
               size="sm" borderRadius="lg" bg="gray.50" type="email"
               placeholder={
-                role === 'student'              ? 'student@institution.ac.ug' :
-                role === 'academic_supervisor'  ? 'staff@institution.ac.ug'   :
-                role === 'internship_administrator' ? 'admin@institution.ac.ug' :
-                'supervisor@company.com'
+                role === 'student'             ? 'student@institution.ac.ug'  :
+                role === 'academic_supervisor' ? 'staff@institution.ac.ug'    :
+                role === 'admin'               ? 'admin@institution.ac.ug'    :
+                                                 'supervisor@company.com'
               }
               _focus={{ bg: 'white', borderColor: 'brand.400' }}
               {...register('email', {
@@ -401,8 +415,10 @@ function SuccessStep({ role }) {
         <AlertIcon />
         {role === 'student'
           ? 'Your account is pending approval from the administration.'
-          : (role === 'academic_supervisor' || role === 'internship_administrator')
+          : role === 'academic_supervisor'
           ? 'Staff accounts require manual verification before full system access is granted.'
+          : role === 'admin'
+          ? 'Administrator account created. You can now manage internship placements.'
           : 'Your account is active. Sign in to start supervising interns.'}
       </Alert>
       <Button
@@ -441,13 +457,52 @@ function Register() {
     setLoading(true)
     setApiError('')
     try {
-      const { confirmPassword, ...payload } = data
-      await authService.register({ ...payload, username: payload.email, role: selectedRole })
+      const { confirmPassword, fullName, ...rest } = data
+
+      
+      const nameParts  = (fullName || '').trim().split(' ')
+      const first_name = nameParts[0] || ''
+      const last_name  = nameParts.slice(1).join(' ') || ''
+
+      
+      const payload = {
+        email:        rest.email,
+        username:     rest.email,
+        password:     rest.password,
+        role:         selectedRole,
+        first_name,
+        last_name,
+        phone_number: rest.phone,
+
+        // Student
+        registration_number: rest.regNumber    || undefined,
+        year_of_study:       rest.yearOfStudy  || undefined,
+        course:              rest.course       || undefined,
+        department:          rest.department   || undefined,
+
+        // Academic supervisor
+        staff_id:      rest.staffId      || undefined,
+        office_number: rest.officeNumber || undefined,
+
+        // Workplace supervisor
+        company_name: rest.companyName || undefined,
+        position:     rest.position    || undefined,
+      }
+
+      await authService.register(payload)
       setActiveStep(2)
+
     } catch (err) {
-      setApiError(
-        err.response?.data?.message || 'Registration failed. Please try again.'
-      )
+      // ✅ Show all backend validation errors
+      const data = err.response?.data
+      if (data && typeof data === 'object') {
+        const messages = Object.entries(data)
+          .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+          .join(' | ')
+        setApiError(messages)
+      } else {
+        setApiError('Registration failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -598,7 +653,6 @@ function Register() {
 
           {activeStep === 2 && <SuccessStep role={selectedRole} />}
 
-          {/* Link to login */}
           {activeStep < 2 && (
             <Text fontSize="sm" color="gray.500" textAlign="center" mt={5}>
               Already have an account?{' '}

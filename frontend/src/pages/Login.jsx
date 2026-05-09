@@ -8,6 +8,14 @@ import {
 } from '@chakra-ui/react'
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons'
 
+
+const ROLE_REDIRECTS = {
+  student:              '/student/dashboard',
+  academic_supervisor:  '/academic/dashboard',
+  workplace_supervisor: '/workplace/dashboard',
+  admin:                '/admin/dashboard',
+}
+
 function Login() {
   const { loginUser } = useContext(AuthContext)
   const navigate = useNavigate()
@@ -23,9 +31,12 @@ function Login() {
     setError('')
     setLoading(true)
     try {
-      const success = await loginUser(email, password)
-      if (success) {
-        navigate('/dashboard')
+      const user = await loginUser(email, password)
+
+      if (user) {
+        // ✅ Redirect based on role
+        const redirect = ROLE_REDIRECTS[user.role] || '/dashboard'
+        navigate(redirect)
       } else {
         setError('Invalid email or password. Please try again.')
       }
@@ -64,7 +75,6 @@ function Login() {
           continue managing your internship activities.
         </Text>
 
-        {/* Decorative feature hints */}
         <VStack align="flex-start" mt={10} spacing={4}>
           {[
             'Track internship logbooks in real time',
@@ -113,7 +123,6 @@ function Login() {
           <form onSubmit={handleSubmit}>
             <VStack spacing={4}>
 
-              {/* Email */}
               <FormControl>
                 <FormLabel fontSize="xs" color="gray.600" textTransform="uppercase" letterSpacing="wide">
                   Email Address
@@ -128,7 +137,6 @@ function Login() {
                 />
               </FormControl>
 
-              {/* Password */}
               <FormControl>
                 <FormLabel fontSize="xs" color="gray.600" textTransform="uppercase" letterSpacing="wide">
                   Password
@@ -153,7 +161,6 @@ function Login() {
                 </InputGroup>
               </FormControl>
 
-              {/* Submit */}
               <Button
                 type="submit" w="100%" mt={2}
                 bg="brand.600" color="white" borderRadius="lg" size="md"

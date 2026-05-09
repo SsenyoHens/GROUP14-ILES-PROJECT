@@ -25,21 +25,31 @@ export function AuthProvider({ children }) {
 
   const loginUser = async (email, password) => {
     try {
-      const response = await authService.login({ email, password }) // ✅ use authService
-      localStorage.setItem('access',  response.data.access)
-      localStorage.setItem('refresh', response.data.refresh)
+      const response = await authService.login({ email, password })
+
+      localStorage.setItem('access',  response.data.tokens.access)
+      localStorage.setItem('refresh', response.data.tokens.refresh)
       setUser(response.data.user)
-      return true
+
+      return response.data.user  
+
     } catch (error) {
       console.error('Login error:', error)
       return false
     }
   }
 
-  const logoutUser = () => {
-    localStorage.removeItem('access')
-    localStorage.removeItem('refresh')
-    setUser(null)
+  const logoutUser = async () => {
+    try {
+      const refresh = localStorage.getItem('refresh')
+      if (refresh) await authService.logout({ refresh })
+    } catch {
+      // fail silently
+    } finally {
+      localStorage.removeItem('access')
+      localStorage.removeItem('refresh')
+      setUser(null)
+    }
   }
 
   return (

@@ -4,19 +4,16 @@ import {
 } from '@chakra-ui/react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
-  MdDashboard, MdPeople, MdWork, MdAssignment,
-  MdBarChart, MdManageAccounts, MdLogout,
+  MdDashboard, MdAssignment, MdBarChart, MdPeople, MdLogout,
 } from 'react-icons/md'
 import { useAuth } from '../context/AuthContext'
 import { ROUTES } from '../constants'
 
 const navItems = [
-  { label: 'Dashboard',            path: ROUTES.ADMIN_DASHBOARD, icon: MdDashboard      },
-  { label: 'Student Registration', path: ROUTES.STUDENTS,        icon: MdPeople         },
-  { label: 'Placements',           path: ROUTES.PLACEMENTS,      icon: MdWork           },
-  { label: 'Evaluations',          path: ROUTES.EVALUATIONS,     icon: MdAssignment     },
-  { label: 'Reports',              path: ROUTES.REPORTS,         icon: MdBarChart       },
-  { label: 'User Accounts',        path: ROUTES.USERS,           icon: MdManageAccounts },
+  { label: 'Dashboard',   path: ROUTES.ACADEMIC_DASHBOARD,   icon: MdDashboard  },
+  { label: 'Students',    path: ROUTES.STUDENTS,             icon: MdPeople     },
+  { label: 'Evaluations', path: ROUTES.ACADEMIC_EVALUATIONS, icon: MdAssignment },
+  { label: 'Reports',     path: ROUTES.ACADEMIC_REPORTS,     icon: MdBarChart   },
 ]
 
 function NavItem({ item, isActive }) {
@@ -42,10 +39,10 @@ function NavItem({ item, isActive }) {
   )
 }
 
-function Sidebar() {
+function AcademicSupervisorSidebar() {
   const location = useLocation()
   const navigate  = useNavigate()
-  const { user, logoutUser } = useAuth()   // ✅ fixed: logoutUser not logout
+  const { user, logoutUser } = useAuth()
 
   const handleLogout = async () => {
     await logoutUser()
@@ -66,7 +63,7 @@ function Sidebar() {
           ILES
         </Text>
         <Text fontSize="10px" color="sidebar.text" mt={1} textTransform="uppercase" letterSpacing="wider">
-          Admin Portal
+          Academic Supervisor Portal
         </Text>
       </Box>
 
@@ -90,15 +87,15 @@ function Sidebar() {
         <HStack spacing={3} mb={3} px={2}>
           <Avatar
             size="sm"
-            name={`${user?.first_name} ${user?.last_name}`}  // ✅ fixed: use first_name/last_name
-            bg="brand.600" color="white"
+            name={`${user?.first_name} ${user?.last_name}`}
+            bg="purple.600" color="white"
           />
           <Box minW={0}>
             <Text fontSize="sm" color="white" fontWeight="600" noOfLines={1}>
-              {user?.first_name} {user?.last_name}  {/* ✅ fixed */}
+              {user?.first_name} {user?.last_name}
             </Text>
             <Text fontSize="10px" color="sidebar.text" noOfLines={1}>
-              Internship Administrator
+              Academic Supervisor
             </Text>
           </Box>
         </HStack>
@@ -117,4 +114,4 @@ function Sidebar() {
   )
 }
 
-export default Sidebar
+export default AcademicSupervisorSidebar
