@@ -1,99 +1,187 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from core.models import (
+    CustomUser,
     StudentProfile,
     AcademicSupervisorProfile,
     WorkplaceSupervisorProfile,
 )
-
 from core.serializers import (
     StudentProfileSerializer,
+    AcademicSupervisorProfileSerializer,
+    WorkplaceSupervisorProfileSerializer,
+    UserSerializer,
 )
 
-# =========================================================
-# UPDATE STUDENT PROFILE
-# =========================================================
 
+# =========================
+# 👤 GET MY PROFILE
+# =========================
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_my_profile(request):
+    user = request.user
+
+    base_data = {
+        "id":         user.id,
+        "email":      user.email,
+        "username":   user.username,
+        "first_name": user.first_name,
+        "last_name":  user.last_name,
+        "role":       user.role,
+        "department": user.department,
+        "phone":      user.phone,
+    }
+
+    if user.role == 'student':
+        profile = getattr(user, 'studentprofile', None)
+        profile_data = StudentProfileSerializer(profile).data if profile else {}
+
+    elif user.role == 'academic_supervisor':
+        profile = getattr(user, 'academicsupervisorprofile', None)
+        profile_data = AcademicSupervisorProfileSerializer(profile).data if profile else {}
+
+    elif user.role == 'workplace_supervisor':
+        profile = getattr(user, 'workplacesupervisorprofile', None)
+        profile_data = WorkplaceSupervisorProfileSerializer(profile).data if profile else {}
+
+    else:
+        # Admin has no separate profile
+        profile_data = {}
+
+    return Response({**base_data, "profile": profile_data})
+
+
+# =========================
+# ✏️ UPDATE MY PROFILE
+# =========================
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
-def update_student_profile(request):
+def update_my_profile(request):
+    user = request.user
 
-    try:
-        profile = StudentProfile.objects.get(user=request.user)
+    # Update base user fields
+    user_fields = ['first_name', 'last_name', 'phone', 'department']
+    for field in user_fields:
+        if field in request.data:
+            setattr(user, field, request.data[field])
+    user.save()
 
-    except StudentProfile.DoesNotExist:
+    # Update role-specific profile
+    if user.role == 'student':
+        profile = getattr(user, 'studentprofile', None)
+        if profile:
+            serializer = StudentProfileSerializer(
+                profile, data=request.data, partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors, status=400)
 
+    elif user.role == 'academic_supervisor':
+        profile = getattr(user, 'academicsupervisorprofile', None)
+        if profile:
+            serializer = AcademicSupervisorProfileSerializer(
+                profile, data=request.data, partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors, status=400)
+
+    elif user.role == 'workplace_supervisor':
+        profile = getattr(user, 'workplacesupervisorprofile', None)
+        if profile:
+            serializer = WorkplaceSupervisorProfileSerializer(
+                profile, data=request.data, partial=True
+            )
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors, status=400)
+
+    return Response({
+        "message": "Profile updated successfully",
+        "user": UserSerializer(user).data
+    })
+
+
+# =========================
+# 🔑 CHANGE PASSWORD
+# =========================
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    user         = request.user
+    old_password = request.data.get('old_password')
+    new_password = request.data.get('new_password')
+
+    if not old_password or not new_password:
         return Response(
-            {"error": "Student profile not found."},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": "Both old_password and new_password are required"},
+            status=400
         )
 
-    serializer = StudentProfileSerializer(
-        profile,
-        data=request.data,
-        partial=True
-    )
-
-    if serializer.is_valid():
-
-        serializer.save()
-
+    if not user.check_password(old_password):
         return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
+            {"error": "Old password is incorrect"},
+            status=400
         )
 
-    return Response(
-        serializer.errors,
-        status=status.HTTP_400_BAD_REQUEST
-    )
+    if len(new_password) < 8:
+        return Response(
+            {"error": "New password must be at least 8 characters"},
+            status=400
+        )
+
+    user.set_password(new_password)
+    user.save()
+
+    return Response({"message": "Password changed successfully"})
 
 
-# =========================================================
-# VIEW SUPERVISORS
-# =========================================================
-
+# =========================
+# 👥 VIEW SUPERVISORS
+# =========================
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_supervisors(request):
+    role = request.query_params.get('role')  # optional filter
 
-    academic_supervisors = AcademicSupervisorProfile.objects.all()
+    supervisors = CustomUser.objects.filter(
+        role__in=['academic_supervisor', 'workplace_supervisor']
+    )
 
-    workplace_supervisors = WorkplaceSupervisorProfile.objects.all()
+    if role in ['academic_supervisor', 'workplace_supervisor']:
+        supervisors = supervisors.filter(role=role)
 
-    academic_data = []
+    from core.serializers import SupervisorSerializer
+    serializer = SupervisorSerializer(supervisors, many=True)
+    return Response(serializer.data)
 
-    for supervisor in academic_supervisors:
 
-        academic_data.append({
-            "id": supervisor.id,
-            "email": supervisor.user.email,
-            "username": supervisor.user.username,
-            "department": supervisor.department,
-            "staff_id": supervisor.staff_id,
-            "phone_number": supervisor.phone_number,
-        })
+# =========================
+# ✏️ UPDATE STUDENT PROFILE (admin use)
+# =========================
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_student_profile(request, pk):
+    try:
+        profile = StudentProfile.objects.get(pk=pk)
+    except StudentProfile.DoesNotExist:
+        return Response({"error": "Student profile not found"}, status=404)
 
-    workplace_data = []
+    # Only admin or the student themselves
+    if request.user.role != 'admin' and profile.user != request.user:
+        return Response({"error": "Not authorized"}, status=403)
 
-    for supervisor in workplace_supervisors:
+    serializer = StudentProfileSerializer(profile, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
 
-        workplace_data.append({
-            "id": supervisor.id,
-            "email": supervisor.user.email,
-            "username": supervisor.user.username,
-            "organization": supervisor.organization,
-            "job_title": supervisor.job_title,
-            "phone_number": supervisor.phone_number,
-        })
-
-    return Response({
-
-        "academic_supervisors": academic_data,
-
-        "workplace_supervisors": workplace_data
-
-    }, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=400)

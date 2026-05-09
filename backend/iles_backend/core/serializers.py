@@ -1,15 +1,15 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from core.models import Evaluation, EvaluationScore
 
 from .models import (
     CustomUser,
     Evaluation,
     EvaluationScore,
+    EvaluationCriteria,
     StudentProfile,
-    InternshipPlacement,
     AcademicSupervisorProfile,
     WorkplaceSupervisorProfile,
+    InternshipPlacement,
     WeeklyLog,
     WeeklyLogHistory,
 )
@@ -20,143 +20,86 @@ User = get_user_model()
 # =========================================================
 # 1. REGISTER SERIALIZER
 # =========================================================
-
 class RegisterSerializer(serializers.ModelSerializer):
-
-    password = serializers.CharField(
-        write_only=True,
-        min_length=8
-    )
-
-    # Shared fields
-    full_name = serializers.CharField(required=False)
-    phone_number = serializers.CharField(required=False)
-
-    # Student fields
-    registration_number = serializers.CharField(required=False)
-    course = serializers.CharField(required=False)
-    year_of_study = serializers.IntegerField(required=False)
-
-    # Academic supervisor fields
-    department = serializers.CharField(required=False)
-    staff_id = serializers.CharField(required=False)
-
-    # Workplace supervisor fields
-    organization = serializers.CharField(required=False)
-    job_title = serializers.CharField(required=False)
-
-
-    password = serializers.CharField(
-        write_only=True,
-        min_length=5
-    )
 
     password = serializers.CharField(write_only=True, min_length=8)
 
+    # Shared
+    phone_number = serializers.CharField(required=False, allow_blank=True)
+
+    # Student only
+    registration_number = serializers.CharField(required=False, allow_blank=True)
+    course              = serializers.CharField(required=False, allow_blank=True)
+    year_of_study       = serializers.IntegerField(required=False, allow_null=True)
+
+    # Academic supervisor only
+    department    = serializers.CharField(required=False, allow_blank=True)
+    staff_id      = serializers.CharField(required=False, allow_blank=True)
+    office_number = serializers.CharField(required=False, allow_blank=True)
+
+    # Workplace supervisor only
+    company_name = serializers.CharField(required=False, allow_blank=True)
+    position     = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
-        model = User
+        model  = User
         fields = [
-            'email',
-            'username',
-            'password',
-            'role',
-
-            # Shared
-            'full_name',
+            'email', 'username', 'password', 'role',
+            'first_name', 'last_name',
+            # shared
             'phone_number',
-
-            # Student
-            'registration_number',
-            'course',
-            'year_of_study',
-
-            # Academic supervisor
-            'department',
-            'staff_id',
-
-            # Workplace supervisor
-            'organization',
-            'job_title',
+            # student
+            'registration_number', 'course', 'year_of_study',
+            # academic supervisor
+            'department', 'staff_id', 'office_number',
+            # workplace supervisor
+            'company_name', 'position',
         ]
 
     def validate_role(self, value):
-
-        valid_roles = [
-            'student',
-            'admin',
-            'academic_supervisor',
-            'workplace_supervisor',
-        ]
-
+        valid_roles = ['student', 'admin', 'academic_supervisor', 'workplace_supervisor']
         if value not in valid_roles:
             raise serializers.ValidationError("Invalid role.")
-
         return value
 
     def create(self, validated_data):
+        # Pop profile fields
+        phone_number        = validated_data.pop('phone_number', '')
+        registration_number = validated_data.pop('registration_number', '')
+        course              = validated_data.pop('course', '')
+        year_of_study       = validated_data.pop('year_of_study', None)
+        department          = validated_data.pop('department', '')
+        staff_id            = validated_data.pop('staff_id', '')
+        office_number       = validated_data.pop('office_number', '')
+        company_name        = validated_data.pop('company_name', '')
+        position            = validated_data.pop('position', '')
+        password            = validated_data.pop('password')
 
-        # Shared
-        full_name = validated_data.pop('full_name', '')
-        phone_number = validated_data.pop('phone_number', '')
-
-        # Student
-        registration_number = validated_data.pop(
-            'registration_number',
-            ''
-        )
-
-        course = validated_data.pop('course', '')
-        year_of_study = validated_data.pop(
-            'year_of_study',
-            None
-        )
-
-        # Academic supervisor
-        department = validated_data.pop('department', '')
-        staff_id = validated_data.pop('staff_id', '')
-
-        # Workplace supervisor
-        organization = validated_data.pop('organization', '')
-        job_title = validated_data.pop('job_title', '')
-
-        password = validated_data.pop('password')
-
-        # Create user
-        user = User.objects.create(**validated_data)
-
+        user = User(**validated_data)
         user.set_password(password)
         user.save()
 
-
-        # STUDENT PROFILE
+        # Create profile with full data (signal uses get_or_create so no duplicate)
         if user.role == 'student':
-
-            StudentProfile.objects.create(
-                user=user,
+            StudentProfile.objects.filter(user=user).update(
                 registration_number=registration_number,
                 course=course,
                 year_of_study=year_of_study,
                 phone_number=phone_number,
             )
 
-        # ACADEMIC SUPERVISOR PROFILE
         elif user.role == 'academic_supervisor':
-
-            AcademicSupervisorProfile.objects.create(
-                user=user,
+            AcademicSupervisorProfile.objects.filter(user=user).update(
                 department=department,
                 staff_id=staff_id,
+                office_number=office_number,
                 phone_number=phone_number,
             )
 
-        # WORKPLACE SUPERVISOR PROFILE
         elif user.role == 'workplace_supervisor':
-
-            WorkplaceSupervisorProfile.objects.create(
-                user=user,
-                organization=organization,
-                job_title=job_title,
+            WorkplaceSupervisorProfile.objects.filter(user=user).update(
+                company_name=company_name,
+                position=position,
                 phone_number=phone_number,
             )
 
@@ -166,206 +109,185 @@ class RegisterSerializer(serializers.ModelSerializer):
 # =========================================================
 # 2. LOGIN SERIALIZER
 # =========================================================
-
-# =========================
-# LOGIN SERIALIZER
-# =========================
-
 class LoginSerializer(serializers.Serializer):
-
-
-    email = serializers.EmailField(required=True)
-
-    password = serializers.CharField(
-        required=True,
-        write_only=True
-    )
+    email    = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
 
 
 # =========================================================
-# 3. STUDENT PROFILE SERIALIZER
+# 3. USER SERIALIZER
 # =========================================================
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = CustomUser
+        fields = ['id', 'email', 'username', 'first_name', 'last_name', 'role', 'department', 'phone']
+        read_only_fields = ['id']
 
+
+# =========================================================
+# 4. PROFILE SERIALIZERS
+# =========================================================
 class StudentProfileSerializer(serializers.ModelSerializer):
-
-
-    class Meta:
-        model = StudentProfile
-
-
-        fields = [
-            
-            'registration_number',
-           
-            'course',
-           
-            'year_of_study',
-           
-            'phone_number'
-        ,
-        ]
-
-
-# =========================================================
-# 4. EVALUATION SCORE SERIALIZER
-# =========================================================
-
-# =========================
-# EVALUATION
-# =========================
-
-class EvaluationSerializer(serializers.ModelSerializer):
+    email      = serializers.EmailField(source='user.email', read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name  = serializers.CharField(source='user.last_name', read_only=True)
+    role       = serializers.CharField(source='user.role', read_only=True)
 
     class Meta:
-        model = Evaluation
-
+        model  = StudentProfile
         fields = [
-            'student',
-            'evaluator',
-            'feedback'
+            'id', 'email', 'first_name', 'last_name', 'role',
+            'registration_number', 'course', 'year_of_study', 'phone_number',
         ]
 
-class EvaluationScoreSerializer(serializers.ModelSerializer):
+
+class AcademicSupervisorProfileSerializer(serializers.ModelSerializer):
+    email      = serializers.EmailField(source='user.email', read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name  = serializers.CharField(source='user.last_name', read_only=True)
 
     class Meta:
-        model = EvaluationScore
-
-        fields = [
-            'criteria',
-            'score',
-        ]
-
-        read_only_fields = [
-            'total_score',
-            'grade',
-            'status',
-        ]
+        model  = AcademicSupervisorProfile
+        fields = ['id', 'email', 'first_name', 'last_name', 'department', 'staff_id', 'office_number', 'phone_number']
 
 
-# =========================================================
-# 5. EVALUATION SERIALIZER
-# =========================================================
-
-class EvaluationSerializer(serializers.ModelSerializer):
-
-    scores = EvaluationScoreSerializer(
-        many=True,
-        source='evaluationscore_set',
-        read_only=True
-    )
+class WorkplaceSupervisorProfileSerializer(serializers.ModelSerializer):
+    email      = serializers.EmailField(source='user.email', read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name  = serializers.CharField(source='user.last_name', read_only=True)
 
     class Meta:
-        model = Evaluation
+        model  = WorkplaceSupervisorProfile
+        fields = ['id', 'email', 'first_name', 'last_name', 'company_name', 'position', 'phone_number']
 
-        fields = [
-            'id',
-            'student',
-            'evaluator',
-            'weekly_log',
-            'status',
-            'total_score',
-            'grade',
-            'feedback',
-            'scores',
-            'created_at',
-            'updated_at',
-        ]
 
-        read_only_fields = [
-            'total_score',
-            'grade',
-            'status',
-        ]
+class SupervisorSerializer(serializers.ModelSerializer):
+    """Combined serializer for listing all supervisors"""
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model  = CustomUser
+        fields = ['id', 'email', 'first_name', 'last_name', 'role', 'profile']
+
+    def get_profile(self, obj):
+        if obj.role == 'academic_supervisor':
+            profile = getattr(obj, 'academicsupervisorprofile', None)
+            if profile:
+                return AcademicSupervisorProfileSerializer(profile).data
+        elif obj.role == 'workplace_supervisor':
+            profile = getattr(obj, 'workplacesupervisorprofile', None)
+            if profile:
+                return WorkplaceSupervisorProfileSerializer(profile).data
+        return None
 
 
 # =========================================================
-# 6. PLACEMENT SERIALIZER
+# 5. PLACEMENT SERIALIZER
 # =========================================================
-
 class PlacementSerializer(serializers.ModelSerializer):
-
-
-    class Meta:
-        model = InternshipPlacement
-
-
-        fields = '__all__'
-
-    def validate(self, data):
-
-        start = data.get('start_date')
-        end = data.get('end_date')
-
-        if start and end and start > end:
-
-            raise serializers.ValidationError(
-                "Start date cannot be after end date."
-            )
-
-        return data
-
-
-# =========================================================
-# 7. WEEKLY LOG SERIALIZER
-# =========================================================
-
-class WeeklyLogSerializer(serializers.ModelSerializer):
-
-    student = serializers.ReadOnlyField(
-        source='student.email'
-    )
+    student_email  = serializers.EmailField(source='student.user.email', read_only=True)
+    student_name   = serializers.SerializerMethodField()
 
     class Meta:
-        model = WeeklyLog
-
+        model  = InternshipPlacement
         fields = [
-            'id',
-            'student',
-            'week_number',
-            'activities_done',
-            'challenges',
-            'skills_gained',
-            'strengths',
-            'plan_of_action',
-            'status',
-            'created_at',
+            'id', 'student', 'student_email', 'student_name',
+            'academic_supervisor', 'workplace_supervisor',
+            'company_name', 'position',
+            'start_date', 'end_date', 'status', 'created_at',
         ]
+        read_only_fields = ['id', 'created_at']
+
+    def get_student_name(self, obj):
+        return f"{obj.student.user.first_name} {obj.student.user.last_name}"
 
     def validate(self, data):
-
-        if (
-            data.get('status') == 'submitted'
-            and not data.get('activities_done')
-        ):
-
-            raise serializers.ValidationError(
-                "Cannot submit empty log."
-            )
-
+        start = data.get('start_date')
+        end   = data.get('end_date')
+        if start and end and start >= end:
+            raise serializers.ValidationError("End date must be after start date.")
         return data
+
+
+# =========================================================
+# 6. WEEKLY LOG SERIALIZER
+# =========================================================
+class WeeklyLogSerializer(serializers.ModelSerializer):
+    student_email = serializers.ReadOnlyField(source='student.email')
+    student_name  = serializers.SerializerMethodField()
+
+    class Meta:
+        model  = WeeklyLog
+        fields = [
+            'id', 'student', 'student_email', 'student_name',
+            'week_number', 'activities_done', 'challenges',
+            'skills_gained', 'strengths', 'plan_for_action',   # ✅ correct field name
+            'status', 'submitted_at', 'created_at',
+        ]
+        read_only_fields = ['id', 'student', 'submitted_at', 'created_at']
+
+    def get_student_name(self, obj):
+        return f"{obj.student.first_name} {obj.student.last_name}"
+
+    def validate(self, data):
+        if data.get('status') == 'submitted' and not data.get('activities_done'):
+            raise serializers.ValidationError("Cannot submit an empty log.")
+        return data
+
+
+# =========================================================
+# 7. WEEKLY LOG HISTORY SERIALIZER
+# =========================================================
+class WeeklyLogHistorySerializer(serializers.ModelSerializer):
+    changed_by_email = serializers.EmailField(source='changed_by.email', read_only=True)
+
+    class Meta:
+        model  = WeeklyLogHistory
+        fields = ['id', 'log', 'changed_by', 'changed_by_email', 'old_status', 'new_status', 'changed_at']  # ✅ fixed typo
 
 
 # =========================================================
 # 8. WEEKLY LOG STATS SERIALIZER
 # =========================================================
-
 class WeeklyLogStatsSerializer(serializers.Serializer):
-
-    total_logs = serializers.IntegerField()
-
-    approved_logs = serializers.IntegerField()
-
-    pending_logs = serializers.IntegerField()
-
-    rejected_logs = serializers.IntegerField()
+    total_logs     = serializers.IntegerField()
+    submitted_logs = serializers.IntegerField()
+    approved_logs  = serializers.IntegerField()
+    rejected_logs  = serializers.IntegerField()
+    draft_logs     = serializers.IntegerField()
 
 
 # =========================================================
-# 9. WEEKLY LOG HISTORY SERIALIZER
+# 9. EVALUATION SERIALIZERS
 # =========================================================
+class EvaluationCriteriaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = EvaluationCriteria
+        fields = ['id', 'name', 'max_score', 'description']
 
-class WeeklyLogHistorySerializer(serializers.ModelSerializer):
+
+class EvaluationScoreSerializer(serializers.ModelSerializer):
+    criteria_name     = serializers.CharField(source='criteria.name', read_only=True)
+    criteria_max      = serializers.IntegerField(source='criteria.max_score', read_only=True)
 
     class Meta:
-        model = WeeklyLogHistory
-        fields = '_init__'
+        model  = EvaluationScore
+        fields = ['id', 'criteria', 'criteria_name', 'criteria_max', 'score']
+
+
+class EvaluationSerializer(serializers.ModelSerializer):
+    scores        = EvaluationScoreSerializer(many=True, source='evaluationscore_set', read_only=True)
+    student_email = serializers.EmailField(source='student.email', read_only=True)
+    evaluator_email = serializers.EmailField(source='evaluator.email', read_only=True)
+
+    class Meta:
+        model  = Evaluation
+        fields = [
+            'id', 'student', 'student_email',
+            'evaluator', 'evaluator_email',
+            'weekly_log', 'status',
+            'total_score', 'grade',
+            'feedback', 'scores',
+            'created_at', 'updated_at',   # ✅ now exists on model
+        ]
+        read_only_fields = ['id', 'total_score', 'grade', 'created_at', 'updated_at']
