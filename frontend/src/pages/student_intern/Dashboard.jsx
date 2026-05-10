@@ -19,9 +19,9 @@ import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axiosInstance'
 
 function useFetch(endpoint) {
-  const [data, setData] = useState(null)
+  const [data,    setData]    = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error,   setError]   = useState(null)
   const load = useCallback(async () => {
     setLoading(true); setError(null)
     try { const res = await api.get(endpoint); setData(res.data) }
@@ -33,16 +33,17 @@ function useFetch(endpoint) {
 }
 
 const STATUS_CONFIG = {
-  active:   { color: 'green',  label: 'Active',    icon: MdCheckCircle },
-  pending:  { color: 'orange', label: 'Pending',   icon: MdSchedule    },
-  review:   { color: 'blue',   label: 'In Review', icon: MdNotifications },
-  complete: { color: 'purple', label: 'Complete',  icon: MdCheckCircle },
+  active:    { color: 'green',  label: 'Active',    icon: MdCheckCircle   },
+  pending:   { color: 'orange', label: 'Pending',   icon: MdSchedule      },
+  review:    { color: 'blue',   label: 'In Review', icon: MdNotifications },
+  completed: { color: 'purple', label: 'Complete',  icon: MdCheckCircle   },
 }
 
 const EVAL_STATUS = {
   submitted: { color: 'teal',   label: 'Submitted' },
   pending:   { color: 'orange', label: 'Pending'   },
-  graded:    { color: 'green',  label: 'Graded'    },
+  approved:  { color: 'green',  label: 'Approved'  },
+  draft:     { color: 'gray',   label: 'Draft'     },
 }
 
 function ErrorBanner({ message, onRetry }) {
@@ -50,7 +51,11 @@ function ErrorBanner({ message, onRetry }) {
     <Alert status="error" borderRadius="lg" fontSize="sm" mb={3}>
       <AlertIcon />
       <AlertDescription flex={1}>{message}</AlertDescription>
-      {onRetry && <Button size="xs" ml={3} onClick={onRetry} colorScheme="red" variant="outline">Retry</Button>}
+      {onRetry && (
+        <Button size="xs" ml={3} onClick={onRetry} colorScheme="red" variant="outline">
+          Retry
+        </Button>
+      )}
     </Alert>
   )
 }
@@ -60,7 +65,9 @@ function StatMini({ label, value, icon, color, sub, loading }) {
     <Box bg="white" borderRadius="xl" p={4} border="1px solid" borderColor="gray.100"
       boxShadow="0 1px 3px rgba(0,0,0,0.04)">
       <Flex justify="space-between" align="center" mb={2}>
-        <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider">{label}</Text>
+        <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider">
+          {label}
+        </Text>
         <Flex w="32px" h="32px" borderRadius="lg" bg={`${color}.50`} align="center" justify="center">
           <Icon as={icon} color={`${color}.500`} boxSize={4} />
         </Flex>
@@ -75,14 +82,21 @@ function StatMini({ label, value, icon, color, sub, loading }) {
 }
 
 function LogbookModal({ isOpen, onClose, onSubmit }) {
-  const [form, setForm] = useState({ date: '', activities: '', challenges: '', learning: '' })
+  const [form,   setForm]   = useState({ week_number: '', activities_done: '', challenges: '', skills_gained: '' })
   const [saving, setSaving] = useState(false)
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
   const handleSubmit = async () => {
     setSaving(true)
-    try { await onSubmit(form); setForm({ date: '', activities: '', challenges: '', learning: '' }); onClose() }
-    finally { setSaving(false) }
+    try {
+      await onSubmit(form)
+      setForm({ week_number: '', activities_done: '', challenges: '', skills_gained: '' })
+      onClose()
+    } finally {
+      setSaving(false)
+    }
   }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(4px)" />
@@ -92,30 +106,38 @@ function LogbookModal({ isOpen, onClose, onSubmit }) {
         <ModalBody>
           <VStack spacing={4}>
             <Box w="full">
-              <FormLabel fontSize="xs" color="gray.500" mb={1}>Date *</FormLabel>
-              <Input type="date" size="sm" borderRadius="lg" bg="gray.50" value={form.date} onChange={set('date')} />
+              <FormLabel fontSize="xs" color="gray.500" mb={1}>Week Number *</FormLabel>
+              <Input
+                type="number" size="sm" borderRadius="lg" bg="gray.50"
+                placeholder="e.g. 1"
+                value={form.week_number} onChange={set('week_number')}
+              />
             </Box>
             <Box w="full">
               <FormLabel fontSize="xs" color="gray.500" mb={1}>Activities Performed *</FormLabel>
               <Textarea size="sm" borderRadius="lg" bg="gray.50" rows={3}
-                placeholder="Describe what you did today…" value={form.activities} onChange={set('activities')} />
+                placeholder="Describe what you did…"
+                value={form.activities_done} onChange={set('activities_done')} />
             </Box>
             <Box w="full">
               <FormLabel fontSize="xs" color="gray.500" mb={1}>Challenges Faced</FormLabel>
               <Textarea size="sm" borderRadius="lg" bg="gray.50" rows={2}
-                placeholder="Any difficulties?" value={form.challenges} onChange={set('challenges')} />
+                placeholder="Any difficulties?"
+                value={form.challenges} onChange={set('challenges')} />
             </Box>
             <Box w="full">
-              <FormLabel fontSize="xs" color="gray.500" mb={1}>Key Learnings</FormLabel>
+              <FormLabel fontSize="xs" color="gray.500" mb={1}>Skills Gained</FormLabel>
               <Textarea size="sm" borderRadius="lg" bg="gray.50" rows={2}
-                placeholder="What did you learn?" value={form.learning} onChange={set('learning')} />
+                placeholder="What did you learn?"
+                value={form.skills_gained} onChange={set('skills_gained')} />
             </Box>
           </VStack>
         </ModalBody>
         <ModalFooter gap={2}>
           <Button size="sm" variant="ghost" onClick={onClose} borderRadius="lg">Cancel</Button>
-          <Button size="sm" bg="brand.600" color="white" borderRadius="lg" _hover={{ bg: 'brand.700' }}
-            isLoading={saving} onClick={handleSubmit} isDisabled={!form.date || !form.activities}>
+          <Button size="sm" bg="brand.600" color="white" borderRadius="lg"
+            _hover={{ bg: 'brand.700' }} isLoading={saving} onClick={handleSubmit}
+            isDisabled={!form.week_number || !form.activities_done}>
             Save Entry
           </Button>
         </ModalFooter>
@@ -125,62 +147,84 @@ function LogbookModal({ isOpen, onClose, onSubmit }) {
 }
 
 export default function StudentDashboard() {
-  const { user } = useAuth()
+  const { user }  = useAuth()
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
 
-  // /student/placement/  → { organisation_name, department, supervisor_name, start_date, end_date, status, days_remaining, total_days, location }
-  // /student/summary/    → { logbook_count, evaluations_count, pending_evaluations, attendance_pct }
-  // /student/evaluations/→ [{ id, title, week, date, status, score }]
-  // /student/logbook/    → [{ id, date, activities, approved }]
-  const placement   = useFetch('/student/placement/')
-  const summary     = useFetch('/student/summary/')
-  const evaluations = useFetch('/student/evaluations/')
-  const logbook     = useFetch('/student/logbook/')
+  // ✅ Correct backend endpoints
+  const stats      = useFetch('/dashboard/stats/')
+  const placement  = useFetch('/placements/')
+  const logs       = useFetch('/logs/')
+  const evals      = useFetch('/evaluations/')
 
-  const summaryData = summary.data    ?? {}
-  const evalList    = evaluations.data ?? []
-  const logEntries  = logbook.data    ?? []
-  const p           = placement.data
+  const statsData  = stats.data      ?? {}
+  const logList    = Array.isArray(logs.data)  ? logs.data  : []
+  const evalList   = Array.isArray(evals.data) ? evals.data : []
+
+  // ✅ Student only has one placement (OneToOne)
+  const placementList = Array.isArray(placement.data) ? placement.data : []
+  const p = placementList[0] ?? null
 
   const cfg = p ? (STATUS_CONFIG[p.status] || STATUS_CONFIG.pending) : null
-  const progress = p && p.total_days > 0
-    ? Math.min(100, Math.round(((p.total_days - (p.days_remaining ?? 0)) / p.total_days) * 100))
+
+  const progress = p && p.start_date && p.end_date
+    ? (() => {
+        const start = new Date(p.start_date)
+        const end   = new Date(p.end_date)
+        const now   = new Date()
+        const total = end - start
+        const done  = now - start
+        return Math.min(100, Math.max(0, Math.round((done / total) * 100)))
+      })()
     : 0
+
+  const daysRemaining = p?.end_date
+    ? Math.max(0, Math.round((new Date(p.end_date) - new Date()) / (1000 * 60 * 60 * 24)))
+    : null
 
   const handleLogEntry = async (form) => {
     try {
-      await api.post('/student/logbook/', form)
+      // ✅ Correct endpoint
+      await api.post('/logs/create/', form)
       toast({ title: 'Entry added', status: 'success', duration: 3000, isClosable: true })
-      logbook.refetch(); summary.refetch()
+      logs.refetch()
+      stats.refetch()
     } catch (err) {
       toast({ title: 'Failed', description: err.message, status: 'error', duration: 4000, isClosable: true })
       throw err
     }
   }
 
+  // ✅ Display name
+  const displayName = user
+    ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Student'
+    : 'Student'
+
   return (
     <Box>
       {/* Welcome banner */}
       <Box bg="brand.600" bgGradient="linear(135deg, brand.600 0%, brand.800 100%)"
         borderRadius="2xl" p={5} mb={6} position="relative" overflow="hidden">
-        <Box position="absolute" top="-20px" right="-20px" w="140px" h="140px" borderRadius="full" bg="whiteAlpha.100" />
+        <Box position="absolute" top="-20px" right="-20px" w="140px" h="140px"
+          borderRadius="full" bg="whiteAlpha.100" />
         <Text color="white" fontWeight="700" fontSize="lg">
-          Welcome back, {user?.name?.split(' ')[0] || 'Student'} 👋
+          Welcome back, {displayName.split(' ')[0]} 👋
         </Text>
-        <Text color="brand.100" fontSize="sm" mt={1}>{user?.registration_number || 'Your internship at a glance'}</Text>
+        <Text color="brand.100" fontSize="sm" mt={1}>
+          Your internship at a glance
+        </Text>
       </Box>
 
       {/* Mini stats */}
-      {summary.error && <ErrorBanner message={summary.error} onRetry={summary.refetch} />}
+      {stats.error && <ErrorBanner message={stats.error} onRetry={stats.refetch} />}
       <Grid templateColumns={{ base: '1fr 1fr', md: 'repeat(4,1fr)' }} gap={4} mb={6}>
         {[
-          { label: 'Logbook Entries', value: summaryData.logbook_count,      icon: MdBook,       color: 'brand',  sub: 'All time'   },
-          { label: 'Evaluations',     value: summaryData.evaluations_count,   icon: MdAssignment, color: 'purple', sub: 'Submitted'  },
-          { label: 'Pending Evals',   value: summaryData.pending_evaluations, icon: MdSchedule,   color: 'orange', sub: 'Due soon'   },
-          { label: 'Attendance',      value: summaryData.attendance_pct != null ? `${summaryData.attendance_pct}%` : null,
-                                                                              icon: MdTrendingUp, color: 'green',  sub: 'This period'},
-        ].map(s => <StatMini key={s.label} {...s} loading={summary.loading} />)}
+          { label: 'Logbook Entries', value: statsData.total_logs,     icon: MdBook,       color: 'brand',  sub: 'All time'    },
+          { label: 'Evaluations',     value: evalList.length,           icon: MdAssignment, color: 'purple', sub: 'Submitted'   },
+          { label: 'Pending Evals',   value: evalList.filter(e => e.status === 'pending').length,
+                                                                        icon: MdSchedule,   color: 'orange', sub: 'Due soon'    },
+          { label: 'Submitted Logs',  value: statsData.submitted_logs,  icon: MdTrendingUp, color: 'green',  sub: 'This period' },
+        ].map(s => <StatMini key={s.label} {...s} loading={stats.loading} />)}
       </Grid>
 
       <Grid templateColumns={{ base: '1fr', xl: '1fr 380px' }} gap={5}>
@@ -197,8 +241,8 @@ export default function StudentDashboard() {
                 ? <ErrorBanner message={placement.error} onRetry={placement.refetch} />
                 : !p
                   ? (
-                    <Box bg="white" borderRadius="2xl" p={5} border="1px solid" borderColor="gray.100"
-                      textAlign="center">
+                    <Box bg="white" borderRadius="2xl" p={5} border="1px solid"
+                      borderColor="gray.100" textAlign="center">
                       <Icon as={MdWork} boxSize={10} color="gray.200" mb={2} />
                       <Text color="gray.400" fontSize="sm">No active placement found.</Text>
                     </Box>
@@ -209,44 +253,60 @@ export default function StudentDashboard() {
                       <Box bg="brand.600" px={5} py={4}>
                         <Flex justify="space-between" align="center">
                           <Box>
-                            <Text color="white" fontWeight="700" fontSize="md">{p.organisation_name}</Text>
-                            <Text color="brand.100" fontSize="xs" mt={0.5}>{p.department}</Text>
+                            <Text color="white" fontWeight="700" fontSize="md">
+                              {p.company_name}
+                            </Text>
+                            <Text color="brand.100" fontSize="xs" mt={0.5}>
+                              {p.position}
+                            </Text>
                           </Box>
-                          <Badge colorScheme={cfg.color} bg="whiteAlpha.200" color="white"
-                            border="1px solid" borderColor="whiteAlpha.300" borderRadius="full" px={3} py={1} fontSize="xs">
-                            <HStack spacing={1}><Icon as={cfg.icon} boxSize={3} /><Text>{cfg.label}</Text></HStack>
-                          </Badge>
+                          {cfg && (
+                            <Badge colorScheme={cfg.color} bg="whiteAlpha.200" color="white"
+                              border="1px solid" borderColor="whiteAlpha.300"
+                              borderRadius="full" px={3} py={1} fontSize="xs">
+                              <HStack spacing={1}>
+                                <Icon as={cfg.icon} boxSize={3} />
+                                <Text>{cfg.label}</Text>
+                              </HStack>
+                            </Badge>
+                          )}
                         </Flex>
                       </Box>
                       <Box px={5} py={4}>
                         <Grid templateColumns="1fr 1fr 1fr" gap={4} mb={4}>
                           <Box>
-                            <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider">Supervisor</Text>
-                            <Text fontSize="sm" fontWeight="600" color="gray.700" mt={1}>{p.supervisor_name || '—'}</Text>
+                            <Text fontSize="10px" color="gray.400" textTransform="uppercase"
+                              letterSpacing="wider">Academic Supervisor</Text>
+                            <Text fontSize="sm" fontWeight="600" color="gray.700" mt={1}>
+                              {p.academic_supervisor ?? '—'}
+                            </Text>
                           </Box>
                           <Box>
-                            <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider">Start Date</Text>
-                            <Text fontSize="sm" fontWeight="600" color="gray.700" mt={1}>{p.start_date || '—'}</Text>
+                            <Text fontSize="10px" color="gray.400" textTransform="uppercase"
+                              letterSpacing="wider">Start Date</Text>
+                            <Text fontSize="sm" fontWeight="600" color="gray.700" mt={1}>
+                              {p.start_date ?? '—'}
+                            </Text>
                           </Box>
                           <Box>
-                            <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider">End Date</Text>
-                            <Text fontSize="sm" fontWeight="600" color="gray.700" mt={1}>{p.end_date || '—'}</Text>
+                            <Text fontSize="10px" color="gray.400" textTransform="uppercase"
+                              letterSpacing="wider">End Date</Text>
+                            <Text fontSize="sm" fontWeight="600" color="gray.700" mt={1}>
+                              {p.end_date ?? '—'}
+                            </Text>
                           </Box>
                         </Grid>
                         <Flex justify="space-between" mb={1}>
                           <Text fontSize="xs" color="gray.500">Progress</Text>
                           <Text fontSize="xs" fontWeight="700" color="brand.600">{progress}%</Text>
                         </Flex>
-                        <Progress value={progress} colorScheme="brand" borderRadius="full" size="sm" bg="gray.100" />
+                        <Progress value={progress} colorScheme="brand" borderRadius="full"
+                          size="sm" bg="gray.100" />
                         <Text fontSize="10px" color="gray.400" mt={1}>
-                          {p.days_remaining > 0 ? `${p.days_remaining} days remaining` : 'Placement complete'}
+                          {daysRemaining > 0
+                            ? `${daysRemaining} days remaining`
+                            : 'Placement complete'}
                         </Text>
-                        {p.location && (
-                          <HStack mt={3} spacing={1}>
-                            <Icon as={MdLocationOn} boxSize={3} color="gray.400" />
-                            <Text fontSize="xs" color="gray.400">{p.location}</Text>
-                          </HStack>
-                        )}
                       </Box>
                     </Box>
                   )
@@ -256,49 +316,57 @@ export default function StudentDashboard() {
           {/* Logbook */}
           <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
             boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
-            <Flex px={5} py={4} justify="space-between" align="center" borderBottom="1px solid" borderColor="gray.100">
+            <Flex px={5} py={4} justify="space-between" align="center"
+              borderBottom="1px solid" borderColor="gray.100">
               <Box>
                 <Text fontWeight="700" fontSize="sm" color="gray.800">Recent Logbook Entries</Text>
-                <Text fontSize="11px" color="gray.400">{logbook.loading ? 'Loading…' : `${logEntries.length} entries`}</Text>
+                <Text fontSize="11px" color="gray.400">
+                  {logs.loading ? 'Loading…' : `${logList.length} entries`}
+                </Text>
               </Box>
               <Button size="sm" leftIcon={<Icon as={MdAdd} />} bg="brand.600" color="white"
                 borderRadius="lg" _hover={{ bg: 'brand.700' }} fontSize="xs" onClick={onOpen}>
                 Add Entry
               </Button>
             </Flex>
-            {logbook.error && <Box px={5} pt={3}><ErrorBanner message={logbook.error} onRetry={logbook.refetch} /></Box>}
-            {logbook.loading
+            {logs.error && (
+              <Box px={5} pt={3}>
+                <ErrorBanner message={logs.error} onRetry={logs.refetch} />
+              </Box>
+            )}
+            {logs.loading
               ? <Flex justify="center" py={8}><Spinner color="brand.500" /></Flex>
-              : logEntries.length > 0
-                ? logEntries.slice(0, 5).map((e, i) => (
-                  <Flex key={i} align="center" gap={3} px={4} py={3}
-                    borderBottom="1px solid" borderColor="gray.50" _last={{ border: 'none' }}
-                    _hover={{ bg: 'gray.50' }}>
-                    <Icon as={MdCalendarToday} boxSize={3.5} color="brand.400" flexShrink={0} />
-                    <Box flex={1} minW={0}>
-                      <Text fontSize="xs" fontWeight="600" color="gray.700">{e.date}</Text>
-                      <Text fontSize="xs" color="gray.500" noOfLines={1}>{e.activities}</Text>
-                    </Box>
-                    <Badge colorScheme={e.approved ? 'green' : 'orange'} borderRadius="full" fontSize="9px" px={2}>
-                      {e.approved ? 'Approved' : 'Pending'}
-                    </Badge>
-                  </Flex>
-                ))
+              : logList.length > 0
+                ? logList.slice(0, 5).map((e, i) => (
+                    <Flex key={i} align="center" gap={3} px={4} py={3}
+                      borderBottom="1px solid" borderColor="gray.50"
+                      _last={{ border: 'none' }} _hover={{ bg: 'gray.50' }}>
+                      <Icon as={MdCalendarToday} boxSize={3.5} color="brand.400" flexShrink={0} />
+                      <Box flex={1} minW={0}>
+                        <Text fontSize="xs" fontWeight="600" color="gray.700">
+                          Week {e.week_number}
+                        </Text>
+                        <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                          {e.activities_done}
+                        </Text>
+                      </Box>
+                      <Badge
+                        colorScheme={e.status === 'approved' ? 'green' : e.status === 'submitted' ? 'teal' : 'orange'}
+                        borderRadius="full" fontSize="9px" px={2}>
+                        {e.status}
+                      </Badge>
+                    </Flex>
+                  ))
                 : (
                   <Flex direction="column" align="center" py={10} gap={2}>
                     <Icon as={MdBook} boxSize={8} color="gray.200" />
                     <Text fontSize="sm" color="gray.400">No entries yet.</Text>
-                    <Button size="xs" colorScheme="brand" variant="ghost" onClick={onOpen}>Add first entry</Button>
+                    <Button size="xs" colorScheme="brand" variant="ghost" onClick={onOpen}>
+                      Add first entry
+                    </Button>
                   </Flex>
                 )
             }
-            {logEntries.length > 0 && (
-              <Flex px={5} py={3} justify="flex-end" borderTop="1px solid" borderColor="gray.100">
-                <Button size="xs" variant="ghost" color="brand.600" fontSize="xs" _hover={{ bg: 'brand.50' }}>
-                  View all entries →
-                </Button>
-              </Flex>
-            )}
           </Box>
         </VStack>
 
@@ -308,10 +376,13 @@ export default function StudentDashboard() {
           {/* Evaluations */}
           <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
             boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
-            <Flex px={5} py={4} justify="space-between" align="center" borderBottom="1px solid" borderColor="gray.100">
+            <Flex px={5} py={4} justify="space-between" align="center"
+              borderBottom="1px solid" borderColor="gray.100">
               <Box>
                 <Text fontWeight="700" fontSize="sm" color="gray.800">My Evaluations</Text>
-                <Text fontSize="11px" color="gray.400">{evaluations.loading ? 'Loading…' : `${evalList.length} total`}</Text>
+                <Text fontSize="11px" color="gray.400">
+                  {evals.loading ? 'Loading…' : `${evalList.length} total`}
+                </Text>
               </Box>
               {evalList.filter(e => e.status === 'pending').length > 0 && (
                 <Badge colorScheme="orange" borderRadius="full" px={2} fontSize="10px">
@@ -319,29 +390,37 @@ export default function StudentDashboard() {
                 </Badge>
               )}
             </Flex>
-            {evaluations.loading
+            {evals.loading
               ? <Flex justify="center" py={8}><Spinner color="brand.500" /></Flex>
               : evalList.length > 0
                 ? evalList.map((e, i) => {
                     const ecfg = EVAL_STATUS[e.status] || { color: 'gray', label: e.status }
                     return (
                       <Flex key={i} align="center" gap={3} px={4} py={3}
-                        borderBottom="1px solid" borderColor="gray.50" _last={{ border: 'none' }}
-                        _hover={{ bg: 'gray.50' }}>
+                        borderBottom="1px solid" borderColor="gray.50"
+                        _last={{ border: 'none' }} _hover={{ bg: 'gray.50' }}>
                         <Flex w="36px" h="36px" borderRadius="lg" bg={`${ecfg.color}.50`}
                           align="center" justify="center" flexShrink={0}>
                           <Icon as={MdAssignment} color={`${ecfg.color}.500`} boxSize={4} />
                         </Flex>
                         <Box flex={1} minW={0}>
-                          <Text fontSize="sm" fontWeight="600" color="gray.700" noOfLines={1}>{e.title}</Text>
-                          <Text fontSize="11px" color="gray.400">{e.week ? `Week ${e.week}` : e.date}</Text>
+                          <Text fontSize="sm" fontWeight="600" color="gray.700" noOfLines={1}>
+                            Evaluation #{e.id}
+                          </Text>
+                          <Text fontSize="11px" color="gray.400">
+                            {e.created_at ? new Date(e.created_at).toLocaleDateString() : ''}
+                          </Text>
                         </Box>
                         <VStack spacing={1} align="flex-end">
-                          <Badge colorScheme={ecfg.color} borderRadius="full" fontSize="9px" px={2}>{ecfg.label}</Badge>
-                          {e.score != null && (
+                          <Badge colorScheme={ecfg.color} borderRadius="full" fontSize="9px" px={2}>
+                            {ecfg.label}
+                          </Badge>
+                          {e.total_score != null && (
                             <HStack spacing={1}>
                               <Icon as={MdStar} boxSize={3} color="orange.300" />
-                              <Text fontSize="10px" color="gray.500" fontWeight="600">{e.score}/100</Text>
+                              <Text fontSize="10px" color="gray.500" fontWeight="600">
+                                {e.total_score}/100
+                              </Text>
                             </HStack>
                           )}
                         </VStack>
@@ -357,31 +436,13 @@ export default function StudentDashboard() {
             }
           </Box>
 
-          {/* Reminders */}
-          <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
-            boxShadow="0 1px 3px rgba(0,0,0,0.04)" p={5}>
-            <Text fontWeight="700" fontSize="sm" color="gray.800" mb={4}>Reminders</Text>
-            <VStack spacing={3} align="stretch">
-              {[
-                { icon: MdWarning,     color: 'orange', text: "Submit this week's logbook entry before Friday 5 PM." },
-                { icon: MdAssignment,  color: 'purple', text: 'Mid-placement evaluation is due in 3 days.'          },
-                { icon: MdCheckCircle, color: 'green',  text: 'Your Week 2 logbook entry was approved.'             },
-              ].map((r, i) => (
-                <Flex key={i} align="flex-start" gap={3} p={3} borderRadius="lg" bg={`${r.color}.50`}>
-                  <Icon as={r.icon} color={`${r.color}.400`} boxSize={4} mt={0.5} flexShrink={0} />
-                  <Text fontSize="xs" color={`${r.color}.700`} lineHeight="1.6">{r.text}</Text>
-                </Flex>
-              ))}
-            </VStack>
-          </Box>
-
           {/* Quick actions */}
           <Grid templateColumns="1fr 1fr" gap={3}>
             {[
-              { label: 'My Profile',    icon: MdPerson,        color: 'brand'  },
-              { label: 'Upload Report', icon: MdUpload,        color: 'blue'   },
-              { label: 'My Placement',  icon: MdWork,          color: 'purple' },
-              { label: 'Evaluations',   icon: MdAssignment,    color: 'orange' },
+              { label: 'My Profile',    icon: MdPerson,     color: 'brand'  },
+              { label: 'My Placement',  icon: MdWork,       color: 'purple' },
+              { label: 'Logbook',       icon: MdBook,       color: 'blue'   },
+              { label: 'Evaluations',   icon: MdAssignment, color: 'orange' },
             ].map(a => (
               <Button key={a.label} leftIcon={<Icon as={a.icon} />}
                 variant="outline" borderColor="gray.200" bg="white" color="gray.600"

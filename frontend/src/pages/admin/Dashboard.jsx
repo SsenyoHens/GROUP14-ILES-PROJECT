@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react'
 import {
-  Box, Grid, GridItem, Heading, Text, HStack,
+  Box, Grid, GridItem, Text, HStack,
   VStack, Table, Thead, Tbody, Tr, Th, Td,
   Badge, Divider, Spinner, Center, Alert, AlertIcon,
 } from '@chakra-ui/react'
 import {
   MdPeople, MdWork, MdAssignment, MdPendingActions,
 } from 'react-icons/md'
-import StatCard from '../../components/StatCard'
+import StatCard   from '../../components/StatCard'
 import PageHeader from '../../components/PageHeader'
 import { dashboardService } from '../../api/services'
 
 const statusColor = {
-  Placed: 'green', Pending: 'orange', Evaluating: 'blue',
-  Completed: 'purple', Active: 'green', Submitted: 'teal',
+  placed: 'green', pending: 'orange', active: 'green',
+  completed: 'purple', submitted: 'teal', approved: 'green',
 }
 
 function Dashboard() {
@@ -35,7 +35,7 @@ function Dashboard() {
         setStats(s.data)
         setRecent(r.data)
         setDeadlines(d.data)
-      } catch (err) {
+      } catch {
         setError('Failed to load dashboard data. Check your API connection.')
       } finally {
         setLoading(false)
@@ -63,15 +63,17 @@ function Dashboard() {
     <Box>
       <PageHeader
         title="Dashboard"
-        subtitle={`Session overview — ${new Date().toLocaleDateString('en-UG', { year: 'numeric', month: 'long' })}`}
+        subtitle={`Session overview — ${new Date().toLocaleDateString('en-UG', {
+          year: 'numeric', month: 'long'
+        })}`}
       />
 
-      {/* Stat cards — data from API */}
+      {/* ✅ Fixed field names to match backend response */}
       <Grid templateColumns={{ base: '1fr', sm: 'repeat(2,1fr)', xl: 'repeat(4,1fr)' }} gap={4} mb={6}>
-        <StatCard label="Total Students"      value={stats?.totalStudents}      helpText={stats?.studentsHelpText}    icon={MdPeople}        color="brand.600" />
-        <StatCard label="Active Placements"   value={stats?.activePlacements}   helpText={stats?.placementsHelpText}  icon={MdWork}          color="blue.500"  />
-        <StatCard label="Pending Evaluations" value={stats?.pendingEvaluations} helpText="Awaiting submission"        icon={MdPendingActions} color="orange.500" />
-        <StatCard label="Completed Internships" value={stats?.completed}        helpText={stats?.completedHelpText}   icon={MdAssignment}    color="purple.500" />
+        <StatCard label="Total Students"        value={stats?.total_students}    icon={MdPeople}        color="brand.600"  />
+        <StatCard label="Active Placements"     value={stats?.active_placements} icon={MdWork}          color="blue.500"   />
+        <StatCard label="Pending Logs"          value={stats?.pending_logs}      icon={MdPendingActions} color="orange.500" />
+        <StatCard label="Total Evaluations"     value={stats?.total_evaluations} icon={MdAssignment}    color="purple.500" />
       </Grid>
 
       <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={4}>
@@ -91,17 +93,18 @@ function Dashboard() {
               <Thead>
                 <Tr>
                   <Th>Student</Th>
-                  <Th>Action</Th>
+                  <Th>Type</Th>
                   <Th>Status</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {recent.map((item, i) => (
                   <Tr key={i} _hover={{ bg: 'gray.50' }}>
-                    <Td fontSize="sm" fontWeight="500">{item.studentName}</Td>
-                    <Td fontSize="sm" color="gray.500">{item.action}</Td>
+                    <Td fontSize="sm" fontWeight="500">{item.student}</Td>
+                    <Td fontSize="sm" color="gray.500">{item.type}</Td>
                     <Td>
-                      <Badge colorScheme={statusColor[item.status] || 'gray'}
+                      <Badge
+                        colorScheme={statusColor[item.status] || 'gray'}
                         borderRadius="full" px={2} fontSize="10px">
                         {item.status}
                       </Badge>
@@ -128,12 +131,13 @@ function Dashboard() {
               {deadlines.map((d, i) => (
                 <HStack key={i} justify="space-between" py={3}>
                   <VStack align="start" spacing={0}>
-                    <Text fontSize="sm" fontWeight="500">{d.title}</Text>
-                    <Text fontSize="xs" color="gray.400">{d.description}</Text>
+                    <Text fontSize="sm" fontWeight="500">{d.student}</Text>
+                    <Text fontSize="xs" color="gray.400">{d.company}</Text>
                   </VStack>
-                  <Badge colorScheme={d.urgent ? 'red' : 'gray'}
+                  <Badge
+                    colorScheme={d.days_left <= 3 ? 'red' : 'gray'}
                     borderRadius="full" px={2} fontSize="10px" whiteSpace="nowrap">
-                    {d.dueDate}
+                    {d.days_left} days left
                   </Badge>
                 </HStack>
               ))}

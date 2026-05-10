@@ -40,7 +40,7 @@ const ROLES = [
     badge: 'Employer',
   },
   {
-    value: 'admin',                           
+    value: 'admin',
     label: 'Internship Administrator',
     icon:  MdSupervisorAccount,
     desc:  'Overall system and placement coordinator',
@@ -107,7 +107,12 @@ function RoleStep({ selected, onSelect }) {
 }
 
 // ── Step 2: Fields per role ────────────────────────────
-function FieldsStep({ role, register, errors, showPw, setShowPw, showConfirm, setShowConfirm, watch }) {
+function FieldsStep({
+  role, register, errors,
+  showPw, setShowPw,
+  showConfirm, setShowConfirm,
+  watch,
+}) {
   const pw = watch('password', '')
 
   return (
@@ -393,34 +398,37 @@ function FieldsStep({ role, register, errors, showPw, setShowPw, showConfirm, se
 
 // ── Step 3: Success ────────────────────────────────────
 function SuccessStep({ role }) {
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
   const roleLabel = ROLES.find((r) => r.value === role)?.label || 'User'
 
   return (
     <VStack spacing={5} textAlign="center" py={4}>
-      <Flex w="70px" h="70px" borderRadius="full" bg="brand.50"
-        align="center" justify="center">
+      <Flex
+        w="70px" h="70px" borderRadius="full" bg="brand.50"
+        align="center" justify="center"
+      >
         <CheckCircleIcon boxSize={10} color="brand.500" />
       </Flex>
+
       <Box>
         <Heading size="md" color="gray.800" fontFamily="heading" mb={2}>
           Registration Successful!
         </Heading>
         <Text fontSize="sm" color="gray.500" maxW="320px" lineHeight="1.8">
-          Your <Text as="span" fontWeight="600" color="brand.600">{roleLabel}</Text> account
-          has been created. You can now sign in using your email and password.
+          Your{' '}
+          <Text as="span" fontWeight="600" color="brand.600">
+            {roleLabel}
+          </Text>{' '}
+          account has been created. You can now sign in using your email and password.
         </Text>
       </Box>
-      <Alert status="info" borderRadius="lg" fontSize="xs" textAlign="left">
+
+      {/* ✅ No pending approval — all accounts ready immediately */}
+      <Alert status="success" borderRadius="lg" fontSize="xs" textAlign="left">
         <AlertIcon />
-        {role === 'student'
-          ? 'Your account is pending approval from the administration.'
-          : role === 'academic_supervisor'
-          ? 'Staff accounts require manual verification before full system access is granted.'
-          : role === 'admin'
-          ? 'Administrator account created. You can now manage internship placements.'
-          : 'Your account is active. Sign in to start supervising interns.'}
+        Your account is ready. Sign in to get started.
       </Alert>
+
       <Button
         w="100%" bg="brand.600" color="white" borderRadius="lg" size="md"
         _hover={{ bg: 'brand.700' }}
@@ -459,12 +467,12 @@ function Register() {
     try {
       const { confirmPassword, fullName, ...rest } = data
 
-      
+      // Split full name into first_name and last_name
       const nameParts  = (fullName || '').trim().split(' ')
       const first_name = nameParts[0] || ''
       const last_name  = nameParts.slice(1).join(' ') || ''
 
-      
+      // Map frontend field names to backend field names
       const payload = {
         email:        rest.email,
         username:     rest.email,
@@ -475,10 +483,10 @@ function Register() {
         phone_number: rest.phone,
 
         // Student
-        registration_number: rest.regNumber    || undefined,
-        year_of_study:       rest.yearOfStudy  || undefined,
-        course:              rest.course       || undefined,
-        department:          rest.department   || undefined,
+        registration_number: rest.regNumber   || undefined,
+        year_of_study:       rest.yearOfStudy || undefined,
+        course:              rest.course      || undefined,
+        department:          rest.department  || undefined,
 
         // Academic supervisor
         staff_id:      rest.staffId      || undefined,
@@ -493,11 +501,12 @@ function Register() {
       setActiveStep(2)
 
     } catch (err) {
-      // ✅ Show all backend validation errors
-      const data = err.response?.data
-      if (data && typeof data === 'object') {
-        const messages = Object.entries(data)
-          .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+      const errData = err.response?.data
+      if (errData && typeof errData === 'object') {
+        const messages = Object.entries(errData)
+          .map(([field, msgs]) =>
+            `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`
+          )
           .join(' | ')
         setApiError(messages)
       } else {
@@ -550,7 +559,11 @@ function Register() {
               </Flex>
               <Text
                 fontSize="sm"
-                color={activeStep === i ? 'white' : activeStep > i ? 'brand.300' : 'gray.500'}
+                color={
+                  activeStep === i ? 'white' :
+                  activeStep > i  ? 'brand.300' :
+                  'gray.500'
+                }
                 fontWeight={activeStep === i ? '600' : '400'}
               >
                 {step}
