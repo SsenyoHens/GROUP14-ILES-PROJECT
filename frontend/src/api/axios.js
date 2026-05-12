@@ -8,8 +8,10 @@ api.interceptors.request.use((config) => {
 
     const user = JSON.parse(localStorage.getItem('user'))
 
-    if (user?.access) {
-        config.headers.Authorization = `Bearer ${user.access}`
+    if (user?.tokens?.access) {
+
+        config.headers.Authorization =
+            `Bearer ${user.tokens.access}`
     }
 
     return config
