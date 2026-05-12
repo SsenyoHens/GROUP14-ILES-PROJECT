@@ -9,6 +9,7 @@ from datetime import timedelta
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
+
 # =========================
 # 1. Custom User Manager
 # =========================
@@ -65,50 +66,23 @@ class CustomUser(AbstractUser):
 # 3. Profiles
 # =========================
 class StudentProfile(models.Model):
-<<<<<<< HEAD
-
-    user = models.OneToOneField(
-        CustomUser,
-        on_delete=models.CASCADE
-    )
-=======
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
->>>>>>> staging
 
     registration_number = models.CharField(
         max_length=100,
         blank=True,
-<<<<<<< HEAD
-        default=''
-=======
         null=True
->>>>>>> staging
     )
 
     course = models.CharField(
         max_length=100,
         blank=True,
-<<<<<<< HEAD
-        default=''
-    )
-
-    year_of_study = models.IntegerField(
-        null=True,
-        blank=True
-    )
-
-    phone_number = models.CharField(
-        max_length=20,
-        blank=True,
-        default=''
-=======
         null=True
     )
 
     year_of_study = models.IntegerField(
         blank=True,
         null=True
->>>>>>> staging
     )
 
     def __str__(self):
@@ -116,80 +90,21 @@ class StudentProfile(models.Model):
 
 
 class AcademicSupervisorProfile(models.Model):
-<<<<<<< HEAD
-
-    user = models.OneToOneField(
-        CustomUser,
-        on_delete=models.CASCADE
-    )
-
-    department = models.CharField(
-        max_length=100,
-        blank=True,
-        default=''
-    )
-
-    staff_id = models.CharField(
-        max_length=100,
-        blank=True,
-        default=''
-    )
-
-    office_number = models.CharField(
-        max_length=100,
-        blank=True,
-        default=''
-    )
-
-    phone_number = models.CharField(
-        max_length=20,
-        blank=True,
-        default=''
-    )
-
-=======
     user          = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     office_number = models.CharField(max_length=50, blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)# ✅ added
     department = models.CharField(max_length=100, blank=True, null=True)
     staff_id      = models.CharField(max_length=50, blank=True, null=True)  # ✅ added
      
->>>>>>> staging
     def __str__(self):
         return self.user.email
 
 
 class WorkplaceSupervisorProfile(models.Model):
-<<<<<<< HEAD
-
-    user = models.OneToOneField(
-        CustomUser,
-        on_delete=models.CASCADE
-    )
-
-    company_name = models.CharField(
-        max_length=255,
-        blank=True,
-        default=''
-    )
-
-    position = models.CharField(
-        max_length=255,
-        blank=True,
-        default=''
-    )
-
-    phone_number = models.CharField(
-        max_length=20,
-        blank=True,
-        default=''
-    )
-=======
     user         = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     company_name = models.CharField(max_length=255, blank=True, null=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     position = models.CharField(max_length=100, blank=True, null=True)
->>>>>>> staging
 
     def __str__(self):
         return self.user.email
@@ -459,26 +374,17 @@ class EvaluationScore(models.Model):
 # =========================
 # 10. Signals
 # =========================
-
-@receiver(post_save, sender=CustomUser)
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
-
-    if created:
-
-        if instance.role == 'student':
-
-            StudentProfile.objects.get_or_create(
-                user=instance
-            )
-
-        elif instance.role == 'academic_supervisor':
-
-            AcademicSupervisorProfile.objects.get_or_create(
-                user=instance
-            )
-
-        elif instance.role == 'workplace_supervisor':
-
-            WorkplaceSupervisorProfile.objects.get_or_create(
-                user=instance
-            )
+    """
+    Only create profile if RegisterSerializer hasn't already created one.
+    Signal is a safety net — serializer creates profiles with full data.
+    """
+    if not created:
+        return
+    if instance.role == 'student':
+        StudentProfile.objects.get_or_create(user=instance)
+    elif instance.role == 'academic_supervisor':
+        AcademicSupervisorProfile.objects.get_or_create(user=instance)
+    elif instance.role == 'workplace_supervisor':
+        WorkplaceSupervisorProfile.objects.get_or_create(user=instance)

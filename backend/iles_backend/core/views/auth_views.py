@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from core.serializers import RegisterSerializer, LoginSerializer
 
 from core.models import (
-    CustomUser,
+    User,
     StudentProfile,
     AcademicSupervisorProfile,
     WorkplaceSupervisorProfile
@@ -38,14 +38,14 @@ def register_view(request):
         )
 
     # CHECK IF USER EXISTS
-    if CustomUser.objects.filter(username=username).exists():
+    if User.objects.filter(username=username).exists():
         return Response(
             {"error": "Username already exists"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
     # CREATE USER
-    CustomUser = User.objects.create_user(
+    user = User.objects.create_user(
         username=username,
         email=email,
         password=password,
