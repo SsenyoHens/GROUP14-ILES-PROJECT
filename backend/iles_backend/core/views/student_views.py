@@ -41,7 +41,9 @@ def student_detail(request, pk):
         return Response({"error": "Student not found"}, status=404)
 
     if request.method == 'GET':
-        placement = InternshipPlacement.objects.filter(student=student).first()
+        placement = InternshipPlacement.objects.filter(
+            student=student.studentprofile
+        ).first()
         logs      = WeeklyLog.objects.filter(student=student)
 
         serializer = StudentProfileSerializer(student)

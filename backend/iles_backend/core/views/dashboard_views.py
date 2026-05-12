@@ -14,7 +14,9 @@ def dashboard_stats(request):
     user = request.user
 
     if user.role == 'student':
-        placement = InternshipPlacement.objects.filter(student=user).first()
+        placement = InternshipPlacement.objects.filter(
+            student=user.studentprofile
+        ).first()
         logs      = WeeklyLog.objects.filter(student=user)
         evals     = Evaluation.objects.filter(student=user)
         return Response({

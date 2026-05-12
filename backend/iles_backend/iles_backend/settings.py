@@ -35,10 +35,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
 #if frontend uses another port
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+#CORS_ALLOW_ALL_ORIGINS = False
 
 
 # ==================================
@@ -83,9 +80,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite
-]
 # ==================================
 # 🔗 URLS & TEMPLATES
 # ==================================
@@ -145,11 +139,14 @@ AUTH_PASSWORD_VALIDATORS = [
 # 📡 DJANGO REST FRAMEWORK
 # ==================================
 REST_FRAMEWORK = {
+
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
 
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
 }
 
 

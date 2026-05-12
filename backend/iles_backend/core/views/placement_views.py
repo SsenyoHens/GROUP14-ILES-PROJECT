@@ -57,7 +57,9 @@ def placement_detail(request, pk):
 @permission_classes([IsAuthenticated, IsStudent])
 def create_placement(request):
     # Check student doesn't already have a placement
-    existing = InternshipPlacement.objects.filter(student=request.user).first()
+    existing = InternshipPlacement.objects.filter(
+        student=request.user.studentprofile
+    ).first()
     if existing:
         return Response(
             {"error": "You already have an active placement"},
@@ -66,7 +68,9 @@ def create_placement(request):
 
     serializer = PlacementSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save(student=request.user)
+        serializer.save(
+            student=request.user.studentprofile
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
