@@ -1,4 +1,8 @@
 from django.urls import path
+from core.views.notification_views import (
+    my_notifications,
+    mark_notification_as_read,
+)
 from core.views import (
     # Auth
     register_view, login_view, get_current_user,
@@ -78,4 +82,8 @@ urlpatterns = [
     path('supervisors/create/',             create_supervisor, name='create-supervisor'),
     path('supervisors/<int:pk>/update/',    update_supervisor, name='update-supervisor'),
     path('supervisors/<int:pk>/delete/',    delete_supervisor, name='delete-supervisor'),
+
+    #  NOTIFICATIONS
+    path('notifications/',                   my_notifications,          name='my-notifications'),
+    path('notifications/<int:pk>/read/',    mark_notification_as_read, name='mark-notification-as-read'),
 ]

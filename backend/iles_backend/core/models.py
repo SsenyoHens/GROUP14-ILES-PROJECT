@@ -92,9 +92,9 @@ class StudentProfile(models.Model):
 class AcademicSupervisorProfile(models.Model):
     user          = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     office_number = models.CharField(max_length=50, blank=True, null=True)
-    phone_number = models.CharField(max_length=20, blank=True, null=True)# ✅ added
+    phone_number = models.CharField(max_length=20, blank=True, null=True)#  added
     department = models.CharField(max_length=100, blank=True, null=True)
-    staff_id      = models.CharField(max_length=50, blank=True, null=True)  # ✅ added
+    staff_id      = models.CharField(max_length=50, blank=True, null=True)  #  added
      
     def __str__(self):
         return self.user.email
@@ -174,7 +174,7 @@ class WeeklyLog(models.Model):
     challenges      = models.TextField(blank=True)
     skills_gained   = models.TextField(blank=True)
     strengths       = models.TextField(blank=True)
-    plan_for_action = models.TextField(blank=True)   # ✅ consistent name
+    plan_for_action = models.TextField(blank=True)   #  consistent name
     status          = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     submitted_at    = models.DateTimeField(null=True, blank=True)
     created_at      = models.DateTimeField(auto_now_add=True)
@@ -184,7 +184,7 @@ class WeeklyLog(models.Model):
         unique_together = ('student', 'week_number')
         constraints = [
            models.CheckConstraint(
-            condition=Q(week_number__gte=1) & Q(week_number__lte=52),
+            check=Q(week_number__gte=1) & Q(week_number__lte=52),
             name="week_number_valid_range"
             )
         ]
@@ -292,7 +292,7 @@ class Evaluation(models.Model):
     status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     criteria    = models.ManyToManyField('EvaluationCriteria', through='EvaluationScore')
     created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)   # ✅ added
+    updated_at  = models.DateTimeField(auto_now=True)   #  added
 
     class Meta:
         unique_together = ['weekly_log', 'evaluator']
@@ -381,3 +381,37 @@ def create_user_profile(sender, instance, created, **kwargs):
     This signal prevents duplicate empty profiles.
     """
     pass
+
+
+class Notification(models.Model):
+
+    NOTIFICATION_TYPES = [
+        ('submitted', 'Submitted'),
+        ('reviewed', 'Reviewed'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    recipient = models.ForeignKey(CustomUser, on_delete=models.CASCADE, 
+                                  related_name='notifications')
+
+    weekly_log = models.ForeignKey(
+        WeeklyLog,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True)
+
+    message = models.TextField()
+
+    notification_type = models.CharField(max_length=20,
+        choices=NOTIFICATION_TYPES)
+
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.recipient.email} - {self.notification_type}"

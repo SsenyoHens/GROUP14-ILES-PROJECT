@@ -163,7 +163,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='weeklylog',
-            constraint=models.CheckConstraint(condition=models.Q(('week_number__gte', 1), ('week_number__lte', 52)), name='week_number_valid_range'),
+            constraint=models.CheckConstraint(check=models.Q(('week_number__gte', 1), ('week_number__lte', 52)), name='week_number_valid_range'),
         ),
         migrations.AlterUniqueTogether(
             name='weeklylog',

@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from core.models import (
+    Notification,
+    CustomUser,
     AcademicSupervisorProfile,
     Evaluation,
     EvaluationScore,
@@ -13,6 +15,21 @@ from core.models import (
 )
 
 User = get_user_model()
+
+#============================================
+# USER SERIALIZER
+#============================================
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CustomUser
+
+        fields = [
+            'id',
+            'username',
+            'email',
+            'role',
+        ]
 
 
 # =========================================================
@@ -91,17 +108,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         phone_number = validated_data.pop('phone_number', '')
 
         # Student
-        registration_number = validated_data.pop(
-            'registration_number',
-            ''
-        )
+        registration_number = validated_data.pop('registration_number', '')
 
         course = validated_data.pop('course', '')
 
-        year_of_study = validated_data.pop(
-            'year_of_study',
-            None
-        )
+        year_of_study = validated_data.pop('year_of_study', None)
 
         # Academic supervisor
         department = validated_data.pop('department', '')
@@ -167,10 +178,7 @@ class LoginSerializer(serializers.Serializer):
 
     email = serializers.EmailField(required=True)
 
-    password = serializers.CharField(
-        required=True,
-        write_only=True
-    )
+    password = serializers.CharField(required=True, write_only=True)
 
 
 # =========================================================
@@ -221,9 +229,63 @@ class WorkplaceSupervisorProfileSerializer(serializers.ModelSerializer):
         ]
 
 # =========================================================
-# 4. EVALUATION SCORE SERIALIZER
+# USER SERIALIZER
 # =========================================================
 
+'''class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+
+        fields = [
+            'id',
+            'username',
+            'email',
+            'role',
+        ]'''
+
+
+# =========================================================
+# ACADEMIC SUPERVISOR PROFILE SERIALIZER
+# =========================================================
+class AcademicSupervisorProfileSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = AcademicSupervisorProfile
+
+        fields = '__all__'
+
+# =========================================================
+# WORKPLACE SUPERVISOR PROFILE SERIALIZER
+# =========================================================
+class WorkplaceSupervisorProfileSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = WorkplaceSupervisorProfile
+
+        fields = '__all__'
+
+# =========================================================
+# SUPERVISOR SERIALIZER
+# =========================================================
+class SupervisorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+
+        fields = [
+            'id',
+            'username',
+            'email',
+            'role',
+        ]
+# =========================================================
+# 4. EVALUATION SCORE SERIALIZER
+# =========================================================
 class EvaluationScoreSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -238,7 +300,6 @@ class EvaluationScoreSerializer(serializers.ModelSerializer):
 # =========================================================
 # 5. EVALUATION SERIALIZER
 # =========================================================
-
 class EvaluationSerializer(serializers.ModelSerializer):
 
     scores = EvaluationScoreSerializer(
@@ -274,7 +335,6 @@ class EvaluationSerializer(serializers.ModelSerializer):
 # =========================================================
 # 6. INTERNSHIP PLACEMENT SERIALIZER
 # =========================================================
-
 class PlacementSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -289,9 +349,7 @@ class PlacementSerializer(serializers.ModelSerializer):
 
         if start and end and start > end:
 
-            raise serializers.ValidationError(
-                "Start date cannot be after end date."
-            )
+            raise serializers.ValidationError("Start date cannot be after end date.")
 
         return data
 
@@ -299,12 +357,9 @@ class PlacementSerializer(serializers.ModelSerializer):
 # =========================================================
 # 7. WEEKLY LOG SERIALIZER
 # =========================================================
-
 class WeeklyLogSerializer(serializers.ModelSerializer):
 
-    student = serializers.ReadOnlyField(
-        source='student.email'
-    )
+    student = serializers.ReadOnlyField(source='student.email')
 
     class Meta:
         model = WeeklyLog
@@ -324,22 +379,14 @@ class WeeklyLogSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
 
-        if (
-            data.get('status') == 'submitted'
-            and not data.get('activities_done')
-        ):
-
+        if (data.get('status') == 'submitted' and not data.get('activities_done')):
             raise serializers.ValidationError(
-                "Cannot submit empty log."
-            )
-
+                "Cannot submit empty log.")
         return data
-
 
 # =========================================================
 # 8. WEEKLY LOG STATS SERIALIZER
 # =========================================================
-
 class WeeklyLogStatsSerializer(serializers.Serializer):
 
     total_logs = serializers.IntegerField()
@@ -354,13 +401,12 @@ class WeeklyLogStatsSerializer(serializers.Serializer):
 # =========================================================
 # 9. WEEKLY LOG HISTORY SERIALIZER
 # =========================================================
-
 class WeeklyLogHistorySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = WeeklyLogHistory
 
         fields = '__all__'
+<<<<<<< HEAD
           
 # =========================================================
 # 10. USER SERIALIZER
@@ -399,3 +445,15 @@ class SupervisorSerializer(serializers.ModelSerializer):
             'role',
             'is_active',
         ]        
+=======
+
+#========================================================
+# 10. NOTIFICATION SERIALIZER
+# =========================================================
+class NotificationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Notification
+
+        fields = '__all__'
+>>>>>>> c28388f (updated constraint from conditon to check, added notifications model,)
