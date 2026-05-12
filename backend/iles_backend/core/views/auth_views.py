@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from core.serializers import RegisterSerializer, LoginSerializer
 
 from core.models import (
-    User,
+    CustomUser,
     StudentProfile,
     AcademicSupervisorProfile,
     WorkplaceSupervisorProfile
@@ -23,6 +23,7 @@ from core.models import (
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_view(request):
+
     data = request.data
 
     username = data.get('username')
@@ -30,22 +31,28 @@ def register_view(request):
     password = data.get('password')
     role = data.get('role')
 
-    # CHECK REQUIRED FIELDS
+    # REQUIRED FIELDS
     if not username or not email or not password or not role:
         return Response(
-            {"error": "All required fields must be provided"},
+            {"error": "All required fields are required"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # CHECK IF USER EXISTS
-    if User.objects.filter(username=username).exists():
+    # CHECK EXISTING USER
+    if CustomUser.objects.filter(username=username).exists():
         return Response(
             {"error": "Username already exists"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    if CustomUser.objects.filter(email=email).exists():
+        return Response(
+            {"error": "Email already exists"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     # CREATE USER
-    user = User.objects.create_user(
+    user = CustomUser.objects.create_user(
         username=username,
         email=email,
         password=password,
@@ -56,6 +63,7 @@ def register_view(request):
     # STUDENT PROFILE
     # =========================
     if role == 'student':
+
         StudentProfile.objects.create(
             user=user,
             registration_number=data.get('registration_number'),
@@ -67,6 +75,7 @@ def register_view(request):
     # ACADEMIC SUPERVISOR PROFILE
     # =========================
     elif role == 'academic_supervisor':
+
         AcademicSupervisorProfile.objects.create(
             user=user,
             department=data.get('department'),
@@ -77,6 +86,7 @@ def register_view(request):
     # WORKPLACE SUPERVISOR PROFILE
     # =========================
     elif role == 'workplace_supervisor':
+
         WorkplaceSupervisorProfile.objects.create(
             user=user,
             company_name=data.get('company_name'),
@@ -84,7 +94,9 @@ def register_view(request):
         )
 
     return Response(
-        {"message": "User registered successfully"},
+        {
+            "message": "User registered successfully"
+        },
         status=status.HTTP_201_CREATED
     )
 
@@ -128,6 +140,7 @@ def login_view(request):
     refresh = RefreshToken.for_user(user)
 
     return Response({
+
         "message": "Login successful",
 
         "user": {
@@ -155,6 +168,7 @@ def login_view(request):
 def logout_view(request):
 
     try:
+
         refresh_token = request.data.get("refresh")
 
         if not refresh_token:
@@ -172,6 +186,7 @@ def logout_view(request):
         )
 
     except Exception:
+
         return Response(
             {"error": "Invalid or expired token"},
             status=status.HTTP_400_BAD_REQUEST

@@ -377,14 +377,7 @@ class EvaluationScore(models.Model):
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
     """
-    Only create profile if RegisterSerializer hasn't already created one.
-    Signal is a safety net — serializer creates profiles with full data.
+    Profiles are created manually during registration.
+    This signal prevents duplicate empty profiles.
     """
-    if not created:
-        return
-    if instance.role == 'student':
-        StudentProfile.objects.get_or_create(user=instance)
-    elif instance.role == 'academic_supervisor':
-        AcademicSupervisorProfile.objects.get_or_create(user=instance)
-    elif instance.role == 'workplace_supervisor':
-        WorkplaceSupervisorProfile.objects.get_or_create(user=instance)
+    pass
