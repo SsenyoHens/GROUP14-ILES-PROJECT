@@ -27,7 +27,6 @@ function Login() {
             ...formData,
             [e.target.name]: e.target.value
         })
-
     }
 
     const handleSubmit = async (e) => {
@@ -38,26 +37,31 @@ function Login() {
 
             const response = await authService.login(formData)
 
-            console.log("FULL RESPONSE:", response)
-            console.log("DATA:", response.data)
-			
-			localStorage.setItem(
+            console.log(response.data)
+
+            localStorage.setItem(
                 'user',
                 JSON.stringify(response.data)
             )
 
-            if (response.data.role === 'admin') {
+            const role = response.data.user.role
+
+            if (role === 'admin') {
 
                 navigate('/')
 
-            } else if (
-                response.data.role === 'student'
-            ) {
+            } else if (role === 'student') {
 
                 navigate('/student')
 
             } else if (
-                response.data.role === 'academic_supervisor'
+                role === 'academic_supervisor'
+            ) {
+
+                navigate('/academic')
+
+            } else if (
+                role === 'workplace_supervisor'
             ) {
 
                 navigate('/academic')
@@ -68,9 +72,7 @@ function Login() {
             console.error(error)
 
             alert('Login failed')
-
         }
-
     }
 
     return (
@@ -118,7 +120,6 @@ function Login() {
             </VStack>
 
         </Box>
-
     )
 }
 

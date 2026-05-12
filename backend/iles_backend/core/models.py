@@ -65,21 +65,30 @@ class CustomUser(AbstractUser):
 # 3. Profiles
 # =========================
 class StudentProfile(models.Model):
+<<<<<<< HEAD
 
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE
     )
+=======
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+>>>>>>> staging
 
     registration_number = models.CharField(
         max_length=100,
         blank=True,
+<<<<<<< HEAD
         default=''
+=======
+        null=True
+>>>>>>> staging
     )
 
     course = models.CharField(
         max_length=100,
         blank=True,
+<<<<<<< HEAD
         default=''
     )
 
@@ -92,13 +101,22 @@ class StudentProfile(models.Model):
         max_length=20,
         blank=True,
         default=''
+=======
+        null=True
+    )
+
+    year_of_study = models.IntegerField(
+        blank=True,
+        null=True
+>>>>>>> staging
     )
 
     def __str__(self):
-        return self.user.email
+        return self.user.username
 
 
 class AcademicSupervisorProfile(models.Model):
+<<<<<<< HEAD
 
     user = models.OneToOneField(
         CustomUser,
@@ -129,11 +147,20 @@ class AcademicSupervisorProfile(models.Model):
         default=''
     )
 
+=======
+    user          = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    office_number = models.CharField(max_length=50, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)# ✅ added
+    department = models.CharField(max_length=100, blank=True, null=True)
+    staff_id      = models.CharField(max_length=50, blank=True, null=True)  # ✅ added
+     
+>>>>>>> staging
     def __str__(self):
         return self.user.email
 
 
 class WorkplaceSupervisorProfile(models.Model):
+<<<<<<< HEAD
 
     user = models.OneToOneField(
         CustomUser,
@@ -157,6 +184,12 @@ class WorkplaceSupervisorProfile(models.Model):
         blank=True,
         default=''
     )
+=======
+    user         = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    company_name = models.CharField(max_length=255, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    position = models.CharField(max_length=100, blank=True, null=True)
+>>>>>>> staging
 
     def __str__(self):
         return self.user.email
