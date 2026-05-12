@@ -66,35 +66,45 @@ class CustomUser(AbstractUser):
 # 3. Profiles
 # =========================
 class StudentProfile(models.Model):
-    user                = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    registration_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
-    course              = models.CharField(max_length=100, blank=True)
-    year_of_study       = models.IntegerField(
-                            validators=[MinValueValidator(1), MaxValueValidator(5)],
-                            null=True, blank=True
-                          )
-    phone_number        = models.CharField(max_length=25, blank=True, null=True)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+
+    registration_number = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    course = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    year_of_study = models.IntegerField(
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
-        return self.user.email
+        return self.user.username
 
 
 class AcademicSupervisorProfile(models.Model):
     user          = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    department    = models.CharField(max_length=100, blank=True)
-    office_number = models.CharField(max_length=20, blank=True)
+    office_number = models.CharField(max_length=50, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)# ✅ added
+    department = models.CharField(max_length=100, blank=True, null=True)
     staff_id      = models.CharField(max_length=50, blank=True, null=True)  # ✅ added
-    phone_number  = models.CharField(max_length=25, blank=True, null=True)  # ✅ added
-
+     
     def __str__(self):
         return self.user.email
 
 
 class WorkplaceSupervisorProfile(models.Model):
     user         = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    company_name = models.CharField(max_length=255, blank=True)
-    position     = models.CharField(max_length=100, blank=True)
-    phone_number = models.CharField(max_length=25, blank=True, null=True)
+    company_name = models.CharField(max_length=255, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    position = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return self.user.email

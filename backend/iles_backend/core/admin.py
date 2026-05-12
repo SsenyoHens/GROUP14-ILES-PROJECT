@@ -71,7 +71,7 @@ class CustomUserAdmin(UserAdmin):
 # =========================
 @admin.register(StudentProfile)
 class StudentProfileAdmin(admin.ModelAdmin):
-    list_display  = ['user', 'registration_number', 'course', 'year_of_study', 'phone_number']
+    list_display  = ['user', 'registration_number', 'course', 'year_of_study']
     search_fields = ['user__email', 'user__first_name', 'registration_number']
 
 
