@@ -189,6 +189,36 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             'phone_number',
         ]
 
+# =========================================================
+# ACADEMIC SUPERVISOR PROFILE SERIALIZER
+# =========================================================
+
+class AcademicSupervisorProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AcademicSupervisorProfile
+
+        fields = [
+            'department',
+            'staff_id',
+            'phone_number',
+        ]
+
+
+# =========================================================
+# WORKPLACE SUPERVISOR PROFILE SERIALIZER
+# =========================================================
+
+class WorkplaceSupervisorProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = WorkplaceSupervisorProfile
+
+        fields = [
+            'organization',
+            'job_title',
+            'phone_number',
+        ]
 
 # =========================================================
 # 4. EVALUATION SCORE SERIALIZER
@@ -331,3 +361,41 @@ class WeeklyLogHistorySerializer(serializers.ModelSerializer):
         model = WeeklyLogHistory
 
         fields = '__all__'
+          
+# =========================================================
+# 10. USER SERIALIZER
+# =========================================================
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+
+        fields = [
+            'id',
+            'email',
+            'username',
+            'role',
+            'first_name',
+            'last_name',
+            'is_active',
+        ]        
+
+# =========================================================
+# SUPERVISOR SERIALIZER
+# =========================================================
+
+class SupervisorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+
+        fields = [
+            'id',
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+            'role',
+            'is_active',
+        ]        
