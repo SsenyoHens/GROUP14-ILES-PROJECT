@@ -406,8 +406,6 @@ class WeeklyLogHistorySerializer(serializers.ModelSerializer):
         model = WeeklyLogHistory
 
         fields = '__all__'
-<<<<<<< HEAD
-          
 # =========================================================
 # 10. USER SERIALIZER
 # =========================================================
@@ -445,7 +443,6 @@ class SupervisorSerializer(serializers.ModelSerializer):
             'role',
             'is_active',
         ]        
-=======
 
 #========================================================
 # 10. NOTIFICATION SERIALIZER
@@ -456,4 +453,3 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
 
         fields = '__all__'
->>>>>>> c28388f (updated constraint from conditon to check, added notifications model,)
