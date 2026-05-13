@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from core.utils import create_notification
 
 from core.models import WeeklyLog
 from core.serializers import WeeklyLogSerializer
@@ -49,8 +50,22 @@ def create_log(request):
 
     serializer = WeeklyLogSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save(student=request.user)
+        new_log = serializer.save(student=request.user)
+
+        # Notify academic supervisor
+        placement = getattr(request.user,
+                            'internshipplacement', None)
+        if placement and placement.academic_supervisor:
+
+            create_notification(
+                recipient=placement.academic_supervisor.user,
+                weekly_log=new_log,
+                notification_type='submitted',
+                sender =user,
+                message=f'{request.user.username} submitted Week {new_log.week_number} log.'
+            )
         return Response(serializer.data, status=201)
+        
     return Response(serializer.errors, status=400)
 
 
@@ -85,9 +100,42 @@ def update_log(request, pk):
 
     serializer = WeeklyLogSerializer(log, data=request.data, partial=True)
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=400)
+        updated_log = serializer.save()
+
+        '''return Response(serializer.data)
+    return Response(serializer.errors, status=400)'''
+        
+        # ==============================================
+        # NOTIFICATIONS
+        # ==============================================
+        # Create notification for student when supervisor updates log
+        if user.role in ['academic_supervisor', 'workplace_supervisor']:
+            if updated_log.status == 'approved':
+                create_notification(
+                    recipient=updated_log.student,
+                    weekly_log=updated_log,
+                    notification_type='approved',
+                    sender=user,
+                    message=f"Your weekly log for week {updated_log.week_number} has been approved."
+                )
+            elif updated_log.status == 'rejected':
+                create_notification(
+                    recipient=updated_log.student,
+                    weekly_log=updated_log,
+                    notification_type='rejected',
+                    sender=user,
+                    message=f"Your weekly log for week {updated_log.week_number} has been rejected."
+
+                )
+            elif updated_log.status == 'submitted':
+                create_notification(
+                   recipient=updated_log.student,
+                   weekly_log=updated_log,
+                   notification_type='submitted',
+                   sender = user,
+                   message= f'Your Week {updated_log.week_number} log has been reviewed.' 
+                )
+    return Response(serializer.data)
 
 
 @api_view(['DELETE'])
