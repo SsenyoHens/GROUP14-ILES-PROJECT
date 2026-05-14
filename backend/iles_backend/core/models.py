@@ -184,7 +184,7 @@ class WeeklyLog(models.Model):
         unique_together = ('student', 'week_number')
         constraints = [
            models.CheckConstraint(
-            check=Q(week_number__gte=1) & Q(week_number__lte=52),
+            condition=Q(week_number__gte=1) & Q(week_number__lte=52),
             name="week_number_valid_range"
             )
         ]
