@@ -7,13 +7,16 @@ import {
   ModalBody, ModalFooter, ModalCloseButton,
   useDisclosure, useToast,
 } from '@chakra-ui/react'
-import { MdBook, MdAdd, MdCheckCircle, MdSchedule, MdCalendarToday, MdEdit, MdSearch } from 'react-icons/md'
+import {
+  MdBook, MdAdd, MdCheckCircle, MdSchedule,
+  MdCalendarToday, MdEdit, MdSearch, MdSend,
+} from 'react-icons/md'
 import api from '../../api/axiosInstance'
 
 function useFetch(endpoint) {
-  const [data, setData] = useState(null)
+  const [data,    setData]    = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error,   setError]   = useState(null)
   const load = useCallback(async () => {
     setLoading(true); setError(null)
     try { const res = await api.get(endpoint); setData(res.data) }
@@ -24,50 +27,76 @@ function useFetch(endpoint) {
   return { data, loading, error, refetch: load }
 }
 
-const EMPTY = { date: '', activities: '', challenges: '', learning: '' }
+const EMPTY = {
+  week_number:     '',
+  activities_done: '',
+  challenges:      '',
+  skills_gained:   '',
+  strengths:       '',
+  plan_for_action: '',
+}
 
 function EntryModal({ isOpen, onClose, onSubmit, initial }) {
-  const [form, setForm] = useState(initial || EMPTY)
+  const [form,   setForm]   = useState(initial || EMPTY)
   const [saving, setSaving] = useState(false)
+
   useEffect(() => { setForm(initial || EMPTY) }, [initial, isOpen])
+
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
+
   const handleSubmit = async () => {
     setSaving(true)
-    try { await onSubmit(form); onClose() } finally { setSaving(false) }
+    try { await onSubmit(form); onClose() }
+    finally { setSaving(false) }
   }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(4px)" />
       <ModalContent borderRadius="2xl" mx={4}>
-        <ModalHeader fontSize="md" fontWeight="700" pb={1}>{initial ? 'Edit Entry' : 'New Logbook Entry'}</ModalHeader>
+        <ModalHeader fontSize="md" fontWeight="700" pb={1}>
+          {initial ? 'Edit Entry' : 'New Logbook Entry'}
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <VStack spacing={4}>
             <Box w="full">
-              <FormLabel fontSize="xs" color="gray.500" mb={1}>Date *</FormLabel>
-              <Input type="date" size="sm" borderRadius="lg" bg="gray.50" value={form.date} onChange={set('date')} />
+              <FormLabel fontSize="xs" color="gray.500" mb={1}>Week Number *</FormLabel>
+              <Input type="number" size="sm" borderRadius="lg" bg="gray.50"
+                placeholder="e.g. 1"
+                value={form.week_number} onChange={set('week_number')} />
             </Box>
             <Box w="full">
               <FormLabel fontSize="xs" color="gray.500" mb={1}>Activities Performed *</FormLabel>
               <Textarea size="sm" borderRadius="lg" bg="gray.50" rows={4}
-                placeholder="Describe what you did today…" value={form.activities} onChange={set('activities')} />
+                placeholder="Describe what you did…"
+                value={form.activities_done} onChange={set('activities_done')} />
             </Box>
             <Box w="full">
               <FormLabel fontSize="xs" color="gray.500" mb={1}>Challenges Faced</FormLabel>
               <Textarea size="sm" borderRadius="lg" bg="gray.50" rows={2}
-                placeholder="Any difficulties?" value={form.challenges} onChange={set('challenges')} />
+                placeholder="Any difficulties?"
+                value={form.challenges} onChange={set('challenges')} />
             </Box>
             <Box w="full">
-              <FormLabel fontSize="xs" color="gray.500" mb={1}>Key Learnings</FormLabel>
+              <FormLabel fontSize="xs" color="gray.500" mb={1}>Skills Gained</FormLabel>
               <Textarea size="sm" borderRadius="lg" bg="gray.50" rows={2}
-                placeholder="What did you learn?" value={form.learning} onChange={set('learning')} />
+                placeholder="What skills did you learn?"
+                value={form.skills_gained} onChange={set('skills_gained')} />
+            </Box>
+            <Box w="full">
+              <FormLabel fontSize="xs" color="gray.500" mb={1}>Plan for Action</FormLabel>
+              <Textarea size="sm" borderRadius="lg" bg="gray.50" rows={2}
+                placeholder="What will you do next?"
+                value={form.plan_for_action} onChange={set('plan_for_action')} />
             </Box>
           </VStack>
         </ModalBody>
         <ModalFooter gap={2}>
           <Button size="sm" variant="ghost" onClick={onClose} borderRadius="lg">Cancel</Button>
-          <Button size="sm" bg="brand.600" color="white" borderRadius="lg" _hover={{ bg: 'brand.700' }}
-            isLoading={saving} onClick={handleSubmit} isDisabled={!form.date || !form.activities}>
+          <Button size="sm" bg="brand.600" color="white" borderRadius="lg"
+            _hover={{ bg: 'brand.700' }} isLoading={saving} onClick={handleSubmit}
+            isDisabled={!form.week_number || !form.activities_done}>
             {initial ? 'Save Changes' : 'Add Entry'}
           </Button>
         </ModalFooter>
@@ -76,49 +105,91 @@ function EntryModal({ isOpen, onClose, onSubmit, initial }) {
   )
 }
 
-function EntryCard({ entry, onEdit }) {
+function EntryCard({ entry, onEdit, onSubmitLog }) {
+  const [submitting, setSubmitting] = useState(false)
+  const isApproved = entry.status === 'approved'
+  const isSubmitted = entry.status === 'submitted'
+
+  const badgeColor = isApproved ? 'green' : isSubmitted ? 'teal' : 'orange'
+  const badgeLabel = isApproved ? 'Approved' : isSubmitted ? 'Submitted' : 'Draft'
+
+  const handleClearSubmit = async () => {
+    setSubmitting(true)
+    try {
+      await onSubmitLog(entry.id)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <Box bg="white" borderRadius="xl" border="1px solid" borderColor="gray.100"
       boxShadow="0 1px 3px rgba(0,0,0,0.04)"
-      _hover={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} transition="all 0.15s" overflow="hidden">
+      _hover={{ boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+      transition="all 0.15s" overflow="hidden">
       <Flex px={4} py={3} justify="space-between" align="center"
         borderBottom="1px solid" borderColor="gray.50">
         <HStack spacing={2}>
           <Icon as={MdCalendarToday} boxSize={3.5} color="brand.400" />
-          <Text fontSize="xs" fontWeight="700" color="gray.700">{entry.date}</Text>
+          <Text fontSize="xs" fontWeight="700" color="gray.700">
+            Week {entry.week_number}
+          </Text>
+          <Text fontSize="10px" color="gray.400">
+            · {entry.created_at ? new Date(entry.created_at).toLocaleDateString() : ''}
+          </Text>
         </HStack>
         <HStack spacing={2}>
-          <Badge colorScheme={entry.approved ? 'green' : 'orange'} borderRadius="full" fontSize="9px" px={2}>
+          <Badge colorScheme={badgeColor} borderRadius="full" fontSize="9px" px={2}>
             <HStack spacing={1}>
-              <Icon as={entry.approved ? MdCheckCircle : MdSchedule} boxSize={2.5} />
-              <Text>{entry.approved ? 'Approved' : 'Pending'}</Text>
+              <Icon as={isApproved ? MdCheckCircle : MdSchedule} boxSize={2.5} />
+              <Text>{badgeLabel}</Text>
             </HStack>
           </Badge>
-          <Button size="xs" variant="ghost" color="gray.400" _hover={{ color: 'brand.500' }} onClick={() => onEdit(entry)}>
-            <Icon as={MdEdit} boxSize={3.5} />
-          </Button>
+          
+          {/* ✅ Only allow edit and submit actions on draft logs */}
+          {entry.status === 'draft' && (
+            <HStack spacing={1}>
+              <Button size="xs" variant="ghost" color="gray.400" title="Edit Draft"
+                _hover={{ color: 'brand.500' }} onClick={() => onEdit(entry)}>
+                <Icon as={MdEdit} boxSize={3.5} />
+              </Button>
+              <Button size="xs" variant="ghost" color="gray.400" title="Submit Logbook Entry"
+                _hover={{ color: 'green.500' }} isLoading={submitting} onClick={handleClearSubmit}>
+                <Icon as={MdSend} boxSize={3.5} />
+              </Button>
+            </HStack>
+          )}
         </HStack>
       </Flex>
       <Box px={4} py={3}>
-        <Text fontSize="xs" fontWeight="600" color="gray.500" textTransform="uppercase" letterSpacing="wider" mb={1}>Activities</Text>
-        <Text fontSize="sm" color="gray.700" lineHeight="1.7" mb={3}>{entry.activities}</Text>
+        <Text fontSize="xs" fontWeight="600" color="gray.500"
+          textTransform="uppercase" letterSpacing="wider" mb={1}>
+          Activities
+        </Text>
+        <Text fontSize="sm" color="gray.700" lineHeight="1.7" mb={3}>
+          {entry.activities_done}
+        </Text>
         {entry.challenges && (
           <>
-            <Text fontSize="xs" fontWeight="600" color="gray.500" textTransform="uppercase" letterSpacing="wider" mb={1}>Challenges</Text>
-            <Text fontSize="sm" color="gray.600" lineHeight="1.7" mb={3}>{entry.challenges}</Text>
+            <Text fontSize="xs" fontWeight="600" color="gray.500"
+              textTransform="uppercase" letterSpacing="wider" mb={1}>
+              Challenges
+            </Text>
+            <Text fontSize="sm" color="gray.600" lineHeight="1.7" mb={3}>
+              {entry.challenges}
+            </Text>
           </>
         )}
-        {entry.learning && (
+        {entry.skills_gained && (
           <>
-            <Text fontSize="xs" fontWeight="600" color="gray.500" textTransform="uppercase" letterSpacing="wider" mb={1}>Key Learnings</Text>
-            <Text fontSize="sm" color="gray.600" lineHeight="1.7">{entry.learning}</Text>
+            <Text fontSize="xs" fontWeight="600" color="gray.500"
+              textTransform="uppercase" letterSpacing="wider" mb={1}>
+              Skills Gained
+            </Text>
+            <Text fontSize="sm" color="gray.600" lineHeight="1.7">
+              {entry.skills_gained}
+            </Text>
           </>
-        )}
-        {entry.supervisor_comment && (
-          <Box mt={3} bg="blue.50" borderRadius="lg" p={3} borderLeft="3px solid" borderColor="blue.300">
-            <Text fontSize="10px" color="blue.500" fontWeight="600" mb={1}>Supervisor Comment</Text>
-            <Text fontSize="xs" color="blue.700">{entry.supervisor_comment}</Text>
-          </Box>
         )}
       </Box>
     </Box>
@@ -126,34 +197,66 @@ function EntryCard({ entry, onEdit }) {
 }
 
 export default function Logbook() {
-  // API expects: array of { id, date, activities, challenges, learning, approved, supervisor_comment }
-  const { data, loading, error, refetch } = useFetch('/student/logbook/')
+  const { data, loading, error, refetch } = useFetch('/logs/')
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [editing, setEditing] = useState(null)
-  const [search, setSearch] = useState('')
+  const [search,  setSearch]  = useState('')
   const toast = useToast()
 
-  const entries = data ?? []
+  const entries  = Array.isArray(data) ? data : []
   const filtered = entries.filter(e =>
-    !search || e.activities?.toLowerCase().includes(search.toLowerCase()) || e.date?.includes(search)
+    !search ||
+    e.activities_done?.toLowerCase().includes(search.toLowerCase()) ||
+    String(e.week_number)?.includes(search)
   )
 
   const handleNew  = () => { setEditing(null); onOpen() }
-  const handleEdit = (e) => { setEditing(e); onOpen() }
+  const handleEdit = (e) => {
+    setEditing({
+      id:              e.id,
+      week_number:     e.week_number,
+      activities_done: e.activities_done,
+      challenges:      e.challenges,
+      skills_gained:   e.skills_gained,
+      strengths:       e.strengths,
+      plan_for_action: e.plan_for_action,
+    })
+    onOpen()
+  }
 
   const handleSubmit = async (form) => {
     try {
       if (editing?.id) {
-        await api.put(`/student/logbook/${editing.id}/`, form)
+        await api.put(`/logs/${editing.id}/update/`, form)
         toast({ title: 'Entry updated', status: 'success', duration: 3000, isClosable: true })
       } else {
-        await api.post('/student/logbook/', form)
+        await api.post('/logs/create/', form)
         toast({ title: 'Entry added', status: 'success', duration: 3000, isClosable: true })
       }
       refetch()
     } catch (err) {
-      toast({ title: 'Failed to save', description: err.message, status: 'error', duration: 4000, isClosable: true })
+      toast({
+        title: 'Failed to save', description: err.message,
+        status: 'error', duration: 4000, isClosable: true
+      })
       throw err
+    }
+  }
+
+  {/* ✅ Handler to execute submission endpoint switch */}
+  const handleLogSubmission = async (id) => {
+    try {
+      await api.post(`/logs/${id}/submit/`)
+      toast({ title: 'Logbook entry submitted successfully!', status: 'success', duration: 3000, isClosable: true })
+      refetch()
+    } catch (err) {
+      toast({
+        title: 'Submission failed',
+        description: err.response?.data?.detail || err.message,
+        status: 'error',
+        duration: 4000,
+        isClosable: true
+      })
     }
   }
 
@@ -164,7 +267,10 @@ export default function Logbook() {
         <Box>
           <Text fontSize="xl" fontWeight="800" color="gray.800">Logbook</Text>
           <Text fontSize="sm" color="gray.400">
-            {loading ? 'Loading…' : `${entries.length} entries · ${entries.filter(e => e.approved).length} approved`}
+            {loading
+              ? 'Loading…'
+              : `${entries.length} entries · ${entries.filter(e => e.status === 'approved').length} approved`
+            }
           </Text>
         </Box>
         <HStack spacing={3}>
@@ -186,13 +292,15 @@ export default function Logbook() {
       {/* Stats */}
       <Grid templateColumns="1fr 1fr 1fr" gap={4} mb={6}>
         {[
-          { label: 'Total Entries', value: entries.length,                          color: 'brand'  },
-          { label: 'Approved',      value: entries.filter(e => e.approved).length,  color: 'green'  },
-          { label: 'Pending',       value: entries.filter(e => !e.approved).length, color: 'orange' },
+          { label: 'Total Entries', value: entries.length,                                                         color: 'brand'  },
+          { label: 'Approved',      value: entries.filter(e => e.status === 'approved').length,  color: 'green'  },
+          { label: 'Pending',       value: entries.filter(e => e.status !== 'approved').length,  color: 'orange' },
         ].map(s => (
           <Box key={s.label} bg="white" borderRadius="xl" p={4}
             border="1px solid" borderColor="gray.100" boxShadow="0 1px 3px rgba(0,0,0,0.04)">
-            <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider">{s.label}</Text>
+            <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider">
+              {s.label}
+            </Text>
             <Text fontSize="xl" fontWeight="800" color={`${s.color}.500`} mt={1}>{s.value}</Text>
           </Box>
         ))}
@@ -200,7 +308,8 @@ export default function Logbook() {
 
       {error && (
         <Alert status="error" borderRadius="xl" mb={4}>
-          <AlertIcon /><AlertDescription>{error}</AlertDescription>
+          <AlertIcon />
+          <AlertDescription>{error}</AlertDescription>
           <Button size="xs" ml={3} onClick={refetch} colorScheme="red" variant="outline">Retry</Button>
         </Alert>
       )}
@@ -215,16 +324,26 @@ export default function Logbook() {
                 {search ? 'No entries match your search' : 'No logbook entries yet'}
               </Text>
               {!search && (
-                <Button size="sm" colorScheme="brand" onClick={handleNew} leftIcon={<Icon as={MdAdd} />}>
+                <Button size="sm" colorScheme="brand" onClick={handleNew}
+                  leftIcon={<Icon as={MdAdd} />}>
                   Add your first entry
                 </Button>
               )}
             </Flex>
           )
-          : <VStack spacing={4} align="stretch">{filtered.map(e => <EntryCard key={e.id} entry={e} onEdit={handleEdit} />)}</VStack>
+          : (
+            <VStack spacing={4} align="stretch">
+              {filtered.map(e => (
+                <EntryCard key={e.id} entry={e} onEdit={handleEdit} onSubmitLog={handleLogSubmission} />
+              ))}
+            </VStack>
+          )
       }
 
-      <EntryModal isOpen={isOpen} onClose={onClose} onSubmit={handleSubmit} initial={editing} />
+      <EntryModal
+        isOpen={isOpen} onClose={onClose}
+        onSubmit={handleSubmit} initial={editing}
+      />
     </Box>
   )
 }

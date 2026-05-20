@@ -16,9 +16,9 @@ import {
 import api from '../../api/axiosInstance'
 
 function useFetch(endpoint) {
-  const [data, setData] = useState(null)
+  const [data,    setData]    = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error,   setError]   = useState(null)
   const load = useCallback(async () => {
     if (!endpoint) return
     setLoading(true); setError(null)
@@ -65,32 +65,28 @@ function ScoreSlider({ criterion, value, onChange }) {
         </SliderTrack>
         <SliderThumb boxSize={5} boxShadow="md" border="2px solid" borderColor={`${color}.400`} />
       </Slider>
-      <Flex justify="space-between" mt={1}>
-        <Text fontSize="9px" color="gray.300">0 — Poor</Text>
-        <Text fontSize="9px" color="gray.300">100 — Excellent</Text>
-      </Flex>
     </Box>
   )
 }
 
 export default function SubmitEvaluation() {
-  // /workplace-supervisor/students/ → [{ id, name, registration_number }]
-  // /workplace-supervisor/evaluations/ → history array
-  const students = useFetch('/workplace-supervisor/students/')
-  const history  = useFetch('/workplace-supervisor/evaluations/')
+  
+  const students = useFetch('/students/')
+  const history  = useFetch('/evaluations/')
   const toast    = useToast()
 
-  const [studentId, setStudentId] = useState('')
-  const [week,      setWeek]      = useState('')
-  const [scores, setScores] = useState(Object.fromEntries(CRITERIA.map(c => [c.key, 70])))
-  const [comments, setComments] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [studentId,   setStudentId]   = useState('')
+  const [week,        setWeek]        = useState('')
+  const [scores,      setScores]      = useState(Object.fromEntries(CRITERIA.map(c => [c.key, 70])))
+  const [comments,    setComments]    = useState('')
+  const [submitting,  setSubmitting]  = useState(false)
 
   const overall = Math.round(Object.values(scores).reduce((a, b) => a + b, 0) / CRITERIA.length)
   const grade   = overall >= 80 ? 'A' : overall >= 70 ? 'B' : overall >= 60 ? 'C' : overall >= 50 ? 'D' : 'F'
   const gradeColor = { A: 'green', B: 'teal', C: 'blue', D: 'orange', F: 'red' }[grade]
 
-  const selectedStudent = (students.data ?? []).find(s => String(s.id) === String(studentId))
+  const studentList     = Array.isArray(students.data) ? students.data : []
+  const selectedStudent = studentList.find(s => String(s.id) === String(studentId))
 
   const handleSubmit = async () => {
     if (!studentId || !week) {
@@ -99,8 +95,10 @@ export default function SubmitEvaluation() {
     }
     setSubmitting(true)
     try {
-      await api.post('/workplace-supervisor/evaluations/', {
-        student_id: studentId, week, scores, comments, overall, grade,
+      
+      await api.post('/evaluations/create/', {
+        student:  studentId,
+        feedback: comments,
       })
       toast({ title: 'Evaluation submitted successfully', status: 'success', duration: 3000, isClosable: true })
       setStudentId(''); setWeek(''); setComments('')
@@ -113,7 +111,7 @@ export default function SubmitEvaluation() {
     }
   }
 
-  const evalHistory = history.data ?? []
+  const evalHistory = Array.isArray(history.data) ? history.data : []
 
   return (
     <Box>
@@ -135,18 +133,18 @@ export default function SubmitEvaluation() {
         </TabList>
 
         <TabPanels>
-          {/* ── New Evaluation ── */}
+          {/* New Evaluation */}
           <TabPanel p={0}>
             <Grid templateColumns={{ base: '1fr', xl: '1fr 300px' }} gap={5}>
-
-              {/* Form */}
               <VStack spacing={5} align="stretch">
 
-                {/* Step 1: Select student + period */}
+                {/* Step 1 */}
                 <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
                   boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
                   <Box px={5} py={4} borderBottom="1px solid" borderColor="gray.100">
-                    <Text fontWeight="700" fontSize="sm" color="gray.800">Step 1 — Select Student & Period</Text>
+                    <Text fontWeight="700" fontSize="sm" color="gray.800">
+                      Step 1 — Select Student & Period
+                    </Text>
                   </Box>
                   <Box px={5} py={4}>
                     <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={4}>
@@ -159,15 +157,17 @@ export default function SubmitEvaluation() {
                               placeholder="Select student…"
                               value={studentId} onChange={e => setStudentId(e.target.value)}
                               _focus={{ bg: 'white', borderColor: 'brand.400' }}>
-                              {(students.data ?? []).map(s => (
-                                <option key={s.id} value={s.id}>{s.name} — {s.registration_number}</option>
+                              {studentList.map(s => (
+                                <option key={s.id} value={s.id}>
+                                  {s.first_name} {s.last_name} — {s.email}
+                                </option>
                               ))}
                             </Select>
                           )
                         }
                       </Box>
                       <Box>
-                        <FormLabel fontSize="xs" color="gray.500" mb={1}>Evaluation Period *</FormLabel>
+                        <FormLabel fontSize="xs" color="gray.500" mb={1}>Period *</FormLabel>
                         <Select size="sm" borderRadius="lg" bg="gray.50"
                           placeholder="Select period…"
                           value={week} onChange={e => setWeek(e.target.value)}
@@ -179,41 +179,41 @@ export default function SubmitEvaluation() {
                       </Box>
                     </Grid>
 
-                    {/* Selected student preview */}
                     {selectedStudent && (
                       <Flex align="center" gap={3} mt={4} p={3} bg="brand.50" borderRadius="xl">
-                        <Avatar size="sm" name={selectedStudent.name} bg="brand.600" color="white" fontSize="xs" />
+                        <Avatar size="sm"
+                          name={`${selectedStudent.first_name} ${selectedStudent.last_name}`}
+                          bg="brand.600" color="white" fontSize="xs" />
                         <Box>
-                          <Text fontSize="sm" fontWeight="600" color="brand.800">{selectedStudent.name}</Text>
-                          <Text fontSize="11px" color="brand.500">{selectedStudent.registration_number} · {selectedStudent.department}</Text>
+                          <Text fontSize="sm" fontWeight="600" color="brand.800">
+                            {selectedStudent.first_name} {selectedStudent.last_name}
+                          </Text>
+                          <Text fontSize="11px" color="brand.500">{selectedStudent.email}</Text>
                         </Box>
                       </Flex>
                     )}
                   </Box>
                 </Box>
 
-                {/* Step 2: Criteria scoring */}
+                {/* Step 2 */}
                 <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
                   boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
                   <Box px={5} py={4} borderBottom="1px solid" borderColor="gray.100">
-                    <Text fontWeight="700" fontSize="sm" color="gray.800">Step 2 — Rate Each Criterion</Text>
-                    <Text fontSize="11px" color="gray.400" mt={0.5}>Drag sliders to set scores (0–100)</Text>
+                    <Text fontWeight="700" fontSize="sm" color="gray.800">
+                      Step 2 — Rate Each Criterion
+                    </Text>
                   </Box>
                   <Box px={5} py={4}>
                     <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={4}>
                       {CRITERIA.map(c => (
-                        <ScoreSlider
-                          key={c.key}
-                          criterion={c}
-                          value={scores[c.key]}
-                          onChange={v => setScores(s => ({ ...s, [c.key]: v }))}
-                        />
+                        <ScoreSlider key={c.key} criterion={c} value={scores[c.key]}
+                          onChange={v => setScores(s => ({ ...s, [c.key]: v }))} />
                       ))}
                     </Grid>
                   </Box>
                 </Box>
 
-                {/* Step 3: Comments */}
+                {/* Step 3 */}
                 <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
                   boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
                   <Box px={5} py={4} borderBottom="1px solid" borderColor="gray.100">
@@ -227,18 +227,16 @@ export default function SubmitEvaluation() {
                   </Box>
                 </Box>
 
-                <Button
-                  leftIcon={<Icon as={MdSend} />}
-                  bg="brand.600" color="white" borderRadius="xl" size="md"
-                  _hover={{ bg: 'brand.700' }} isLoading={submitting}
-                  onClick={handleSubmit}
+                <Button leftIcon={<Icon as={MdSend} />} bg="brand.600" color="white"
+                  borderRadius="xl" size="md" _hover={{ bg: 'brand.700' }}
+                  isLoading={submitting} onClick={handleSubmit}
                   isDisabled={!studentId || !week}
                   alignSelf="flex-end" px={8}>
                   Submit Evaluation
                 </Button>
               </VStack>
 
-              {/* Right: score summary */}
+              {/* Score summary */}
               <Box position="sticky" top="80px" alignSelf="flex-start">
                 <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
                   boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
@@ -253,10 +251,10 @@ export default function SubmitEvaluation() {
                           <Text fontSize="xl" fontWeight="800" color="gray.800">{overall}</Text>
                         </CircularProgressLabel>
                       </CircularProgress>
-                      <Badge colorScheme={gradeColor} borderRadius="full" px={4} py={1} fontSize="md" mt={3}>
+                      <Badge colorScheme={gradeColor} borderRadius="full" px={4} py={1}
+                        fontSize="md" mt={3}>
                         Grade {grade}
                       </Badge>
-                      <Text fontSize="11px" color="gray.400" mt={1}>Overall Score</Text>
                     </Flex>
                     <Divider mb={4} />
                     <VStack spacing={2} align="stretch">
@@ -277,7 +275,7 @@ export default function SubmitEvaluation() {
             </Grid>
           </TabPanel>
 
-          {/* ── History ── */}
+          {/* History */}
           <TabPanel p={0}>
             <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
               boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
@@ -299,7 +297,7 @@ export default function SubmitEvaluation() {
                       <Table size="sm" variant="unstyled">
                         <Thead>
                           <Tr bg="gray.50">
-                            {['Student', 'Period', 'Score', 'Grade', 'Date', 'Status'].map(h => (
+                            {['Student', 'Score', 'Grade', 'Status', 'Date'].map(h => (
                               <Th key={h} px={4} py={3} fontSize="10px" color="gray.400"
                                 textTransform="uppercase" letterSpacing="wider">{h}</Th>
                             ))}
@@ -307,24 +305,41 @@ export default function SubmitEvaluation() {
                         </Thead>
                         <Tbody>
                           {evalHistory.map((ev, i) => {
-                            const g = ev.grade || 'B'
+                            const g  = ev.grade || '—'
                             const gc = { A: 'green', B: 'teal', C: 'blue', D: 'orange', F: 'red' }[g] || 'gray'
                             return (
-                              <Tr key={i} _hover={{ bg: 'gray.50' }} borderBottom="1px solid" borderColor="gray.50">
+                              <Tr key={i} _hover={{ bg: 'gray.50' }}
+                                borderBottom="1px solid" borderColor="gray.50">
                                 <Td py={3} px={4}>
                                   <HStack spacing={2}>
-                                    <Avatar size="xs" name={ev.student_name} bg="brand.600" color="white" />
-                                    <Text fontSize="sm" fontWeight="600" color="gray.700">{ev.student_name}</Text>
+                                    <Avatar size="xs" name={ev.student_email}
+                                      bg="brand.600" color="white" />
+                                    <Text fontSize="sm" fontWeight="600" color="gray.700">
+                                      {ev.student_email}
+                                    </Text>
                                   </HStack>
                                 </Td>
-                                <Td py={3} px={4}><Text fontSize="sm" color="gray.600">{ev.week}</Text></Td>
-                                <Td py={3} px={4}><Text fontSize="sm" fontWeight="700" color="gray.700">{ev.overall}/100</Text></Td>
                                 <Td py={3} px={4}>
-                                  <Badge colorScheme={gc} borderRadius="full" px={2} fontSize="10px">Grade {g}</Badge>
+                                  <Text fontSize="sm" fontWeight="700" color="gray.700">
+                                    {ev.total_score ?? '—'}/100
+                                  </Text>
                                 </Td>
-                                <Td py={3} px={4}><Text fontSize="xs" color="gray.400">{ev.date}</Text></Td>
                                 <Td py={3} px={4}>
-                                  <Badge colorScheme="green" borderRadius="full" px={2} fontSize="10px">Submitted</Badge>
+                                  {g !== '—' && (
+                                    <Badge colorScheme={gc} borderRadius="full" px={2} fontSize="10px">
+                                      {g}
+                                    </Badge>
+                                  )}
+                                </Td>
+                                <Td py={3} px={4}>
+                                  <Badge colorScheme="teal" borderRadius="full" px={2} fontSize="10px">
+                                    {ev.status}
+                                  </Badge>
+                                </Td>
+                                <Td py={3} px={4}>
+                                  <Text fontSize="xs" color="gray.400">
+                                    {ev.created_at ? new Date(ev.created_at).toLocaleDateString() : '—'}
+                                  </Text>
                                 </Td>
                               </Tr>
                             )

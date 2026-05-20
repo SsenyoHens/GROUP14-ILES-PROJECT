@@ -5,18 +5,20 @@ import {
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   MdDashboard, MdPeople, MdWork, MdAssignment,
-  MdBarChart, MdManageAccounts, MdLogout,
+  MdBarChart, MdManageAccounts, MdLogout, MdNotifications,
 } from 'react-icons/md'
 import { useAuth } from '../context/AuthContext'
 import { ROUTES } from '../constants'
 
+// ✅ All paths absolute
 const navItems = [
-  { label: 'Dashboard',            path: ROUTES.ADMIN_DASHBOARD, icon: MdDashboard      },
-  { label: 'Student Registration', path: ROUTES.STUDENTS,        icon: MdPeople         },
-  { label: 'Placements',           path: ROUTES.PLACEMENTS,      icon: MdWork           },
-  { label: 'Evaluations',          path: ROUTES.EVALUATIONS,     icon: MdAssignment     },
-  { label: 'Reports',              path: ROUTES.REPORTS,         icon: MdBarChart       },
-  { label: 'User Accounts',        path: ROUTES.USERS,           icon: MdManageAccounts },
+  { label: 'Dashboard',            path: ROUTES.ADMIN_DASHBOARD,     icon: MdDashboard      },
+  { label: 'Student Registration', path: ROUTES.STUDENTS,            icon: MdPeople         },
+  { label: 'Placements',           path: ROUTES.PLACEMENTS,          icon: MdWork           },
+  { label: 'Evaluations',          path: ROUTES.EVALUATIONS,         icon: MdAssignment     },
+  { label: 'Reports',              path: ROUTES.REPORTS,             icon: MdBarChart       },
+  { label: 'User Accounts',        path: ROUTES.USERS,               icon: MdManageAccounts },
+  { label: 'Notifications',        path: ROUTES.ADMIN_NOTIFICATIONS, icon: MdNotifications  },
 ]
 
 function NavItem({ item, isActive }) {
@@ -42,15 +44,19 @@ function NavItem({ item, isActive }) {
   )
 }
 
-function Sidebar() {
+export default function Sidebar() {
   const location = useLocation()
   const navigate  = useNavigate()
-  const { user, logoutUser } = useAuth()   // ✅ fixed: logoutUser not logout
+  const { user, logoutUser } = useAuth()
 
   const handleLogout = async () => {
     await logoutUser()
     navigate('/login')
   }
+
+  const displayName = user
+    ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Admin'
+    : 'Admin'
 
   return (
     <Box
@@ -60,55 +66,34 @@ function Sidebar() {
       display="flex" flexDirection="column"
       position="sticky" top={0} h="100vh" overflowY="auto"
     >
-      {/* Logo */}
       <Box px={5} py={6} borderBottom="1px solid" borderColor="sidebar.border">
-        <Text fontSize="xl" fontWeight="800" color="brand.300" letterSpacing="widest" fontFamily="heading">
-          ILES
-        </Text>
-        <Text fontSize="10px" color="sidebar.text" mt={1} textTransform="uppercase" letterSpacing="wider">
-          Admin Portal
-        </Text>
+        <Text fontSize="xl" fontWeight="800" color="brand.300"
+          letterSpacing="widest" fontFamily="heading">ILES</Text>
+        <Text fontSize="10px" color="sidebar.text" mt={1}
+          textTransform="uppercase" letterSpacing="wider">Admin Portal</Text>
       </Box>
 
-      {/* Nav */}
       <VStack spacing={1} px={2} py={4} flex={1} align="stretch">
         <Text fontSize="10px" color="sidebar.text" px={3} mb={1}
-          textTransform="uppercase" letterSpacing="wider" opacity={0.6}>
-          Main Menu
-        </Text>
-        {navItems.map((item) => (
-          <NavItem
-            key={item.path}
-            item={item}
-            isActive={location.pathname === item.path}
-          />
+          textTransform="uppercase" letterSpacing="wider" opacity={0.6}>Main Menu</Text>
+        {navItems.map(item => (
+          <NavItem key={item.path} item={item}
+            isActive={location.pathname === item.path ||
+                      location.pathname.startsWith(item.path + '/')} />
         ))}
       </VStack>
 
-      {/* Bottom user area */}
       <Box px={3} py={4} borderTop="1px solid" borderColor="sidebar.border">
         <HStack spacing={3} mb={3} px={2}>
-          <Avatar
-            size="sm"
-            name={`${user?.first_name} ${user?.last_name}`}  // ✅ fixed: use first_name/last_name
-            bg="brand.600" color="white"
-          />
+          <Avatar size="sm" name={displayName} bg="brand.600" color="white" />
           <Box minW={0}>
-            <Text fontSize="sm" color="white" fontWeight="600" noOfLines={1}>
-              {user?.first_name} {user?.last_name}  {/* ✅ fixed */}
-            </Text>
-            <Text fontSize="10px" color="sidebar.text" noOfLines={1}>
-              Internship Administrator
-            </Text>
+            <Text fontSize="sm" color="white" fontWeight="600" noOfLines={1}>{displayName}</Text>
+            <Text fontSize="10px" color="sidebar.text" noOfLines={1}>Internship Administrator</Text>
           </Box>
         </HStack>
-        <Flex
-          align="center" gap={3} px={3} py={2}
-          borderRadius="md" cursor="pointer" color="sidebar.text"
-          _hover={{ bg: 'sidebar.hover', color: '#fc8181' }}
-          transition="all 0.15s"
-          onClick={handleLogout}
-        >
+        <Flex align="center" gap={3} px={3} py={2} borderRadius="md" cursor="pointer"
+          color="sidebar.text" _hover={{ bg: 'sidebar.hover', color: '#fc8181' }}
+          transition="all 0.15s" onClick={handleLogout}>
           <Icon as={MdLogout} boxSize={4} />
           <Text fontSize="sm">Logout</Text>
         </Flex>
@@ -116,5 +101,3 @@ function Sidebar() {
     </Box>
   )
 }
-
-export default Sidebar

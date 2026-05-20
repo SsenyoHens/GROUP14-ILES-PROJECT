@@ -64,7 +64,6 @@ function EvalModal({ isOpen, onClose, student, onSubmit }) {
   const handleSubmit = async () => {
     setSaving(true)
     try {
-      // ✅ Correct endpoint and field names matching backend
       await onSubmit({
         student:    student?.id,
         weekly_log: logId,
@@ -152,8 +151,6 @@ export default function WorkplaceSupervisorDashboard() {
   const evalD     = useDisclosure()
   const [sel,     setSel]    = useState(null)
   const [search,  setSearch] = useState('')
-
-  // ✅ Correct endpoints
   const stats    = useFetch('/dashboard/stats/')
   const students = useFetch('/students/')
   const logs     = useFetch('/logs/')
@@ -169,20 +166,19 @@ export default function WorkplaceSupervisorDashboard() {
   const logList = Array.isArray(logs.data) ? logs.data : []
   const sd      = stats.data ?? {}
 
-  // ✅ Display name
+  
   const displayName = user
     ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Supervisor'
     : 'Supervisor'
 
   const submitEval = async (payload) => {
-    // ✅ Correct endpoint
+   
     await api.post('/evaluations/create/', payload)
     toast({ title: 'Evaluation submitted', status: 'success', duration: 3000, isClosable: true })
     students.refetch()
   }
 
   const approveLog = async (id) => {
-    // ✅ Correct endpoint
     await api.put(`/logs/${id}/update/`, { status: 'approved' })
     toast({ title: 'Log approved', status: 'success', duration: 3000, isClosable: true })
     logs.refetch()
@@ -199,7 +195,7 @@ export default function WorkplaceSupervisorDashboard() {
 
       {stats.error && <ErrorBanner message={stats.error} onRetry={stats.refetch} />}
 
-      {/* ✅ Fixed field names */}
+      {/* field names */}
       <Grid templateColumns={{ base: '1fr 1fr', lg: 'repeat(4,1fr)' }} gap={4} mb={6}>
         {[
           { label: 'My Students',         value: sd.total_students,    icon: MdPeople,     color: 'brand',  sub: 'Assigned interns' },

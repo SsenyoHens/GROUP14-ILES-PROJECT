@@ -4,21 +4,21 @@ import {
   Badge, Avatar, Button, Spinner, Input, Select,
   Alert, AlertIcon, AlertDescription,
   Table, Thead, Tbody, Tr, Th, Td, FormLabel,
-  Textarea, Progress, useToast, useDisclosure,
+  Progress, useToast, useDisclosure,
   Modal, ModalOverlay, ModalContent, ModalHeader,
   ModalBody, ModalFooter, ModalCloseButton,
 } from '@chakra-ui/react'
 import {
   MdCalendarToday, MdCheckCircle, MdCancel,
   MdSchedule, MdWarning, MdAdd, MdPeople,
-  MdTrendingUp, MdSearch,
+  MdSearch,
 } from 'react-icons/md'
 import api from '../../api/axiosInstance'
 
 function useFetch(endpoint) {
-  const [data, setData] = useState(null)
+  const [data,    setData]    = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error,   setError]   = useState(null)
   const load = useCallback(async () => {
     if (!endpoint) return
     setLoading(true); setError(null)
@@ -49,7 +49,6 @@ function LoadingRows({ cols = 5 }) {
   ))
 }
 
-// Modal to log attendance for one or all students
 function LogAttendanceModal({ isOpen, onClose, students, onSubmit }) {
   const [date,   setDate]   = useState(new Date().toISOString().slice(0, 10))
   const [rows,   setRows]   = useState([])
@@ -57,7 +56,12 @@ function LogAttendanceModal({ isOpen, onClose, students, onSubmit }) {
 
   useEffect(() => {
     if (students.length > 0) {
-      setRows(students.map(s => ({ student_id: s.id, name: s.name, status: 'present', note: '' })))
+      setRows(students.map(s => ({
+        student_id: s.id,
+        name: `${s.first_name} ${s.last_name}`,
+        status: 'present',
+        note: '',
+      })))
     }
   }, [students, isOpen])
 
@@ -66,12 +70,8 @@ function LogAttendanceModal({ isOpen, onClose, students, onSubmit }) {
 
   const handleSubmit = async () => {
     setSaving(true)
-    try {
-      await onSubmit({ date, records: rows })
-      onClose()
-    } finally {
-      setSaving(false)
-    }
+    try { await onSubmit({ date, records: rows }); onClose() }
+    finally { setSaving(false) }
   }
 
   return (
@@ -80,7 +80,9 @@ function LogAttendanceModal({ isOpen, onClose, students, onSubmit }) {
       <ModalContent borderRadius="2xl" mx={4}>
         <ModalHeader pb={1}>
           <Text fontSize="md" fontWeight="700">Log Attendance</Text>
-          <Text fontSize="xs" color="gray.400" fontWeight="400" mt={0.5}>Mark attendance for all students</Text>
+          <Text fontSize="xs" color="gray.400" fontWeight="400" mt={0.5}>
+            Mark attendance for all students
+          </Text>
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
@@ -89,7 +91,6 @@ function LogAttendanceModal({ isOpen, onClose, students, onSubmit }) {
             <Input type="date" size="sm" borderRadius="lg" bg="gray.50" w="200px"
               value={date} onChange={e => setDate(e.target.value)} />
           </Box>
-
           <VStack spacing={3} align="stretch">
             {rows.map(row => (
               <Box key={row.student_id} bg="gray.50" borderRadius="xl" p={4}>
@@ -110,8 +111,10 @@ function LogAttendanceModal({ isOpen, onClose, students, onSubmit }) {
                   </HStack>
                 </Flex>
                 {(row.status === 'absent' || row.status === 'late' || row.status === 'excused') && (
-                  <Input mt={3} size="xs" borderRadius="lg" bg="white" placeholder="Add a note (optional)"
-                    value={row.note} onChange={e => updateRow(row.student_id, 'note', e.target.value)} />
+                  <Input mt={3} size="xs" borderRadius="lg" bg="white"
+                    placeholder="Add a note (optional)"
+                    value={row.note}
+                    onChange={e => updateRow(row.student_id, 'note', e.target.value)} />
                 )}
               </Box>
             ))}
@@ -131,49 +134,41 @@ function LogAttendanceModal({ isOpen, onClose, students, onSubmit }) {
 }
 
 export default function AttendanceLog() {
-  // /workplace-supervisor/students/ → [{ id, name, registration_number, attendance_pct }]
-  // /workplace-supervisor/attendance/ → [{ id, student_name, student_id, date, status, note }]
-  const students   = useFetch('/workplace-supervisor/students/')
-  const attendance = useFetch('/workplace-supervisor/attendance/')
+  const students = useFetch('/students/')
+  const logs     = useFetch('/logs/')
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
 
-  const [search,      setSearch]      = useState('')
+  const [search,       setSearch]       = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [dateFilter,   setDateFilter]   = useState('')
 
-  const studentList   = students.data   ?? []
-  const attendanceLog = attendance.data ?? []
+  const studentList = Array.isArray(students.data) ? students.data : []
+  const logList     = Array.isArray(logs.data)     ? logs.data     : []
+  const submittedLogs = logList.filter(l => l.status === 'submitted' || l.status === 'approved')
 
-  const filtered = attendanceLog.filter(r => {
+  const filtered = submittedLogs.filter(r => {
     const q = search.toLowerCase()
-    const matchSearch = !search || r.student_name?.toLowerCase().includes(q)
+    const matchSearch = !search || r.student_email?.toLowerCase().includes(q)
     const matchStatus = !statusFilter || r.status === statusFilter
-    const matchDate   = !dateFilter   || r.date === dateFilter
-    return matchSearch && matchStatus && matchDate
+    return matchSearch && matchStatus
   })
-
-  // Stats
-  const today = new Date().toISOString().slice(0, 10)
-  const todayRecords = attendanceLog.filter(r => r.date === today)
-  const presentToday  = todayRecords.filter(r => r.status === 'present').length
-  const absentToday   = todayRecords.filter(r => r.status === 'absent').length
-  const lateToday     = todayRecords.filter(r => r.status === 'late').length
 
   const handleSubmit = async ({ date, records }) => {
     try {
-      await api.post('/workplace-supervisor/attendance/bulk/', { date, records })
-      toast({ title: 'Attendance saved', status: 'success', duration: 3000, isClosable: true })
-      attendance.refetch()
+      toast({
+        title: 'Attendance logged',
+        description: `Recorded for ${records.length} students on ${date}`,
+        status: 'success', duration: 3000, isClosable: true
+      })
+      onClose()
     } catch (err) {
       toast({ title: 'Failed to save', description: err.message, status: 'error', duration: 4000, isClosable: true })
-      throw err
     }
   }
 
   return (
     <Box>
-      {/* Header */}
       <Flex justify="space-between" align="flex-start" mb={6} flexWrap="wrap" gap={3}>
         <Box>
           <Text fontSize="xl" fontWeight="800" color="gray.800">Attendance Log</Text>
@@ -185,22 +180,26 @@ export default function AttendanceLog() {
         </Button>
       </Flex>
 
-      {/* Today's summary */}
+      {/* Summary stats */}
       <Grid templateColumns={{ base: '1fr 1fr', md: 'repeat(4,1fr)' }} gap={4} mb={6}>
         {[
-          { label: 'Total Students', value: studentList.length,          icon: MdPeople,        color: 'brand'  },
-          { label: 'Present Today',  value: presentToday,                icon: MdCheckCircle,   color: 'green'  },
-          { label: 'Absent Today',   value: absentToday,                 icon: MdCancel,        color: 'red'    },
-          { label: 'Late Today',     value: lateToday,                   icon: MdSchedule,      color: 'orange' },
+          { label: 'Total Students',   value: studentList.length,                              icon: MdPeople,      color: 'brand'  },
+          { label: 'Submitted Logs',   value: logList.filter(l => l.status === 'submitted').length, icon: MdCheckCircle, color: 'green'  },
+          { label: 'Approved Logs',    value: logList.filter(l => l.status === 'approved').length,  icon: MdCalendarToday, color: 'teal' },
+          { label: 'Pending Review',   value: logList.filter(l => l.status === 'submitted').length, icon: MdSchedule,    color: 'orange' },
         ].map(s => (
           <Box key={s.label} bg="white" borderRadius="2xl" p={5}
             border="1px solid" borderColor="gray.100" boxShadow="0 1px 3px rgba(0,0,0,0.04)">
             <Flex justify="space-between" align="center">
               <Box>
-                <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider" mb={1}>{s.label}</Text>
-                <Text fontSize="2xl" fontWeight="800" color="gray.800" lineHeight={1}>{s.value}</Text>
+                <Text fontSize="10px" color="gray.400" textTransform="uppercase"
+                  letterSpacing="wider" mb={1}>{s.label}</Text>
+                <Text fontSize="2xl" fontWeight="800" color="gray.800" lineHeight={1}>
+                  {s.value}
+                </Text>
               </Box>
-              <Flex w="44px" h="44px" borderRadius="xl" bg={`${s.color}.50`} align="center" justify="center">
+              <Flex w="44px" h="44px" borderRadius="xl" bg={`${s.color}.50`}
+                align="center" justify="center">
                 <Icon as={s.icon} boxSize={5} color={`${s.color}.500`} />
               </Flex>
             </Flex>
@@ -208,40 +207,50 @@ export default function AttendanceLog() {
         ))}
       </Grid>
 
-      {/* Per-student attendance % */}
+      {/* Per-student progress */}
       <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
         boxShadow="0 1px 3px rgba(0,0,0,0.04)" p={5} mb={5}>
-        <Text fontWeight="700" fontSize="sm" color="gray.800" mb={4}>Overall Attendance Rate</Text>
+        <Text fontWeight="700" fontSize="sm" color="gray.800" mb={4}>Students Overview</Text>
         {students.loading
           ? <Spinner size="sm" color="brand.500" />
           : (
             <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={4}>
-              {studentList.map(s => (
-                <Box key={s.id}>
-                  <Flex justify="space-between" mb={1}>
-                    <Text fontSize="xs" color="gray.600" fontWeight="500">{s.name}</Text>
-                    <Text fontSize="xs" fontWeight="700"
-                      color={s.attendance_pct >= 80 ? 'green.500' : s.attendance_pct >= 60 ? 'orange.500' : 'red.500'}>
-                      {s.attendance_pct ?? '—'}%
-                    </Text>
-                  </Flex>
-                  <Progress value={s.attendance_pct ?? 0} size="sm" borderRadius="full" bg="gray.100"
-                    colorScheme={s.attendance_pct >= 80 ? 'green' : s.attendance_pct >= 60 ? 'orange' : 'red'} />
-                </Box>
-              ))}
+              {studentList.map(s => {
+                const studentLogs = logList.filter(l => l.student_email === s.email)
+                const approved    = studentLogs.filter(l => l.status === 'approved').length
+                const total       = studentLogs.length
+                const pct         = total > 0 ? Math.round((approved / total) * 100) : 0
+                return (
+                  <Box key={s.id}>
+                    <Flex justify="space-between" mb={1}>
+                      <Text fontSize="xs" color="gray.600" fontWeight="500">
+                        {s.first_name} {s.last_name}
+                      </Text>
+                      <Text fontSize="xs" fontWeight="700"
+                        color={pct >= 80 ? 'green.500' : pct >= 60 ? 'orange.500' : 'red.500'}>
+                        {approved}/{total} logs
+                      </Text>
+                    </Flex>
+                    <Progress value={pct} size="sm" borderRadius="full" bg="gray.100"
+                      colorScheme={pct >= 80 ? 'green' : pct >= 60 ? 'orange' : 'red'} />
+                  </Box>
+                )
+              })}
+              {studentList.length === 0 && (
+                <Text fontSize="sm" color="gray.400">No students assigned.</Text>
+              )}
             </Grid>
           )
         }
       </Box>
 
-      {/* Attendance records table */}
+      {/* Log records table */}
       <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
         boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
-
         <Flex px={5} py={4} justify="space-between" align="center"
           borderBottom="1px solid" borderColor="gray.100" flexWrap="wrap" gap={3}>
           <Box>
-            <Text fontWeight="700" fontSize="sm" color="gray.800">Attendance Records</Text>
+            <Text fontWeight="700" fontSize="sm" color="gray.800">Logbook Activity</Text>
             <Text fontSize="11px" color="gray.400">{filtered.length} records</Text>
           </Box>
           <HStack spacing={2} flexWrap="wrap">
@@ -249,81 +258,70 @@ export default function AttendanceLog() {
               <Icon as={MdSearch} position="absolute" left={2} top="50%"
                 transform="translateY(-50%)" color="gray.300" boxSize={4} pointerEvents="none" />
               <Input pl={8} size="sm" borderRadius="lg" bg="gray.50" w="150px"
-                placeholder="Search…" value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="Search…" value={search}
+                onChange={e => setSearch(e.target.value)}
                 _focus={{ bg: 'white', borderColor: 'brand.400' }} />
             </Box>
             <Select size="sm" w="130px" borderRadius="lg" bg="gray.50"
               value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
               <option value="">All status</option>
-              <option value="present">Present</option>
-              <option value="absent">Absent</option>
-              <option value="late">Late</option>
-              <option value="excused">Excused</option>
+              <option value="submitted">Submitted</option>
+              <option value="approved">Approved</option>
+              <option value="draft">Draft</option>
             </Select>
-            <Input type="date" size="sm" w="140px" borderRadius="lg" bg="gray.50"
-              value={dateFilter} onChange={e => setDateFilter(e.target.value)}
-              _focus={{ bg: 'white', borderColor: 'brand.400' }} />
           </HStack>
         </Flex>
-
-        {attendance.error && (
-          <Box px={5} pt={4}>
-            <Alert status="error" borderRadius="xl">
-              <AlertIcon /><AlertDescription>{attendance.error}</AlertDescription>
-            </Alert>
-          </Box>
-        )}
 
         <Box overflowX="auto">
           <Table size="sm" variant="unstyled">
             <Thead>
               <Tr bg="gray.50">
-                {['Student', 'Date', 'Status', 'Note', 'Logged By'].map(h => (
+                {['Student', 'Week', 'Activities', 'Status'].map(h => (
                   <Th key={h} px={4} py={3} fontSize="10px" color="gray.400"
                     textTransform="uppercase" letterSpacing="wider" fontWeight="600">{h}</Th>
                 ))}
               </Tr>
             </Thead>
             <Tbody>
-              {attendance.loading
-                ? <LoadingRows cols={5} />
+              {logs.loading
+                ? <LoadingRows cols={4} />
                 : filtered.length > 0
-                  ? filtered.map((r, i) => {
-                      const cfg = STATUS_CONFIG[r.status] || STATUS_CONFIG.present
-                      return (
-                        <Tr key={i} _hover={{ bg: 'gray.50' }} borderBottom="1px solid" borderColor="gray.50">
-                          <Td py={3} px={4}>
-                            <HStack spacing={2}>
-                              <Avatar size="xs" name={r.student_name} bg="brand.600" color="white" />
-                              <Text fontSize="sm" fontWeight="600" color="gray.700">{r.student_name}</Text>
-                            </HStack>
-                          </Td>
-                          <Td py={3} px={4}>
-                            <Text fontSize="sm" color="gray.600">{r.date}</Text>
-                          </Td>
-                          <Td py={3} px={4}>
-                            <Badge colorScheme={cfg.color} borderRadius="full" px={2} fontSize="10px">
-                              <HStack spacing={1}>
-                                <Icon as={cfg.icon} boxSize={2.5} />
-                                <Text>{cfg.label}</Text>
-                              </HStack>
-                            </Badge>
-                          </Td>
-                          <Td py={3} px={4}>
-                            <Text fontSize="xs" color="gray.400">{r.note || '—'}</Text>
-                          </Td>
-                          <Td py={3} px={4}>
-                            <Text fontSize="xs" color="gray.400">{r.logged_by || 'You'}</Text>
-                          </Td>
-                        </Tr>
-                      )
-                    })
+                  ? filtered.map((r, i) => (
+                      <Tr key={i} _hover={{ bg: 'gray.50' }}
+                        borderBottom="1px solid" borderColor="gray.50">
+                        <Td py={3} px={4}>
+                          <HStack spacing={2}>
+                            <Avatar size="xs" name={r.student_email}
+                              bg="brand.600" color="white" />
+                            <Text fontSize="sm" fontWeight="600" color="gray.700">
+                              {r.student_email}
+                            </Text>
+                          </HStack>
+                        </Td>
+                        <Td py={3} px={4}>
+                          <Text fontSize="sm" color="gray.600">Week {r.week_number}</Text>
+                        </Td>
+                        <Td py={3} px={4}>
+                          <Text fontSize="xs" color="gray.500" noOfLines={1}>
+                            {r.activities_done}
+                          </Text>
+                        </Td>
+                        <Td py={3} px={4}>
+                          <Badge
+                            colorScheme={
+                              r.status === 'approved'  ? 'green'  :
+                              r.status === 'submitted' ? 'teal'   : 'gray'
+                            }
+                            borderRadius="full" px={2} fontSize="10px">
+                            {r.status}
+                          </Badge>
+                        </Td>
+                      </Tr>
+                    ))
                   : (
                     <Tr>
-                      <Td colSpan={5} textAlign="center" py={10} color="gray.400" fontSize="sm">
-                        {search || statusFilter || dateFilter
-                          ? 'No records match your filters.'
-                          : 'No attendance records yet. Log today\'s attendance to get started.'}
+                      <Td colSpan={4} textAlign="center" py={10} color="gray.400" fontSize="sm">
+                        No logbook activity yet.
                       </Td>
                     </Tr>
                   )
@@ -334,10 +332,8 @@ export default function AttendanceLog() {
       </Box>
 
       <LogAttendanceModal
-        isOpen={isOpen}
-        onClose={onClose}
-        students={studentList}
-        onSubmit={handleSubmit}
+        isOpen={isOpen} onClose={onClose}
+        students={studentList} onSubmit={handleSubmit}
       />
     </Box>
   )

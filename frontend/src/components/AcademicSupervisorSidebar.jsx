@@ -4,16 +4,19 @@ import {
 } from '@chakra-ui/react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
-  MdDashboard, MdAssignment, MdBarChart, MdPeople, MdLogout,
+  MdDashboard, MdPeople, MdAssignment,
+  MdBarChart, MdPerson, MdLogout, MdNotifications,
 } from 'react-icons/md'
 import { useAuth } from '../context/AuthContext'
 import { ROUTES } from '../constants'
 
+// ✅ All paths absolute — match App.jsx routes exactly
 const navItems = [
-  { label: 'Dashboard',   path: ROUTES.ACADEMIC_DASHBOARD,   icon: MdDashboard  },
-  { label: 'Students',    path: ROUTES.STUDENTS,             icon: MdPeople     },
-  { label: 'Evaluations', path: ROUTES.ACADEMIC_EVALUATIONS, icon: MdAssignment },
-  { label: 'Reports',     path: ROUTES.ACADEMIC_REPORTS,     icon: MdBarChart   },
+  { label: 'Dashboard',     path: ROUTES.ACADEMIC_DASHBOARD,     icon: MdDashboard     },
+  { label: 'Students',      path: ROUTES.ACADEMIC_STUDENTS,      icon: MdPeople        },
+  { label: 'Evaluations',   path: ROUTES.ACADEMIC_EVALUATIONS,   icon: MdAssignment    },
+  { label: 'Reports',       path: ROUTES.ACADEMIC_REPORTS,       icon: MdBarChart      },
+  { label: 'Notifications', path: ROUTES.ACADEMIC_NOTIFICATIONS, icon: MdNotifications },
 ]
 
 function NavItem({ item, isActive }) {
@@ -39,7 +42,7 @@ function NavItem({ item, isActive }) {
   )
 }
 
-function AcademicSupervisorSidebar() {
+export default function AcademicSupervisorSidebar() {
   const location = useLocation()
   const navigate  = useNavigate()
   const { user, logoutUser } = useAuth()
@@ -48,6 +51,10 @@ function AcademicSupervisorSidebar() {
     await logoutUser()
     navigate('/login')
   }
+
+  const displayName = user
+    ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Supervisor'
+    : 'Supervisor'
 
   return (
     <Box
@@ -59,11 +66,13 @@ function AcademicSupervisorSidebar() {
     >
       {/* Logo */}
       <Box px={5} py={6} borderBottom="1px solid" borderColor="sidebar.border">
-        <Text fontSize="xl" fontWeight="800" color="brand.300" letterSpacing="widest" fontFamily="heading">
+        <Text fontSize="xl" fontWeight="800" color="brand.300"
+          letterSpacing="widest" fontFamily="heading">
           ILES
         </Text>
-        <Text fontSize="10px" color="sidebar.text" mt={1} textTransform="uppercase" letterSpacing="wider">
-          Academic Supervisor Portal
+        <Text fontSize="10px" color="sidebar.text" mt={1}
+          textTransform="uppercase" letterSpacing="wider">
+          Academic Supervisor
         </Text>
       </Box>
 
@@ -73,11 +82,12 @@ function AcademicSupervisorSidebar() {
           textTransform="uppercase" letterSpacing="wider" opacity={0.6}>
           Main Menu
         </Text>
-        {navItems.map((item) => (
-          <NavItem
-            key={item.path}
-            item={item}
-            isActive={location.pathname === item.path}
+        {navItems.map(item => (
+          <NavItem key={item.path} item={item}
+            isActive={
+              location.pathname === item.path ||
+              location.pathname.startsWith(item.path + '/')
+            }
           />
         ))}
       </VStack>
@@ -85,14 +95,10 @@ function AcademicSupervisorSidebar() {
       {/* Bottom user area */}
       <Box px={3} py={4} borderTop="1px solid" borderColor="sidebar.border">
         <HStack spacing={3} mb={3} px={2}>
-          <Avatar
-            size="sm"
-            name={`${user?.first_name} ${user?.last_name}`}
-            bg="purple.600" color="white"
-          />
+          <Avatar size="sm" name={displayName} bg="brand.600" color="white" />
           <Box minW={0}>
             <Text fontSize="sm" color="white" fontWeight="600" noOfLines={1}>
-              {user?.first_name} {user?.last_name}
+              {displayName}
             </Text>
             <Text fontSize="10px" color="sidebar.text" noOfLines={1}>
               Academic Supervisor
@@ -113,5 +119,3 @@ function AcademicSupervisorSidebar() {
     </Box>
   )
 }
-
-export default AcademicSupervisorSidebar

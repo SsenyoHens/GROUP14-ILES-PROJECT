@@ -13,7 +13,7 @@ import {
   MdSchool, MdAdminPanelSettings, MdBusiness, MdSupervisorAccount
 } from 'react-icons/md'
 
-// ── Role cards ─────────────────────────────────────────
+//Role cards 
 const ROLES = [
   {
     value: 'student',
@@ -49,7 +49,7 @@ const ROLES = [
   },
 ]
 
-// ── Step 1: Role selection ─────────────────────────────
+//  Step 1: Role selection 
 function RoleStep({ selected, onSelect }) {
   return (
     <VStack spacing={4} w="100%">
@@ -106,7 +106,7 @@ function RoleStep({ selected, onSelect }) {
   )
 }
 
-// ── Step 2: Fields per role ────────────────────────────
+//  Step 2: Fields per role 
 function FieldsStep({
   role, register, errors,
   showPw, setShowPw,
@@ -164,6 +164,7 @@ function FieldsStep({
               <option value="2">Year 2</option>
               <option value="3">Year 3</option>
               <option value="4">Year 4</option>
+              <option value="1">Year 5</option>
             </Select>
             <FormErrorMessage fontSize="xs">{errors.yearOfStudy?.message}</FormErrorMessage>
           </FormControl>
@@ -295,10 +296,10 @@ function FieldsStep({
             <Input
               size="sm" borderRadius="lg" bg="gray.50" type="email"
               placeholder={
-                role === 'student'             ? 'student@institution.ac.ug'  :
-                role === 'academic_supervisor' ? 'staff@institution.ac.ug'    :
-                role === 'admin'               ? 'admin@institution.ac.ug'    :
-                                                 'supervisor@company.com'
+                role === 'student'             ? 'Your email':
+                role === 'academic_supervisor' ? 'Your email':
+                role === 'admin'               ? 'Your email':
+                                                 'Your email'
               }
               _focus={{ bg: 'white', borderColor: 'brand.400' }}
               {...register('email', {
@@ -423,7 +424,7 @@ function SuccessStep({ role }) {
         </Text>
       </Box>
 
-      {/* ✅ No pending approval — all accounts ready immediately */}
+      {/* No pending approval — all accounts ready immediately */}
       <Alert status="success" borderRadius="lg" fontSize="xs" textAlign="left">
         <AlertIcon />
         Your account is ready. Sign in to get started.

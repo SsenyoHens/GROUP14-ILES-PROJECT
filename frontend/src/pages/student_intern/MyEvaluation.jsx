@@ -9,9 +9,9 @@ import { MdAssignment, MdCheckCircle, MdSchedule, MdStar, MdInfo } from 'react-i
 import api from '../../api/axiosInstance'
 
 function useFetch(endpoint) {
-  const [data, setData] = useState(null)
+  const [data,    setData]    = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error,   setError]   = useState(null)
   const load = useCallback(async () => {
     setLoading(true); setError(null)
     try { const res = await api.get(endpoint); setData(res.data) }
@@ -24,18 +24,9 @@ function useFetch(endpoint) {
 
 const STATUS_CONFIG = {
   submitted: { color: 'teal',   label: 'Submitted', icon: MdCheckCircle },
+  approved:  { color: 'green',  label: 'Approved',  icon: MdStar        },
   pending:   { color: 'orange', label: 'Pending',   icon: MdSchedule    },
-  graded:    { color: 'green',  label: 'Graded',    icon: MdStar        },
   draft:     { color: 'gray',   label: 'Draft',     icon: MdInfo        },
-}
-
-const CRITERIA_LABELS = {
-  punctuality:   'Punctuality & Attendance',
-  attitude:      'Work Attitude',
-  technical:     'Technical Skills',
-  communication: 'Communication',
-  teamwork:      'Teamwork',
-  initiative:    'Initiative',
 }
 
 function ScoreBar({ label, value }) {
@@ -61,22 +52,31 @@ function EvalCard({ ev, onSelect, selected }) {
       _hover={{ borderColor: 'brand.300', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
       <Flex justify="space-between" align="flex-start" mb={3}>
         <Box>
-          <Text fontSize="sm" fontWeight="700" color="gray.800">{ev.title}</Text>
-          <Text fontSize="11px" color="gray.400" mt={0.5}>{ev.week ? `Week ${ev.week}` : ev.date}</Text>
+          <Text fontSize="sm" fontWeight="700" color="gray.800">
+            Evaluation #{ev.id}
+          </Text>
+          <Text fontSize="11px" color="gray.400" mt={0.5}>
+            {ev.created_at ? new Date(ev.created_at).toLocaleDateString() : ''}
+          </Text>
         </Box>
         <Badge colorScheme={cfg.color} borderRadius="full" px={2} fontSize="9px">
-          <HStack spacing={1}><Icon as={cfg.icon} boxSize={2.5} /><Text>{cfg.label}</Text></HStack>
+          <HStack spacing={1}>
+            <Icon as={cfg.icon} boxSize={2.5} />
+            <Text>{cfg.label}</Text>
+          </HStack>
         </Badge>
       </Flex>
-      {ev.score != null && (
+      {ev.total_score != null && (
         <Flex align="center" gap={3}>
-          <CircularProgress value={ev.score} size="44px" thickness="8px"
-            color={ev.score >= 70 ? 'green.400' : 'orange.400'} trackColor="gray.100">
-            <CircularProgressLabel fontSize="10px" fontWeight="800" color="gray.700">{ev.score}</CircularProgressLabel>
+          <CircularProgress value={ev.total_score} size="44px" thickness="8px"
+            color={ev.total_score >= 70 ? 'green.400' : 'orange.400'} trackColor="gray.100">
+            <CircularProgressLabel fontSize="10px" fontWeight="800" color="gray.700">
+              {ev.total_score}
+            </CircularProgressLabel>
           </CircularProgress>
           <Box>
             <Text fontSize="xs" color="gray.400">Overall Score</Text>
-            <Text fontSize="sm" fontWeight="700" color="gray.700">{ev.score}/100</Text>
+            <Text fontSize="sm" fontWeight="700" color="gray.700">{ev.total_score}/100</Text>
           </Box>
         </Flex>
       )}
@@ -85,29 +85,36 @@ function EvalCard({ ev, onSelect, selected }) {
 }
 
 export default function MyEvaluations() {
-  // API expects array of: { id, title, week, date, status, score, comments,
-  //   scores: { punctuality, attitude, technical, communication, teamwork, initiative },
-  //   evaluator_name }
-  const { data, loading, error, refetch } = useFetch('/student/evaluations/')
+  
+  const { data, loading, error, refetch } = useFetch('/evaluations/')
   const [selected, setSelected] = useState(null)
 
-  const evalList = data ?? []
-  const avg = evalList.filter(e => e.score != null).length > 0
-    ? Math.round(evalList.filter(e => e.score != null).reduce((s, e) => s + e.score, 0)
-        / evalList.filter(e => e.score != null).length)
+  const evalList = Array.isArray(data) ? data : []
+
+  const avg = evalList.filter(e => e.total_score != null).length > 0
+    ? Math.round(
+        evalList.filter(e => e.total_score != null)
+          .reduce((s, e) => s + e.total_score, 0) /
+        evalList.filter(e => e.total_score != null).length
+      )
     : null
 
   useEffect(() => {
     if (evalList.length > 0 && !selected) {
-      setSelected(evalList.find(e => e.status === 'graded') || evalList[0])
+      setSelected(evalList.find(e => e.status === 'approved') || evalList[0])
     }
   }, [evalList])
 
-  if (loading) return <Flex justify="center" align="center" minH="60vh"><Spinner size="lg" color="brand.500" /></Flex>
+  if (loading) return (
+    <Flex justify="center" align="center" minH="60vh">
+      <Spinner size="lg" color="brand.500" />
+    </Flex>
+  )
 
   if (error) return (
     <Alert status="error" borderRadius="xl">
-      <AlertIcon /><AlertDescription>{error}</AlertDescription>
+      <AlertIcon />
+      <AlertDescription>{error}</AlertDescription>
       <Button size="xs" ml={3} onClick={refetch} colorScheme="red" variant="outline">Retry</Button>
     </Alert>
   )
@@ -117,14 +124,16 @@ export default function MyEvaluations() {
       {/* Summary bar */}
       <Grid templateColumns={{ base: '1fr 1fr', md: 'repeat(4,1fr)' }} gap={4} mb={6}>
         {[
-          { label: 'Total',   value: evalList.length,                                     color: 'brand'  },
-          { label: 'Graded',  value: evalList.filter(e => e.status === 'graded').length,  color: 'green'  },
-          { label: 'Pending', value: evalList.filter(e => e.status === 'pending').length, color: 'orange' },
-          { label: 'Avg Score', value: avg != null ? `${avg}%` : '—',                    color: 'purple' },
+          { label: 'Total',    value: evalList.length,                                      color: 'brand'  },
+          { label: 'Approved', value: evalList.filter(e => e.status === 'approved').length, color: 'green'  },
+          { label: 'Pending',  value: evalList.filter(e => e.status === 'draft').length,    color: 'orange' },
+          { label: 'Avg Score', value: avg != null ? `${avg}%` : '—',                      color: 'purple' },
         ].map(s => (
           <Box key={s.label} bg="white" borderRadius="xl" p={4}
             border="1px solid" borderColor="gray.100" boxShadow="0 1px 3px rgba(0,0,0,0.04)">
-            <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider">{s.label}</Text>
+            <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider">
+              {s.label}
+            </Text>
             <Text fontSize="xl" fontWeight="800" color={`${s.color}.500`} mt={1}>{s.value}</Text>
           </Box>
         ))}
@@ -135,7 +144,9 @@ export default function MyEvaluations() {
           <Flex direction="column" align="center" justify="center" minH="40vh" gap={3}>
             <Icon as={MdAssignment} boxSize={14} color="gray.200" />
             <Text color="gray.400" fontWeight="600">No evaluations yet</Text>
-            <Text color="gray.300" fontSize="sm">Your supervisor will submit evaluations during placement.</Text>
+            <Text color="gray.300" fontSize="sm">
+              Your supervisor will submit evaluations during placement.
+            </Text>
           </Flex>
         )
         : (
@@ -143,9 +154,15 @@ export default function MyEvaluations() {
             {/* List */}
             <VStack spacing={3} align="stretch">
               <Text fontSize="xs" color="gray.400" fontWeight="600"
-                textTransform="uppercase" letterSpacing="wider" px={1}>All Evaluations</Text>
+                textTransform="uppercase" letterSpacing="wider" px={1}>
+                All Evaluations
+              </Text>
               {evalList.map(ev => (
-                <EvalCard key={ev.id} ev={ev} selected={selected?.id === ev.id} onSelect={setSelected} />
+                <EvalCard
+                  key={ev.id} ev={ev}
+                  selected={selected?.id === ev.id}
+                  onSelect={setSelected}
+                />
               ))}
             </VStack>
 
@@ -156,46 +173,53 @@ export default function MyEvaluations() {
                 <Box px={5} py={4} borderBottom="1px solid" borderColor="gray.100">
                   <Flex justify="space-between" align="center">
                     <Box>
-                      <Text fontWeight="700" fontSize="md" color="gray.800">{selected.title}</Text>
+                      <Text fontWeight="700" fontSize="md" color="gray.800">
+                        Evaluation #{selected.id}
+                      </Text>
                       <Text fontSize="11px" color="gray.400" mt={0.5}>
-                        By {selected.evaluator_name || 'Supervisor'} · {selected.date}
+                        By {selected.evaluator_email || 'Supervisor'} ·{' '}
+                        {selected.created_at ? new Date(selected.created_at).toLocaleDateString() : ''}
                       </Text>
                     </Box>
-                    {selected.score != null && (
-                      <CircularProgress value={selected.score} size="64px" thickness="8px"
-                        color={selected.score >= 70 ? 'green.400' : 'orange.400'} trackColor="gray.100">
+                    {selected.total_score != null && (
+                      <CircularProgress value={selected.total_score} size="64px" thickness="8px"
+                        color={selected.total_score >= 70 ? 'green.400' : 'orange.400'}
+                        trackColor="gray.100">
                         <CircularProgressLabel fontSize="sm" fontWeight="800" color="gray.800">
-                          {selected.score}
+                          {selected.total_score}
                         </CircularProgressLabel>
                       </CircularProgress>
                     )}
                   </Flex>
                 </Box>
                 <Box px={5} py={5}>
-                  {selected.scores && Object.keys(selected.scores).length > 0 && (
+                  {selected.feedback && (
                     <>
                       <Text fontSize="xs" fontWeight="600" color="gray.500"
-                        textTransform="uppercase" letterSpacing="wider" mb={4}>Breakdown</Text>
-                      <VStack spacing={3} align="stretch" mb={6}>
-                        {Object.entries(selected.scores).map(([key, val]) => (
-                          <ScoreBar key={key} label={CRITERIA_LABELS[key] || key} value={val} />
-                        ))}
-                      </VStack>
+                        textTransform="uppercase" letterSpacing="wider" mb={2}>
+                        Supervisor Feedback
+                      </Text>
+                      <Box bg="gray.50" borderRadius="xl" p={4} mb={5}>
+                        <Text fontSize="sm" color="gray.600" lineHeight="1.8">
+                          {selected.feedback}
+                        </Text>
+                      </Box>
                       <Divider mb={5} />
                     </>
                   )}
-                  {selected.comments && (
-                    <>
-                      <Text fontSize="xs" fontWeight="600" color="gray.500"
-                        textTransform="uppercase" letterSpacing="wider" mb={2}>Supervisor Comments</Text>
-                      <Box bg="gray.50" borderRadius="xl" p={4}>
-                        <Text fontSize="sm" color="gray.600" lineHeight="1.8">{selected.comments}</Text>
-                      </Box>
-                    </>
+                  {selected.grade && (
+                    <Flex align="center" gap={3}>
+                      <Text fontSize="xs" color="gray.400">Grade:</Text>
+                      <Badge colorScheme="green" fontSize="md" px={3} py={1} borderRadius="lg">
+                        {selected.grade}
+                      </Badge>
+                    </Flex>
                   )}
-                  {!selected.scores && !selected.comments && (
+                  {!selected.feedback && !selected.grade && (
                     <Text fontSize="sm" color="gray.400" textAlign="center" py={8}>
-                      {selected.status === 'pending' ? 'Evaluation not yet submitted.' : 'No details available.'}
+                      {selected.status === 'draft'
+                        ? 'Evaluation not yet submitted.'
+                        : 'No details available.'}
                     </Text>
                   )}
                 </Box>

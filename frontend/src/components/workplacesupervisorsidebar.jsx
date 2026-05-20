@@ -1,121 +1,100 @@
-import { Box, Flex, VStack, Text, Icon, Avatar, Divider, Tooltip } from '@chakra-ui/react'
-import { NavLink, useLocation } from 'react-router-dom'
+import {
+  Box, VStack, Text, Flex, Icon, Tooltip,
+  Avatar, HStack,
+} from '@chakra-ui/react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   MdDashboard, MdPeople, MdStar,
-  MdCalendarToday, MdPerson, MdLogout,
+  MdCalendarToday, MdPerson, MdLogout, MdNotifications,
 } from 'react-icons/md'
 import { useAuth } from '../context/AuthContext'
 
-const LINKS = [
-  { label: 'Dashboard',   icon: MdDashboard,     to: '/workplace-supervisor/dashboard'   },
-  { label: 'My Students', icon: MdPeople,        to: '/workplace-supervisor/students'    },
-  { label: 'Evaluations', icon: MdStar,          to: '/workplace-supervisor/evaluations' },
-  { label: 'Attendance',  icon: MdCalendarToday, to: '/workplace-supervisor/attendance'  },
-  { label: 'My Profile',  icon: MdPerson,        to: '/workplace-supervisor/profile'     },
+// ✅ All paths are absolute
+const navItems = [
+  { label: 'Dashboard',     path: '/workplace/dashboard',     icon: MdDashboard     },
+  { label: 'My Students',   path: '/workplace/students',      icon: MdPeople        },
+  { label: 'Evaluations',   path: '/workplace/evaluations',   icon: MdStar          },
+  { label: 'Attendance',    path: '/workplace/attendance',    icon: MdCalendarToday },
+  { label: 'My Profile',    path: '/workplace/profile',       icon: MdPerson        },
+  { label: 'Notifications', path: '/workplace/notifications', icon: MdNotifications },
 ]
 
-function SidebarLink({ to, icon, label }) {
-  const location = useLocation()
-  const active   = location.pathname === to || location.pathname.startsWith(to + '/')
-
+function NavItem({ item, isActive }) {
   return (
-    <Tooltip label={label} placement="right" hasArrow openDelay={600}>
-      <Box
-        as={NavLink}
-        to={to}
-        w="full"
-        display="flex"
-        alignItems="center"
-        gap={3}
-        px={3}
-        py={2.5}
-        borderRadius="xl"
-        fontSize="sm"
-        fontWeight={active ? '700' : '500'}
-        color={active ? 'blue.600' : 'gray.500'}
-        bg={active ? 'blue.50' : 'transparent'}
-        _hover={{ bg: active ? 'blue.50' : 'gray.100', color: active ? 'blue.600' : 'gray.700' }}
+    <Tooltip label={item.label} placement="right" hasArrow>
+      <Flex
+        as={Link} to={item.path}
+        align="center" gap={3} px={4} py={3}
+        borderRadius="md" w="100%" cursor="pointer"
+        bg={isActive ? 'sidebar.active' : 'transparent'}
+        borderLeft={isActive ? '3px solid' : '3px solid transparent'}
+        borderColor={isActive ? 'brand.400' : 'transparent'}
+        color={isActive ? 'white' : 'sidebar.text'}
+        _hover={{ bg: 'sidebar.hover', color: 'white', textDecoration: 'none' }}
         transition="all 0.15s"
-        textDecoration="none"
       >
-        <Icon as={icon} boxSize={5} flexShrink={0} />
-        <Text noOfLines={1}>{label}</Text>
-        {active && (
-          <Box ml="auto" w="4px" h="16px" bg="blue.500" borderRadius="full" />
-        )}
-      </Box>
+        <Icon as={item.icon} boxSize={5} flexShrink={0} />
+        <Text fontSize="sm" fontWeight={isActive ? '600' : '400'} noOfLines={1}>
+          {item.label}
+        </Text>
+      </Flex>
     </Tooltip>
   )
 }
 
 export default function WorkplaceSupervisorSidebar() {
-  const { user, logout } = useAuth()
+  const location = useLocation()
+  const navigate  = useNavigate()
+  const { user, logoutUser } = useAuth()
+
+  const handleLogout = async () => {
+    await logoutUser()
+    navigate('/login')
+  }
+
+  const displayName = user
+    ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Supervisor'
+    : 'Supervisor'
 
   return (
     <Box
-      w="220px"
-      minW="220px"
-      bg="white"
-      h="100vh"
-      position="sticky"
-      top={0}
-      borderRight="1px solid"
-      borderColor="gray.100"
-      display="flex"
-      flexDirection="column"
-      py={5}
-      px={3}
-      boxShadow="1px 0 4px rgba(0,0,0,0.03)"
+      w="240px" minH="100vh" flexShrink={0}
+      bg="sidebar.bg"
+      borderRight="1px solid" borderColor="sidebar.border"
+      display="flex" flexDirection="column"
+      position="sticky" top={0} h="100vh" overflowY="auto"
     >
-      {/* Logo / brand */}
-      <Flex align="center" gap={2} px={2} mb={6}>
-        <Box
-          w="32px" h="32px" borderRadius="lg"
-          bg="blue.600" display="flex" alignItems="center" justifyContent="center"
-          flexShrink={0}
-        >
-          <Text color="white" fontWeight="800" fontSize="sm">IP</Text>
-        </Box>
-        <Box>
-          <Text fontSize="12px" fontWeight="700" color="gray.800" lineHeight={1}>Intern Portal</Text>
-          <Text fontSize="10px" color="blue.500" fontWeight="600">Workplace Supervisor</Text>
-        </Box>
-      </Flex>
+      <Box px={5} py={6} borderBottom="1px solid" borderColor="sidebar.border">
+        <Text fontSize="xl" fontWeight="800" color="brand.300"
+          letterSpacing="widest" fontFamily="heading">ILES</Text>
+        <Text fontSize="10px" color="sidebar.text" mt={1}
+          textTransform="uppercase" letterSpacing="wider">Workplace Supervisor</Text>
+      </Box>
 
-      {/* Navigation links */}
-      <VStack spacing={1} align="stretch" flex={1}>
-        {LINKS.map(l => <SidebarLink key={l.to} {...l} />)}
+      <VStack spacing={1} px={2} py={4} flex={1} align="stretch">
+        <Text fontSize="10px" color="sidebar.text" px={3} mb={1}
+          textTransform="uppercase" letterSpacing="wider" opacity={0.6}>Main Menu</Text>
+        {navItems.map(item => (
+          <NavItem key={item.path} item={item}
+            isActive={location.pathname === item.path ||
+                      location.pathname.startsWith(item.path + '/')} />
+        ))}
       </VStack>
 
-      <Divider my={3} />
-
-      {/* User info + logout */}
-      <Box px={1}>
-        <Flex align="center" gap={2} mb={3}>
-          <Avatar size="sm" name={user?.name} bg="blue.600" color="white" fontSize="xs" />
+      <Box px={3} py={4} borderTop="1px solid" borderColor="sidebar.border">
+        <HStack spacing={3} mb={3} px={2}>
+          <Avatar size="sm" name={displayName} bg="brand.600" color="white" />
           <Box minW={0}>
-            <Text fontSize="xs" fontWeight="600" color="gray.700" noOfLines={1}>{user?.name}</Text>
-            <Text fontSize="10px" color="gray.400" noOfLines={1}>{user?.organisation || 'Workplace Supervisor'}</Text>
+            <Text fontSize="sm" color="white" fontWeight="600" noOfLines={1}>{displayName}</Text>
+            <Text fontSize="10px" color="sidebar.text" noOfLines={1}>Workplace Supervisor</Text>
           </Box>
-        </Flex>
-        <Box
-          as="button"
-          onClick={logout}
-          w="full"
-          display="flex"
-          alignItems="center"
-          gap={2}
-          px={3}
-          py={2}
-          borderRadius="xl"
-          fontSize="sm"
-          color="gray.400"
-          _hover={{ bg: 'red.50', color: 'red.500' }}
-          transition="all 0.15s"
-        >
+        </HStack>
+        <Flex align="center" gap={3} px={3} py={2} borderRadius="md" cursor="pointer"
+          color="sidebar.text" _hover={{ bg: 'sidebar.hover', color: '#fc8181' }}
+          transition="all 0.15s" onClick={handleLogout}>
           <Icon as={MdLogout} boxSize={4} />
-          <Text fontSize="xs">Sign out</Text>
-        </Box>
+          <Text fontSize="sm">Sign out</Text>
+        </Flex>
       </Box>
     </Box>
   )

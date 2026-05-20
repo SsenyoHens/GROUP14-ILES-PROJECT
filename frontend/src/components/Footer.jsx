@@ -44,7 +44,7 @@ function Footer({ minimal = false }) {
                 and workplace supervisors to streamline internship management and evaluation.
               </Text>
               <HStack spacing={2} flexWrap="wrap">
-                {['Students', 'Academic Supervisors', 'Workplace Supervisors'].map(role => (
+                {['Students', 'Academic Supervisors', 'Workplace Supervisors' , 'Internship Administrators'].map(role => (
                   <Text
                     key={role} fontSize="11px" px={3} py="3px"
                     border="1px solid" borderColor={tagBorder}

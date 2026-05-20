@@ -2,8 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import {
   Box, Flex, Grid, Text, VStack, HStack, Icon,
   Badge, Avatar, Button, Spinner, Progress,
-  Alert, AlertIcon, AlertDescription, Divider,
-  CircularProgress, CircularProgressLabel,
+  Alert, AlertIcon, AlertDescription,
   Textarea, Input, FormLabel,
   Modal, ModalOverlay, ModalContent, ModalHeader,
   ModalBody, ModalFooter, ModalCloseButton,
@@ -12,8 +11,7 @@ import {
 import {
   MdWork, MdAssignment, MdBook, MdPerson,
   MdCheckCircle, MdSchedule, MdTrendingUp,
-  MdLocationOn, MdCalendarToday, MdAdd,
-  MdStar, MdNotifications, MdUpload, MdWarning,
+  MdCalendarToday, MdAdd, MdStar, MdNotifications,
 } from 'react-icons/md'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axiosInstance'
@@ -68,7 +66,8 @@ function StatMini({ label, value, icon, color, sub, loading }) {
         <Text fontSize="10px" color="gray.400" textTransform="uppercase" letterSpacing="wider">
           {label}
         </Text>
-        <Flex w="32px" h="32px" borderRadius="lg" bg={`${color}.50`} align="center" justify="center">
+        <Flex w="32px" h="32px" borderRadius="lg" bg={`${color}.50`}
+          align="center" justify="center">
           <Icon as={icon} color={`${color}.500`} boxSize={4} />
         </Flex>
       </Flex>
@@ -82,7 +81,9 @@ function StatMini({ label, value, icon, color, sub, loading }) {
 }
 
 function LogbookModal({ isOpen, onClose, onSubmit }) {
-  const [form,   setForm]   = useState({ week_number: '', activities_done: '', challenges: '', skills_gained: '' })
+  const [form,   setForm]   = useState({
+    week_number: '', activities_done: '', challenges: '', skills_gained: '',
+  })
   const [saving, setSaving] = useState(false)
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
@@ -107,11 +108,9 @@ function LogbookModal({ isOpen, onClose, onSubmit }) {
           <VStack spacing={4}>
             <Box w="full">
               <FormLabel fontSize="xs" color="gray.500" mb={1}>Week Number *</FormLabel>
-              <Input
-                type="number" size="sm" borderRadius="lg" bg="gray.50"
+              <Input type="number" size="sm" borderRadius="lg" bg="gray.50"
                 placeholder="e.g. 1"
-                value={form.week_number} onChange={set('week_number')}
-              />
+                value={form.week_number} onChange={set('week_number')} />
             </Box>
             <Box w="full">
               <FormLabel fontSize="xs" color="gray.500" mb={1}>Activities Performed *</FormLabel>
@@ -151,22 +150,30 @@ export default function StudentDashboard() {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const toast = useToast()
 
-  // ✅ Correct backend endpoints
-  const stats      = useFetch('/dashboard/stats/')
-  const placement  = useFetch('/placements/')
-  const logs       = useFetch('/logs/')
-  const evals      = useFetch('/evaluations/')
+  const stats     = useFetch('/dashboard/stats/')
+  const placement = useFetch('/placements/')
+  const logs      = useFetch('/logs/')
+  const evals     = useFetch('/evaluations/')
 
-  const statsData  = stats.data      ?? {}
-  const logList    = Array.isArray(logs.data)  ? logs.data  : []
-  const evalList   = Array.isArray(evals.data) ? evals.data : []
-
-  // ✅ Student only has one placement (OneToOne)
+  const statsData     = stats.data ?? {}
+  const logList       = Array.isArray(logs.data)      ? logs.data      : []
+  const evalList      = Array.isArray(evals.data)     ? evals.data     : []
   const placementList = Array.isArray(placement.data) ? placement.data : []
-  const p = placementList[0] ?? null
 
+  // ✅ Student has one placement — take the first
+  const p   = placementList[0] ?? null
   const cfg = p ? (STATUS_CONFIG[p.status] || STATUS_CONFIG.pending) : null
 
+  // ✅ Safely extract supervisor names — backend now returns objects {id, name, email}
+  const academicSupName  = typeof p?.academic_supervisor  === 'object'
+    ? (p.academic_supervisor?.name  || p.academic_supervisor?.email  || '—')
+    : (p?.academic_supervisor  ?? '—')
+
+  const workplaceSupName = typeof p?.workplace_supervisor === 'object'
+    ? (p.workplace_supervisor?.name || p.workplace_supervisor?.email || '—')
+    : (p?.workplace_supervisor ?? '—')
+
+  // ✅ Progress calculation
   const progress = p && p.start_date && p.end_date
     ? (() => {
         const start = new Date(p.start_date)
@@ -184,18 +191,19 @@ export default function StudentDashboard() {
 
   const handleLogEntry = async (form) => {
     try {
-      // ✅ Correct endpoint
       await api.post('/logs/create/', form)
       toast({ title: 'Entry added', status: 'success', duration: 3000, isClosable: true })
       logs.refetch()
       stats.refetch()
     } catch (err) {
-      toast({ title: 'Failed', description: err.message, status: 'error', duration: 4000, isClosable: true })
+      toast({
+        title: 'Failed', description: err.message,
+        status: 'error', duration: 4000, isClosable: true,
+      })
       throw err
     }
   }
 
-  // ✅ Display name
   const displayName = user
     ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Student'
     : 'Student'
@@ -219,24 +227,42 @@ export default function StudentDashboard() {
       {stats.error && <ErrorBanner message={stats.error} onRetry={stats.refetch} />}
       <Grid templateColumns={{ base: '1fr 1fr', md: 'repeat(4,1fr)' }} gap={4} mb={6}>
         {[
-          { label: 'Logbook Entries', value: statsData.total_logs,     icon: MdBook,       color: 'brand',  sub: 'All time'    },
-          { label: 'Evaluations',     value: evalList.length,           icon: MdAssignment, color: 'purple', sub: 'Submitted'   },
-          { label: 'Pending Evals',   value: evalList.filter(e => e.status === 'pending').length,
-                                                                        icon: MdSchedule,   color: 'orange', sub: 'Due soon'    },
-          { label: 'Submitted Logs',  value: statsData.submitted_logs,  icon: MdTrendingUp, color: 'green',  sub: 'This period' },
-        ].map(s => <StatMini key={s.label} {...s} loading={stats.loading} />)}
+          {
+            label: 'Logbook Entries',
+            value: statsData.total_logs ?? logList.length,
+            icon:  MdBook,       color: 'brand',  sub: 'All time',
+          },
+          {
+            label: 'Evaluations',
+            value: evalList.length,
+            icon:  MdAssignment, color: 'purple', sub: 'Submitted',
+          },
+          {
+            label: 'Pending Evals',
+            value: evalList.filter(e => e.status === 'draft').length,
+            icon:  MdSchedule,   color: 'orange', sub: 'Due soon',
+          },
+          {
+            label: 'Submitted Logs',
+            value: statsData.submitted_logs ?? logList.filter(l => l.status === 'submitted').length,
+            icon:  MdTrendingUp, color: 'green',  sub: 'This period',
+          },
+        ].map(s => <StatMini key={s.label} {...s} loading={stats.loading && logs.loading} />)}
       </Grid>
 
       <Grid templateColumns={{ base: '1fr', xl: '1fr 380px' }} gap={5}>
         <VStack spacing={5} align="stretch">
 
-          {/* Placement card */}
+          {/* ── Placement card ── */}
           <Box>
             <Text fontWeight="700" fontSize="sm" color="gray.700" mb={3}>My Current Placement</Text>
+
             {placement.loading
-              ? <Box bg="white" borderRadius="2xl" p={5} border="1px solid" borderColor="gray.100">
+              ? (
+                <Box bg="white" borderRadius="2xl" p={5} border="1px solid" borderColor="gray.100">
                   <Flex justify="center" py={6}><Spinner color="brand.500" /></Flex>
                 </Box>
+              )
               : placement.error
                 ? <ErrorBanner message={placement.error} onRetry={placement.refetch} />
                 : !p
@@ -245,19 +271,24 @@ export default function StudentDashboard() {
                       borderColor="gray.100" textAlign="center">
                       <Icon as={MdWork} boxSize={10} color="gray.200" mb={2} />
                       <Text color="gray.400" fontSize="sm">No active placement found.</Text>
+                      <Text color="gray.300" fontSize="xs" mt={1}>
+                        Contact your coordinator to get placed.
+                      </Text>
                     </Box>
                   )
                   : (
                     <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
                       boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
+
+                      {/* Header */}
                       <Box bg="brand.600" px={5} py={4}>
                         <Flex justify="space-between" align="center">
                           <Box>
                             <Text color="white" fontWeight="700" fontSize="md">
-                              {p.company_name}
+                              {p.company_name || '—'}
                             </Text>
                             <Text color="brand.100" fontSize="xs" mt={0.5}>
-                              {p.position}
+                              {p.position || ''}
                             </Text>
                           </Box>
                           {cfg && (
@@ -272,13 +303,16 @@ export default function StudentDashboard() {
                           )}
                         </Flex>
                       </Box>
+
+                      {/* Details */}
                       <Box px={5} py={4}>
                         <Grid templateColumns="1fr 1fr 1fr" gap={4} mb={4}>
                           <Box>
                             <Text fontSize="10px" color="gray.400" textTransform="uppercase"
                               letterSpacing="wider">Academic Supervisor</Text>
+                            {/* ✅ Fixed — extract .name from object */}
                             <Text fontSize="sm" fontWeight="600" color="gray.700" mt={1}>
-                              {p.academic_supervisor ?? '—'}
+                              {academicSupName}
                             </Text>
                           </Box>
                           <Box>
@@ -296,6 +330,18 @@ export default function StudentDashboard() {
                             </Text>
                           </Box>
                         </Grid>
+
+                        {/* Workplace supervisor row */}
+                        <Box mb={4}>
+                          <Text fontSize="10px" color="gray.400" textTransform="uppercase"
+                            letterSpacing="wider">Workplace Supervisor</Text>
+                          {/* ✅ Fixed — extract .name from object */}
+                          <Text fontSize="sm" fontWeight="600" color="gray.700" mt={1}>
+                            {workplaceSupName}
+                          </Text>
+                        </Box>
+
+                        {/* Progress */}
                         <Flex justify="space-between" mb={1}>
                           <Text fontSize="xs" color="gray.500">Progress</Text>
                           <Text fontSize="xs" fontWeight="700" color="brand.600">{progress}%</Text>
@@ -303,9 +349,11 @@ export default function StudentDashboard() {
                         <Progress value={progress} colorScheme="brand" borderRadius="full"
                           size="sm" bg="gray.100" />
                         <Text fontSize="10px" color="gray.400" mt={1}>
-                          {daysRemaining > 0
+                          {daysRemaining !== null && daysRemaining > 0
                             ? `${daysRemaining} days remaining`
-                            : 'Placement complete'}
+                            : daysRemaining === 0
+                              ? 'Placement ends today'
+                              : 'Placement complete'}
                         </Text>
                       </Box>
                     </Box>
@@ -313,7 +361,7 @@ export default function StudentDashboard() {
             }
           </Box>
 
-          {/* Logbook */}
+          {/* ── Logbook ── */}
           <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
             boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
             <Flex px={5} py={4} justify="space-between" align="center"
@@ -329,16 +377,18 @@ export default function StudentDashboard() {
                 Add Entry
               </Button>
             </Flex>
+
             {logs.error && (
               <Box px={5} pt={3}>
                 <ErrorBanner message={logs.error} onRetry={logs.refetch} />
               </Box>
             )}
+
             {logs.loading
               ? <Flex justify="center" py={8}><Spinner color="brand.500" /></Flex>
               : logList.length > 0
                 ? logList.slice(0, 5).map((e, i) => (
-                    <Flex key={i} align="center" gap={3} px={4} py={3}
+                    <Flex key={e.id ?? i} align="center" gap={3} px={4} py={3}
                       borderBottom="1px solid" borderColor="gray.50"
                       _last={{ border: 'none' }} _hover={{ bg: 'gray.50' }}>
                       <Icon as={MdCalendarToday} boxSize={3.5} color="brand.400" flexShrink={0} />
@@ -351,7 +401,11 @@ export default function StudentDashboard() {
                         </Text>
                       </Box>
                       <Badge
-                        colorScheme={e.status === 'approved' ? 'green' : e.status === 'submitted' ? 'teal' : 'orange'}
+                        colorScheme={
+                          e.status === 'approved'  ? 'green'  :
+                          e.status === 'submitted' ? 'teal'   :
+                          e.status === 'rejected'  ? 'red'    : 'orange'
+                        }
                         borderRadius="full" fontSize="9px" px={2}>
                         {e.status}
                       </Badge>
@@ -370,7 +424,7 @@ export default function StudentDashboard() {
           </Box>
         </VStack>
 
-        {/* Right column */}
+        {/* ── Right column ── */}
         <VStack spacing={5} align="stretch">
 
           {/* Evaluations */}
@@ -384,19 +438,20 @@ export default function StudentDashboard() {
                   {evals.loading ? 'Loading…' : `${evalList.length} total`}
                 </Text>
               </Box>
-              {evalList.filter(e => e.status === 'pending').length > 0 && (
+              {evalList.filter(e => e.status === 'draft').length > 0 && (
                 <Badge colorScheme="orange" borderRadius="full" px={2} fontSize="10px">
-                  {evalList.filter(e => e.status === 'pending').length} pending
+                  {evalList.filter(e => e.status === 'draft').length} pending
                 </Badge>
               )}
             </Flex>
+
             {evals.loading
               ? <Flex justify="center" py={8}><Spinner color="brand.500" /></Flex>
               : evalList.length > 0
                 ? evalList.map((e, i) => {
                     const ecfg = EVAL_STATUS[e.status] || { color: 'gray', label: e.status }
                     return (
-                      <Flex key={i} align="center" gap={3} px={4} py={3}
+                      <Flex key={e.id ?? i} align="center" gap={3} px={4} py={3}
                         borderBottom="1px solid" borderColor="gray.50"
                         _last={{ border: 'none' }} _hover={{ bg: 'gray.50' }}>
                         <Flex w="36px" h="36px" borderRadius="lg" bg={`${ecfg.color}.50`}
@@ -408,11 +463,14 @@ export default function StudentDashboard() {
                             Evaluation #{e.id}
                           </Text>
                           <Text fontSize="11px" color="gray.400">
-                            {e.created_at ? new Date(e.created_at).toLocaleDateString() : ''}
+                            {e.created_at
+                              ? new Date(e.created_at).toLocaleDateString()
+                              : ''}
                           </Text>
                         </Box>
                         <VStack spacing={1} align="flex-end">
-                          <Badge colorScheme={ecfg.color} borderRadius="full" fontSize="9px" px={2}>
+                          <Badge colorScheme={ecfg.color} borderRadius="full"
+                            fontSize="9px" px={2}>
                             {ecfg.label}
                           </Badge>
                           {e.total_score != null && (
@@ -439,15 +497,19 @@ export default function StudentDashboard() {
           {/* Quick actions */}
           <Grid templateColumns="1fr 1fr" gap={3}>
             {[
-              { label: 'My Profile',    icon: MdPerson,     color: 'brand'  },
-              { label: 'My Placement',  icon: MdWork,       color: 'purple' },
-              { label: 'Logbook',       icon: MdBook,       color: 'blue'   },
-              { label: 'Evaluations',   icon: MdAssignment, color: 'orange' },
+              { label: 'My Profile',   icon: MdPerson,     color: 'brand'  },
+              { label: 'My Placement', icon: MdWork,       color: 'purple' },
+              { label: 'Logbook',      icon: MdBook,       color: 'blue'   },
+              { label: 'Evaluations',  icon: MdAssignment, color: 'orange' },
             ].map(a => (
               <Button key={a.label} leftIcon={<Icon as={a.icon} />}
                 variant="outline" borderColor="gray.200" bg="white" color="gray.600"
                 borderRadius="xl" size="sm" fontSize="xs" fontWeight="500" py={5}
-                _hover={{ bg: `${a.color}.50`, borderColor: `${a.color}.300`, color: `${a.color}.600` }}
+                _hover={{
+                  bg: `${a.color}.50`,
+                  borderColor: `${a.color}.300`,
+                  color: `${a.color}.600`,
+                }}
                 transition="all 0.15s">
                 {a.label}
               </Button>
