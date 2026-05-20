@@ -8,9 +8,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from core.serializers import RegisterSerializer, LoginSerializer
 
 
-# =========================
-# 📝 REGISTER
-# =========================
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_view(request):
@@ -39,9 +36,6 @@ def register_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# =========================
-# 🔐 LOGIN
-# =========================
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -87,9 +81,6 @@ def login_view(request):
     }, status=status.HTTP_200_OK)
 
 
-# =========================
-# 🚪 LOGOUT
-# =========================
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):

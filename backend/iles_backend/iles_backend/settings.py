@@ -1,58 +1,34 @@
 import environ
 from pathlib import Path
 import os
+from datetime import timedelta
 
-# ==================================
-# 📁 BASE DIRECTORY
-# ==================================
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ==================================
-# 📁 STATIC FILES
-# ==================================
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# ==================================
-# 🔐 ENVIRONMENT SETUP
-# ==================================
+
 env = environ.Env()
 environ.Env.read_env(BASE_DIR / '.env')
 
 
-# ==================================
-# 🔐 SECURITY SETTINGS
-# ==================================
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
 DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
-#Secure cookies
-#SESSION_COOKIE_SECURE = True
-#CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
-#if frontend uses another port
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
 
-
-# ==================================
-# 🌍 INTERNATIONALIZATION
-# ==================================
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
 
-# ==================================
-# 📦 APPLICATIONS
-# ==================================
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -63,32 +39,38 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
-    "corsheaders",
+    'rest_framework_simplejwt',          
+    'rest_framework_simplejwt.token_blacklist',  
+    'corsheaders',
     'core',
-    ]
+]
 
 
-# ==================================
-# 🔧 MIDDLEWARE
-# ==================================
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    ]
+]
+
+
+CORS_ALLOW_ALL_ORIGINS = False          
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite
+    "http://localhost:5173",
+    "http://localhost:5174",            
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
 ]
-# ==================================
-# 🔗 URLS & TEMPLATES
-# ==================================
+
+CORS_ALLOW_CREDENTIALS = True           
+
+
+
 ROOT_URLCONF = 'iles_backend.urls'
 
 TEMPLATES = [
@@ -109,53 +91,42 @@ TEMPLATES = [
 WSGI_APPLICATION = 'iles_backend.wsgi.application'
 
 
-# ==================================
-# 🗄 DATABASE (PostgreSQL via .env)
-# ==================================
 DATABASES = {
     'default': env.db()
 }
 
-# Ensures each request is wrapped in a transaction
 DATABASES['default']['ATOMIC_REQUESTS'] = True
 
 
-# ==================================
-# 🔑 AUTHENTICATION
-# ==================================
 AUTH_USER_MODEL = 'core.CustomUser'
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 
-# ==================================
-# 📡 DJANGO REST FRAMEWORK
-# ==================================
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  
     ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  
+    ],
+}
 
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME':        timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME':       timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS':        True,    
+    'BLACKLIST_AFTER_ROTATION':     True,    
+    'AUTH_HEADER_TYPES':            ('Bearer',),
+    'AUTH_TOKEN_CLASSES':           ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
 
-# ==================================
-# 📊 LOGGING
-# ==================================
 LOGGING = {
     'version': 1,
     'handlers': {
@@ -170,10 +141,4 @@ LOGGING = {
 }
 
 
-# ==================================
-# 🔧 DEFAULT PRIMARY KEY
-# ==================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-#for testing
-CORS_ALLOW_ALL_ORIGINS = True

@@ -17,9 +17,6 @@ from core.serializers import (
 )
 
 
-# =========================
-# 👤 GET MY PROFILE
-# =========================
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_my_profile(request):
@@ -55,9 +52,7 @@ def get_my_profile(request):
     return Response({**base_data, "profile": profile_data})
 
 
-# =========================
-# ✏️ UPDATE MY PROFILE
-# =========================
+
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def update_my_profile(request):
@@ -110,9 +105,6 @@ def update_my_profile(request):
     })
 
 
-# =========================
-# 🔑 CHANGE PASSWORD
-# =========================
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def change_password(request):
@@ -144,9 +136,6 @@ def change_password(request):
     return Response({"message": "Password changed successfully"})
 
 
-# =========================
-# 👥 VIEW SUPERVISORS
-# =========================
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_supervisors(request):
@@ -164,9 +153,6 @@ def view_supervisors(request):
     return Response(serializer.data)
 
 
-# =========================
-# ✏️ UPDATE STUDENT PROFILE (admin use)
-# =========================
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def update_student_profile(request, pk):

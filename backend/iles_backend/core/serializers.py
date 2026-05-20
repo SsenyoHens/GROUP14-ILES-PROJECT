@@ -17,9 +17,6 @@ from .models import (
 User = get_user_model()
 
 
-# =========================================================
-# 1. REGISTER SERIALIZER
-# =========================================================
 class RegisterSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True, min_length=8)
@@ -106,17 +103,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-# =========================================================
-# 2. LOGIN SERIALIZER
-# =========================================================
 class LoginSerializer(serializers.Serializer):
     email    = serializers.EmailField(required=True)
     password = serializers.CharField(required=True, write_only=True)
 
 
-# =========================================================
-# 3. USER SERIALIZER
-# =========================================================
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model  = CustomUser
@@ -124,9 +115,6 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
-# =========================================================
-# 4. PROFILE SERIALIZERS
-# =========================================================
 class StudentProfileSerializer(serializers.ModelSerializer):
     email      = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
@@ -181,9 +169,6 @@ class SupervisorSerializer(serializers.ModelSerializer):
         return None
 
 
-# =========================================================
-# 5. PLACEMENT SERIALIZER
-# =========================================================
 class PlacementSerializer(serializers.ModelSerializer):
     student_email  = serializers.EmailField(source='student.user.email', read_only=True)
     student_name   = serializers.SerializerMethodField()
@@ -209,9 +194,6 @@ class PlacementSerializer(serializers.ModelSerializer):
         return data
 
 
-# =========================================================
-# 6. WEEKLY LOG SERIALIZER
-# =========================================================
 class WeeklyLogSerializer(serializers.ModelSerializer):
     student_email = serializers.ReadOnlyField(source='student.email')
     student_name  = serializers.SerializerMethodField()
@@ -221,7 +203,7 @@ class WeeklyLogSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'student', 'student_email', 'student_name',
             'week_number', 'activities_done', 'challenges',
-            'skills_gained', 'strengths', 'plan_for_action',   # ✅ correct field name
+            'skills_gained', 'strengths', 'plan_for_action',   
             'status', 'submitted_at', 'created_at',
         ]
         read_only_fields = ['id', 'student', 'submitted_at', 'created_at']
@@ -235,20 +217,14 @@ class WeeklyLogSerializer(serializers.ModelSerializer):
         return data
 
 
-# =========================================================
-# 7. WEEKLY LOG HISTORY SERIALIZER
-# =========================================================
 class WeeklyLogHistorySerializer(serializers.ModelSerializer):
     changed_by_email = serializers.EmailField(source='changed_by.email', read_only=True)
 
     class Meta:
         model  = WeeklyLogHistory
-        fields = ['id', 'log', 'changed_by', 'changed_by_email', 'old_status', 'new_status', 'changed_at']  # ✅ fixed typo
+        fields = ['id', 'log', 'changed_by', 'changed_by_email', 'old_status', 'new_status', 'changed_at']  
 
 
-# =========================================================
-# 8. WEEKLY LOG STATS SERIALIZER
-# =========================================================
 class WeeklyLogStatsSerializer(serializers.Serializer):
     total_logs     = serializers.IntegerField()
     submitted_logs = serializers.IntegerField()
@@ -257,9 +233,6 @@ class WeeklyLogStatsSerializer(serializers.Serializer):
     draft_logs     = serializers.IntegerField()
 
 
-# =========================================================
-# 9. EVALUATION SERIALIZERS
-# =========================================================
 class EvaluationCriteriaSerializer(serializers.ModelSerializer):
     class Meta:
         model  = EvaluationCriteria
@@ -288,6 +261,6 @@ class EvaluationSerializer(serializers.ModelSerializer):
             'weekly_log', 'status',
             'total_score', 'grade',
             'feedback', 'scores',
-            'created_at', 'updated_at',   # ✅ now exists on model
+            'created_at', 'updated_at',   
         ]
         read_only_fields = ['id', 'total_score', 'grade', 'created_at', 'updated_at']
