@@ -1,45 +1,45 @@
-import axios from 'axios'
+import api from './axios'
 
-const api = axios.create({
-    baseURL: 'http://127.0.0.1:8000/api/'
-})
+// =========================
+// AUTH SERVICES
+// =========================
 
-api.interceptors.request.use((config) => {
+export const authService = {
 
-    const user = JSON.parse(localStorage.getItem('user'))
+    login: (data) =>
+        api.post('/auth/login/', data)
+}
 
-    if (user?.access) {
-        config.headers.Authorization = `Bearer ${user.access}`
-    }
 
-    return config
-})
+// =========================
+// SUPERVISOR SERVICES
+// =========================
 
 export const supervisorService = {
 
-    getAll: () => api.get('supervisors/'),
+    getAll: () =>
+        api.get('/supervisors/'),
 
     create: (data) =>
         api.post('/supervisors/create/', data),
 
     update: (id, data) =>
-        api.put(`/supervisors/update/${id}/`, data),
+        api.put(`/supervisors/${id}/update/`, data),
 
     delete: (id) =>
-        api.delete(`/supervisors/delete/${id}/`),
+        api.delete(`/supervisors/${id}/delete/`)
 }
 
-export const authService = {
 
-    login: (data) =>
-        api.post('/login/', data)
-}
+// =========================
+// WEEKLY LOG SERVICES
+// =========================
 
 export const weeklyLogService = {
 
-    create: (data) => api.post('/logs/create/', data),
+    create: (data) =>
+        api.post('/logs/create/', data),
 
-    getAll: () => api.get('/logs/')
+    getAll: () =>
+        api.get('/logs/')
 }
-
-export default api

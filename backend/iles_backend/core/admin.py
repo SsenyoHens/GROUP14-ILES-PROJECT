@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django import forms
-
+    
 from .models import (
     CustomUser,
     StudentProfile,
@@ -13,6 +13,7 @@ from .models import (
     Evaluation,
     EvaluationScore,
     EvaluationCriteria,
+    Notification,
 )
 
 
@@ -64,7 +65,7 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(StudentProfile)
 class StudentProfileAdmin(admin.ModelAdmin):
-    list_display  = ['user', 'registration_number', 'course', 'year_of_study', 'phone_number']
+    list_display  = ['user', 'registration_number', 'course', 'year_of_study']
     search_fields = ['user__email', 'user__first_name', 'registration_number']
 
 
@@ -159,3 +160,13 @@ class EvaluationAdmin(admin.ModelAdmin):
 class EvaluationScoreAdmin(admin.ModelAdmin):
     list_display  = ['evaluation', 'criteria', 'score']
     search_fields = ['evaluation__student__email', 'criteria__name']
+
+
+# =========================
+# 🔔 NOTIFICATION ADMIN
+# =========================
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display  = ['recipient', 'weekly_log', 'notification_type', 'is_read', 'created_at']
+    list_filter   = ['notification_type', 'is_read']
+    search_fields = ['recipient__email', 'message']
