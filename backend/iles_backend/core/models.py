@@ -174,8 +174,8 @@ class WeeklyLog(models.Model):
         unique_together = ('student', 'week_number')
         constraints = [
             models.CheckConstraint(
-            condition=Q(week_number__gte=1) & Q(week_number__lte=52),
-            name="week_number_valid_range"
+                condition=Q(week_number__gte=1) & Q(week_number__lte=52),
+                name='week_number_valid_range',
             )
         ]
 
@@ -382,3 +382,37 @@ def create_user_profile(sender, instance, created, **kwargs):
         AcademicSupervisorProfile.objects.get_or_create(user=instance)
     elif instance.role == 'workplace_supervisor':
         WorkplaceSupervisorProfile.objects.get_or_create(user=instance)
+        
+class Notification(models.Model):
+
+    NOTIFICATION_TYPES = [
+        ('submitted', 'Submitted'),
+        ('reviewed', 'Reviewed'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    recipient = models.ForeignKey(CustomUser, on_delete=models.CASCADE,
+                                  related_name='notifications')
+
+    weekly_log = models.ForeignKey(
+        WeeklyLog,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True)
+
+    message = models.TextField()
+
+    notification_type = models.CharField(max_length=20,
+        choices=NOTIFICATION_TYPES)
+
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.recipient.email} - {self.notification_type}"
+        
