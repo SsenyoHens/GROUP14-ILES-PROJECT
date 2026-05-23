@@ -2,70 +2,50 @@ from django.db.models import Count, Q
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-from core.utils import create_notification
+from django.shortcuts import get_object_or_404
 
 from core.models import WeeklyLog
 from core.serializers import WeeklyLogSerializer
-from core.permissions import IsAdmin, IsAcademicSupervisor, IsSupervisor
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_logs(request):
     user = request.user
+    try:
+        if user.role == 'student':
+            logs = WeeklyLog.objects.filter(student=user)
 
-    if user.role == 'student':
-        # Students only see their own logs
-        logs = WeeklyLog.objects.filter(student=user)
+        elif user.role == 'academic_supervisor':
+            logs = WeeklyLog.objects.filter(
+                student__studentprofile__internshipplacement__academic_supervisor__user=user
+            )
 
-    elif user.role == 'academic_supervisor':
-        # Academic supervisors see logs of students they supervise
-        logs = WeeklyLog.objects.filter(
-            student__internshipplacement__academic_supervisor__user=user
-        )
+        elif user.role == 'workplace_supervisor':
+            logs = WeeklyLog.objects.filter(
+                student__studentprofile__internshipplacement__workplace_supervisor__user=user
+            )
 
-    elif user.role == 'workplace_supervisor':
-        # Workplace supervisors see logs of students at their company
-        logs = WeeklyLog.objects.filter(
-            student__internshipplacement__workplace_supervisor__user=user
-        )
+        else:
+            logs = WeeklyLog.objects.all()
 
-    else:
-        # Admin sees all logs
-        logs = WeeklyLog.objects.all()
+        serializer = WeeklyLogSerializer(logs, many=True)
+        return Response(serializer.data)
 
-    serializer = WeeklyLogSerializer(logs, many=True)
-    return Response(serializer.data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_log(request):
     if request.user.role != 'student':
-        return Response(
-            {"error": "Only students can create logs"},
-            status=403
-        )
+        return Response({"error": "Only students can create logs"}, status=403)
 
     serializer = WeeklyLogSerializer(data=request.data)
     if serializer.is_valid():
-        new_log = serializer.save(student=request.user)
-
-        # Notify academic supervisor
-        placement = getattr(request.user,
-                            'internshipplacement', None)
-        if placement and placement.academic_supervisor:
-
-            create_notification(
-                recipient=placement.academic_supervisor.user,
-                weekly_log=new_log,
-                notification_type='submitted',
-                sender =user,
-                message=f'{request.user.username} submitted Week {new_log.week_number} log.'
-            )
+        serializer.save(student=request.user)
         return Response(serializer.data, status=201)
-        
     return Response(serializer.errors, status=400)
 
 
@@ -79,17 +59,12 @@ def update_log(request, pk):
 
     user = request.user
 
-    # Students can only edit their own draft logs
     if user.role == 'student':
         if log.student != user:
             return Response({"error": "Not authorized"}, status=403)
         if log.status != 'draft':
-            return Response(
-                {"error": "Only draft logs can be edited"},
-                status=400
-            )
+            return Response({"error": "Only draft logs can be edited"}, status=400)
 
-    # Supervisors can update status (approve/reject)
     elif user.role in ['academic_supervisor', 'workplace_supervisor']:
         allowed_fields = {'status', 'feedback'}
         if not set(request.data.keys()).issubset(allowed_fields):
@@ -100,42 +75,9 @@ def update_log(request, pk):
 
     serializer = WeeklyLogSerializer(log, data=request.data, partial=True)
     if serializer.is_valid():
-        updated_log = serializer.save()
-
-        '''return Response(serializer.data)
-    return Response(serializer.errors, status=400)'''
-        
-        # ==============================================
-        # NOTIFICATIONS
-        # ==============================================
-        # Create notification for student when supervisor updates log
-        if user.role in ['academic_supervisor', 'workplace_supervisor']:
-            if updated_log.status == 'approved':
-                create_notification(
-                    recipient=updated_log.student,
-                    weekly_log=updated_log,
-                    notification_type='approved',
-                    sender=user,
-                    message=f"Your weekly log for week {updated_log.week_number} has been approved."
-                )
-            elif updated_log.status == 'rejected':
-                create_notification(
-                    recipient=updated_log.student,
-                    weekly_log=updated_log,
-                    notification_type='rejected',
-                    sender=user,
-                    message=f"Your weekly log for week {updated_log.week_number} has been rejected."
-
-                )
-            elif updated_log.status == 'submitted':
-                create_notification(
-                   recipient=updated_log.student,
-                   weekly_log=updated_log,
-                   notification_type='submitted',
-                   sender = user,
-                   message= f'Your Week {updated_log.week_number} log has been reviewed.' 
-                )
-    return Response(serializer.data)
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=400)
 
 
 @api_view(['DELETE'])
@@ -148,14 +90,11 @@ def delete_log(request, pk):
 
     user = request.user
 
-    # Students can only delete their own draft logs
     if user.role == 'student':
         if log.student != user:
             return Response({"error": "Not authorized"}, status=403)
         if log.status != 'draft':
             return Response({"error": "Only draft logs can be deleted"}, status=400)
-
-    # Only admin can delete any log
     elif user.role != 'admin':
         return Response({"error": "Not authorized"}, status=403)
 
@@ -167,56 +106,90 @@ def delete_log(request, pk):
 @permission_classes([IsAuthenticated])
 def weekly_log_summary(request):
     user = request.user
+    try:
+        if user.role == 'student':
+            logs = WeeklyLog.objects.filter(student=user)
+        elif user.role == 'academic_supervisor':
+            logs = WeeklyLog.objects.filter(
+                student__studentprofile__internshipplacement__academic_supervisor__user=user
+            )
+        elif user.role == 'workplace_supervisor':
+            logs = WeeklyLog.objects.filter(
+                student__studentprofile__internshipplacement__workplace_supervisor__user=user
+            )
+        else:
+            logs = WeeklyLog.objects.all()
 
-    if user.role == 'student':
-        logs = WeeklyLog.objects.filter(student=user)
-    elif user.role == 'academic_supervisor':
-        logs = WeeklyLog.objects.filter(
-            student__internshipplacement__academic_supervisor__user=user
+        summary = logs.values(
+            'student__first_name',
+            'student__last_name',
+        ).annotate(
+            total_logs=Count('id'),
+            draft_logs=Count('id', filter=Q(status='draft')),
+            submitted_logs=Count('id', filter=Q(status='submitted')),
+            approved_logs=Count('id', filter=Q(status='approved')),
+            rejected_logs=Count('id', filter=Q(status='rejected')),
         )
-    elif user.role == 'workplace_supervisor':
-        logs = WeeklyLog.objects.filter(
-            student__internshipplacement__workplace_supervisor__user=user
-        )
-    else:
-        logs = WeeklyLog.objects.all()
+        return Response(summary)
 
-    summary = logs.values(
-        'student__first_name',
-        'student__last_name',
-    ).annotate(
-        total_logs=Count('id'),
-        draft_logs=Count('id', filter=Q(status='draft')),
-        submitted_logs=Count('id', filter=Q(status='submitted')),
-        approved_logs=Count('id', filter=Q(status='approved')),
-        rejected_logs=Count('id', filter=Q(status='rejected')),
-    )
-
-    return Response(summary)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def weekly_log_stats(request):
     user = request.user
+    try:
+        if user.role == 'student':
+            logs = WeeklyLog.objects.filter(student=user)
+        elif user.role == 'academic_supervisor':
+            logs = WeeklyLog.objects.filter(
+                student__studentprofile__internshipplacement__academic_supervisor__user=user
+            )
+        elif user.role == 'workplace_supervisor':
+            logs = WeeklyLog.objects.filter(
+                student__studentprofile__internshipplacement__workplace_supervisor__user=user
+            )
+        else:
+            logs = WeeklyLog.objects.all()
 
-    if user.role == 'student':
-        logs = WeeklyLog.objects.filter(student=user)
-    elif user.role == 'academic_supervisor':
-        logs = WeeklyLog.objects.filter(
-            student__internshipplacement__academic_supervisor__user=user
-        )
-    elif user.role == 'workplace_supervisor':
-        logs = WeeklyLog.objects.filter(
-            student__internshipplacement__workplace_supervisor__user=user
-        )
-    else:
-        logs = WeeklyLog.objects.all()
+        return Response({
+            "total_logs":     logs.count(),
+            "draft_logs":     logs.filter(status='draft').count(),
+            "submitted_logs": logs.filter(status='submitted').count(),
+            "approved_logs":  logs.filter(status='approved').count(),
+            "rejected_logs":  logs.filter(status='rejected').count(),
+        })
 
-    return Response({
-        "total_logs":     logs.count(),
-        "draft_logs":     logs.filter(status='draft').count(),
-        "submitted_logs": logs.filter(status='submitted').count(),
-        "approved_logs":  logs.filter(status='approved').count(),
-        "rejected_logs":  logs.filter(status='rejected').count(),
-    })
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+# ── NEW SUBMISSION ENDPOINT ──
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def submit_log(request, pk):
+    """
+    Allows students to submit a draft weekly logbook entry for supervisor evaluation.
+    """
+    if request.user.role != 'student':
+        return Response({"error": "Only students can submit logbook entries."}, status=403)
+        
+    # Find the log, ensuring it belongs explicitly to the student making the request
+    log = get_object_or_404(WeeklyLog, pk=pk, student=request.user)
+    
+    # Validation constraint check
+    if log.status != 'draft':
+        return Response(
+            {"error": f"Cannot submit log. This entry is already marked as '{log.status}'."}, 
+            status=400
+        )
+        
+    # Perform status state migration
+    log.status = 'submitted'
+    log.save()
+    
+    # Return updated item fields back to react UI sync cycle
+    serializer = WeeklyLogSerializer(log)
+    return Response(serializer.data, status=200)
