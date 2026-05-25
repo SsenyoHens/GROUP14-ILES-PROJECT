@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django import forms
-    
+ 
 from .models import (
     CustomUser,
     StudentProfile,
@@ -17,9 +17,7 @@ from .models import (
 )
 
 
-# =========================
-# 🔧 WEEKLY LOG FORM
-# =========================
+
 class WeeklyLogAdminForm(forms.ModelForm):
     class Meta:
         model  = WeeklyLog
@@ -36,9 +34,7 @@ class WeeklyLogAdminForm(forms.ModelForm):
         return cleaned_data
 
 
-# =========================
-# 👤 CUSTOM USER ADMIN
-# =========================
+
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     model         = CustomUser
@@ -67,36 +63,25 @@ class CustomUserAdmin(UserAdmin):
     )
 
 
-# =========================
-# 👨‍🎓 STUDENT PROFILE ADMIN
-# =========================
 @admin.register(StudentProfile)
 class StudentProfileAdmin(admin.ModelAdmin):
     list_display  = ['user', 'registration_number', 'course', 'year_of_study']
     search_fields = ['user__email', 'user__first_name', 'registration_number']
 
 
-# =========================
-# 🎓 ACADEMIC SUPERVISOR ADMIN
-# =========================
 @admin.register(AcademicSupervisorProfile)
 class AcademicSupervisorAdmin(admin.ModelAdmin):
     list_display  = ['user', 'department', 'staff_id', 'office_number', 'phone_number']
     search_fields = ['user__email', 'department', 'staff_id']
 
 
-# =========================
-# 🏢 WORKPLACE SUPERVISOR ADMIN
-# =========================
 @admin.register(WorkplaceSupervisorProfile)
 class WorkplaceSupervisorAdmin(admin.ModelAdmin):
     list_display  = ['user', 'company_name', 'position', 'phone_number']
     search_fields = ['user__email', 'company_name']
 
 
-# =========================
-# 🏢 INTERNSHIP PLACEMENT ADMIN
-# =========================
+
 @admin.register(InternshipPlacement)
 class InternshipPlacementAdmin(admin.ModelAdmin):
     list_display  = ['student', 'company_name', 'position', 'status', 'start_date', 'end_date']
@@ -113,9 +98,6 @@ class InternshipPlacementAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-# =========================
-# 📘 WEEKLY LOG ADMIN
-# =========================
 @admin.register(WeeklyLog)
 class WeeklyLogAdmin(admin.ModelAdmin):
     form          = WeeklyLogAdminForm
@@ -144,9 +126,6 @@ class WeeklyLogAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-# =========================
-# 📋 WEEKLY LOG HISTORY ADMIN
-# =========================
 @admin.register(WeeklyLogHistory)
 class WeeklyLogHistoryAdmin(admin.ModelAdmin):
     list_display  = ['log', 'changed_by', 'old_status', 'new_status', 'changed_at']
@@ -154,18 +133,12 @@ class WeeklyLogHistoryAdmin(admin.ModelAdmin):
     readonly_fields = ['log', 'changed_by', 'old_status', 'new_status', 'changed_at']
 
 
-# =========================
-# 📊 EVALUATION CRITERIA ADMIN
-# =========================
 @admin.register(EvaluationCriteria)
 class EvaluationCriteriaAdmin(admin.ModelAdmin):
     list_display  = ['name', 'max_score', 'description']
     search_fields = ['name']
 
 
-# =========================
-# 📊 EVALUATION ADMIN
-# =========================
 @admin.register(Evaluation)
 class EvaluationAdmin(admin.ModelAdmin):
     list_display  = ['student', 'evaluator', 'weekly_log', 'status', 'total_score', 'grade', 'created_at']
@@ -183,9 +156,6 @@ class EvaluationAdmin(admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-# =========================
-# 📊 EVALUATION SCORE ADMIN
-# =========================
 @admin.register(EvaluationScore)
 class EvaluationScoreAdmin(admin.ModelAdmin):
     list_display  = ['evaluation', 'criteria', 'score']

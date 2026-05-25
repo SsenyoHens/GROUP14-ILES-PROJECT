@@ -17,9 +17,6 @@ from core.models import (
 )
 
 
-# =========================
-# 📝 REGISTER
-# =========================
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_view(request):
@@ -101,9 +98,6 @@ def register_view(request):
     )
 
 
-# =========================
-# 🔐 LOGIN
-# =========================
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -160,9 +154,6 @@ def login_view(request):
     }, status=status.HTTP_200_OK)
 
 
-# =========================
-# 🚪 LOGOUT
-# =========================
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
