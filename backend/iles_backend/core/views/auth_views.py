@@ -23,8 +23,9 @@ def register_view(request):
 
     data = request.data
 
-    username = data.get('username')
-    email = data.get('email')
+    
+    email = data.get('email').lower()
+    username = email.lower()
     password = data.get('password')
     role = data.get('role')
 
@@ -61,22 +62,26 @@ def register_view(request):
     # =========================
     if role == 'student':
 
-        StudentProfile.objects.create(
+        StudentProfile.objects.get_or_create(
             user=user,
-            registration_number=data.get('registration_number'),
-            course=data.get('course'),
-            year_of_study=data.get('year_of_study')
-        )
+            defaults={
+                'registration_number': data.get('registration_number'),
+                'course': data.get('course'),
+                'year_of_study': data.get('year_of_study')
+        }
+    )
 
     # =========================
     # ACADEMIC SUPERVISOR PROFILE
     # =========================
     elif role == 'academic_supervisor':
 
-        AcademicSupervisorProfile.objects.create(
+        AcademicSupervisorProfile.objects.get_or_create(
             user=user,
-            department=data.get('department'),
-            office_number=data.get('office_number')
+            defaults={
+                'department': data.get('department'),
+                'office_number': data.get('office_number')
+            }
         )
 
     # =========================
@@ -84,10 +89,12 @@ def register_view(request):
     # =========================
     elif role == 'workplace_supervisor':
 
-        WorkplaceSupervisorProfile.objects.create(
+        WorkplaceSupervisorProfile.objects.get_or_create(
             user=user,
-            company_name=data.get('company_name'),
-            position=data.get('position')
+            defaults={
+                'company_name': data.get('company_name'),
+                'position': data.get('position')
+            }
         )
 
     return Response(
@@ -110,15 +117,25 @@ def login_view(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    email = serializer.validated_data['email']
+    email = serializer.validated_data['email'].lower()
     password = serializer.validated_data['password']
+
+    #debug print(f"Attempting login for email: {email}")
+    print("EMAIL RECEIVED:", email)
+    print("PASSWORD RECEIVED:", password)
+
+    user_check = CustomUser.objects.filter(username=email).first()
+
+    print("USER FOUND:", user_check)
 
     user = authenticate(
         request,
-        email=email,
+        username=email,
         password=password
     )
-
+    
+    print("AUTHENTICATED USER:", user)
+    
     if user is None:
         return Response(
             {"error": "Invalid email or password"},
