@@ -12,9 +12,9 @@ import api from '../../api/axiosInstance'
 import { useAuth } from '../../context/AuthContext'
 
 function useFetch(endpoint) {
-  const [data, setData] = useState(null)
+  const [data,    setData]    = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error,   setError]   = useState(null)
   const load = useCallback(async () => {
     setLoading(true); setError(null)
     try { const res = await api.get(endpoint); setData(res.data) }
@@ -54,20 +54,19 @@ function Field({ label, name, value, onChange, type = 'text', readOnly = false }
 }
 
 export default function StudentProfile() {
-  // API: GET/PATCH /student/profile/
-  // expects: { name, email, phone, registration_number, programme, year_of_study,
-  //   department, date_of_birth, status, placement_status, created_at }
-  const { data: profile, loading, error, refetch } = useFetch('/student/profile/')
+  const { data: profile, loading, error, refetch } = useFetch('/profile/')
   const { user } = useAuth()
-  const toast = useToast()
+  const toast    = useToast()
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({})
-  const [saving, setSaving] = useState(false)
+  const [form,    setForm]    = useState({})
+  const [saving,  setSaving]  = useState(false)
 
   useEffect(() => {
     if (profile) setForm({
-      name: profile.name || '', email: profile.email || '',
-      phone: profile.phone || '', date_of_birth: profile.date_of_birth || '',
+      first_name: profile.first_name || '',
+      last_name:  profile.last_name  || '',
+      email:      profile.email      || '',
+      phone:      profile.phone      || '',
     })
   }, [profile])
 
@@ -76,30 +75,43 @@ export default function StudentProfile() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await api.patch('/student/profile/', form)
+      await api.put('/profile/update/', form)
       toast({ title: 'Profile updated', status: 'success', duration: 3000, isClosable: true })
       refetch(); setEditing(false)
     } catch (err) {
-      toast({ title: 'Update failed', description: err.message, status: 'error', duration: 4000, isClosable: true })
+      toast({
+        title: 'Update failed', description: err.message,
+        status: 'error', duration: 4000, isClosable: true
+      })
     } finally { setSaving(false) }
   }
 
   const handleCancel = () => {
     setEditing(false)
     if (profile) setForm({
-      name: profile.name || '', email: profile.email || '',
-      phone: profile.phone || '', date_of_birth: profile.date_of_birth || '',
+      first_name: profile.first_name || '',
+      last_name:  profile.last_name  || '',
+      email:      profile.email      || '',
+      phone:      profile.phone      || '',
     })
   }
 
-  if (loading) return <Flex justify="center" align="center" minH="60vh"><Spinner size="lg" color="brand.500" /></Flex>
+  if (loading) return (
+    <Flex justify="center" align="center" minH="60vh">
+      <Spinner size="lg" color="brand.500" />
+    </Flex>
+  )
 
   if (error) return (
     <Alert status="error" borderRadius="xl">
-      <AlertIcon /><AlertDescription>{error}</AlertDescription>
+      <AlertIcon />
+      <AlertDescription>{error}</AlertDescription>
       <Button size="xs" ml={3} onClick={refetch} colorScheme="red" variant="outline">Retry</Button>
     </Alert>
   )
+
+  const studentProfile = profile?.profile || {}
+  const displayName    = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || profile?.email
 
   return (
     <Box>
@@ -111,13 +123,16 @@ export default function StudentProfile() {
             boxShadow="0 1px 3px rgba(0,0,0,0.04)" overflow="hidden">
             <Box bg="brand.600" bgGradient="linear(135deg, brand.600, brand.800)" h="80px" />
             <Flex direction="column" align="center" px={5} pb={5} mt="-40px">
-              <Avatar size="xl" name={profile?.name} bg="brand.600" color="white"
+              <Avatar size="xl" name={displayName} bg="brand.600" color="white"
                 fontSize="xl" border="4px solid white" mb={3} />
-              <Text fontWeight="800" fontSize="md" color="gray.800" textAlign="center">{profile?.name}</Text>
-              <Text fontSize="xs" color="gray.400" mt={0.5}>{profile?.registration_number}</Text>
-              <Badge mt={2} colorScheme={profile?.status === 'Placed' ? 'green' : 'orange'}
-                borderRadius="full" px={3} fontSize="10px">
-                {profile?.status || 'Pending'}
+              <Text fontWeight="800" fontSize="md" color="gray.800" textAlign="center">
+                {displayName}
+              </Text>
+              <Text fontSize="xs" color="gray.400" mt={0.5}>
+                {studentProfile.registration_number || profile?.email}
+              </Text>
+              <Badge mt={2} colorScheme="brand" borderRadius="full" px={3} fontSize="10px">
+                Student
               </Badge>
             </Flex>
           </Box>
@@ -125,10 +140,10 @@ export default function StudentProfile() {
           <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="gray.100"
             boxShadow="0 1px 3px rgba(0,0,0,0.04)" p={5}>
             <Text fontWeight="700" fontSize="sm" color="gray.800" mb={4}>Academic Info</Text>
-            <InfoRow label="Programme"     value={profile?.programme}                                   icon={MdSchool}        />
-            <InfoRow label="Department"    value={profile?.department}                                  icon={MdBadge}         />
-            <InfoRow label="Year of Study" value={profile?.year_of_study ? `Year ${profile.year_of_study}` : null} icon={MdCalendarToday} />
-            <InfoRow label="Placement"     value={profile?.placement_status}                            icon={MdWork}          />
+            <InfoRow label="Course"        value={studentProfile.course}                                       icon={MdSchool}        />
+            <InfoRow label="Department"    value={profile?.department}                                         icon={MdBadge}         />
+            <InfoRow label="Year of Study" value={studentProfile.year_of_study ? `Year ${studentProfile.year_of_study}` : null} icon={MdCalendarToday} />
+            <InfoRow label="Reg. Number"   value={studentProfile.registration_number}                          icon={MdWork}          />
           </Box>
         </VStack>
 
@@ -153,10 +168,14 @@ export default function StudentProfile() {
               : (
                 <HStack spacing={2}>
                   <Button size="sm" leftIcon={<Icon as={MdClose} />} variant="ghost"
-                    borderRadius="lg" fontSize="xs" onClick={handleCancel}>Cancel</Button>
+                    borderRadius="lg" fontSize="xs" onClick={handleCancel}>
+                    Cancel
+                  </Button>
                   <Button size="sm" leftIcon={<Icon as={MdSave} />} bg="brand.600" color="white"
                     borderRadius="lg" fontSize="xs" _hover={{ bg: 'brand.700' }}
-                    isLoading={saving} onClick={handleSave}>Save Changes</Button>
+                    isLoading={saving} onClick={handleSave}>
+                    Save Changes
+                  </Button>
                 </HStack>
               )
             }
@@ -164,12 +183,12 @@ export default function StudentProfile() {
 
           <Box px={5} py={5}>
             <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={5}>
-              <Field label="Full Name"          name="name"                value={form.name}                onChange={handleChange} readOnly={!editing} />
-              <Field label="Email Address"      name="email"               value={form.email}               onChange={handleChange} type="email" readOnly={!editing} />
-              <Field label="Phone Number"       name="phone"               value={form.phone}               onChange={handleChange} type="tel"   readOnly={!editing} />
-              <Field label="Date of Birth"      name="date_of_birth"       value={form.date_of_birth}       onChange={handleChange} type="date"  readOnly={!editing} />
-              <Field label="Registration No."   name="registration_number" value={profile?.registration_number} onChange={() => {}} readOnly />
-              <Field label="Programme"          name="programme"           value={profile?.programme}       onChange={() => {}} readOnly />
+              <Field label="First Name"   name="first_name" value={form.first_name} onChange={handleChange} readOnly={!editing} />
+              <Field label="Last Name"    name="last_name"  value={form.last_name}  onChange={handleChange} readOnly={!editing} />
+              <Field label="Email"        name="email"      value={form.email}      onChange={handleChange} type="email" readOnly={!editing} />
+              <Field label="Phone"        name="phone"      value={form.phone}      onChange={handleChange} type="tel"   readOnly={!editing} />
+              <Field label="Reg. Number"  name="reg"        value={studentProfile.registration_number} onChange={() => {}} readOnly />
+              <Field label="Course"       name="course"     value={studentProfile.course}              onChange={() => {}} readOnly />
             </Grid>
 
             <Divider my={6} />
@@ -177,8 +196,8 @@ export default function StudentProfile() {
             <Text fontSize="xs" fontWeight="600" color="gray.400"
               textTransform="uppercase" letterSpacing="wider" mb={4}>Account</Text>
             <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={5}>
-              <InfoRow label="Member Since" value={profile?.created_at?.slice(0, 10)} icon={MdCalendarToday} />
-              <InfoRow label="Role" value="Student" icon={MdPerson} />
+              <InfoRow label="Role"  value="Student Intern" icon={MdPerson}        />
+              <InfoRow label="Email" value={profile?.email} icon={MdEmail}         />
             </Grid>
           </Box>
         </Box>

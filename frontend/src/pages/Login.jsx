@@ -129,7 +129,7 @@ function Login() {
                 </FormLabel>
                 <Input
                   size="sm" borderRadius="lg" bg="gray.50" type="email"
-                  placeholder="you@institution.ac.ug"
+                  placeholder="Your email "
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   _focus={{ bg: 'white', borderColor: 'brand.400' }}
