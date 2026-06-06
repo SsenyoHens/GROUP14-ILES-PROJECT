@@ -39,7 +39,7 @@ def register_view(request):
     # CHECK EXISTING USER
     if CustomUser.objects.filter(username=username).exists():
         return Response(
-            {"error": "Username already exists"},
+            {"error": "Email already exists"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
