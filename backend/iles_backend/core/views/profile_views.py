@@ -157,7 +157,7 @@ def view_supervisors(request):
 @permission_classes([IsAuthenticated])
 def update_student_profile(request, pk):
     try:
-        profile = StudentProfile.objects.get(pk=pk)
+        profile = StudentProfile.objects.get(user_id=pk)
     except StudentProfile.DoesNotExist:
         return Response({"error": "Student profile not found"}, status=404)
 
