@@ -79,7 +79,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         # Create profile with full data (signal uses get_or_create so no duplicate)
         if user.role == 'student':
             StudentProfile.objects.filter(user=user).update(
-                registration_number=registration_number,
+                registration_number=registration_number.upper(),
                 course=course,
                 year_of_study=year_of_study,
                 phone_number=phone_number,

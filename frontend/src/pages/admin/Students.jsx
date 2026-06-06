@@ -49,7 +49,7 @@ export default function Students() {
   })
 
   const handleAdd  = () => { setSelected(null); onOpen() }
-  const handleEdit = (s) => { setSelected(s);   onOpen() }
+  const handleEdit = (s) => { console.log("STUDENT =", s); setSelected(s);   onOpen() }
 
   const handleDelete = async (id) => {
     if (!window.confirm('Remove this student?')) return
