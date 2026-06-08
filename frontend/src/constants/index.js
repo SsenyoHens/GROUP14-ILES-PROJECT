@@ -26,6 +26,7 @@ export const ROUTES = {
   ACADEMIC_EVALUATIONS:   '/academic/evaluations',
   ACADEMIC_REPORTS:       '/academic/reports',
   ACADEMIC_NOTIFICATIONS: '/academic/notifications',
+  ACADEMIC_PROFILE:       '/academic/profile',
 
   // ── Student ────────────────────────────────────────────
   STUDENT_DASHBOARD:     '/student/dashboard',

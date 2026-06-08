@@ -37,6 +37,7 @@ import AcademicDashboard    from './pages/academic_supervisor/Dashboard'
 import AcademicStudents     from './pages/academic_supervisor/Students'
 import AcademicEvaluations  from './pages/academic_supervisor/Evaluations'
 import AcademicReports      from './pages/academic_supervisor/Reports'
+import AcademicMyProfile    from './pages/academic_supervisor/MyProfile'
 
 // Student-intern portal pages
 import StudentDashboard from './pages/student_intern/Dashboard'
@@ -250,7 +251,14 @@ function App() {
             </Protected>
           } 
         />
-
+        <Route path={ROUTES.ACADEMIC_PROFILE}
+          element={
+            <Protected roles={[ROLES.ACADEMIC_SUPERVISOR]} layout={AcademicLayout}>
+              <AcademicMyProfile />
+            </Protected>
+          }
+        />
+        
         {/* ── STUDENT PORTAL ── */}
         <Route path={ROUTES.STUDENT_DASHBOARD}
           element={

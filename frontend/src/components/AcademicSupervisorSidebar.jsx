@@ -10,13 +10,14 @@ import {
 import { useAuth } from '../context/AuthContext'
 import { ROUTES } from '../constants'
 
-// ✅ All paths absolute — match App.jsx routes exactly
+// All paths absolute — match App.jsx routes exactly at naItems
 const navItems = [
   { label: 'Dashboard',     path: ROUTES.ACADEMIC_DASHBOARD,     icon: MdDashboard     },
   { label: 'Students',      path: ROUTES.ACADEMIC_STUDENTS,      icon: MdPeople        },
   { label: 'Evaluations',   path: ROUTES.ACADEMIC_EVALUATIONS,   icon: MdAssignment    },
   { label: 'Reports',       path: ROUTES.ACADEMIC_REPORTS,       icon: MdBarChart      },
   { label: 'Notifications', path: ROUTES.ACADEMIC_NOTIFICATIONS, icon: MdNotifications },
+  { label: 'My Profile',    path: ROUTES.ACADEMIC_PROFILE,       icon: MdPerson        },
 ]
 
 function NavItem({ item, isActive }) {
