@@ -5,7 +5,7 @@ import {
   IconButton, useDisclosure, useToast, Spinner, Center,
   Alert, AlertIcon, Text, Flex,
 } from '@chakra-ui/react'
-import { SearchIcon, AddIcon, EditIcon } from '@chakra-ui/icons'
+import { SearchIcon, AddIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons'
 import PageHeader from '../../components/PageHeader'
 import PlacementModal from '../../components/modals/PlacementModal'
 import { placementService } from '../../api/services'
@@ -56,6 +56,39 @@ export default function Placements() {
 
   const handleAdd  = () => { setSelected(null); onOpen() }
   const handleEdit = (p) => { setSelected(p);   onOpen() }
+  
+  const handleDelete = async (id) => {
+
+	const confirmed = window.confirm(
+		'Delete this placement?'
+	)
+
+	if (!confirmed) return
+
+	try {
+
+		await placementService.delete(id)
+
+		toast({
+			title: 'Placement deleted',
+			status: 'success',
+			duration: 2500,
+			isClosable: true,
+		})
+
+		fetchPlacements()
+
+	} catch {
+
+		toast({
+			title: 'Delete failed',
+			status: 'error',
+			duration: 2500,
+			isClosable: true,
+		})
+
+	}
+}
 
   const handleStatusChange = async (id, newStatus) => {
     try {
@@ -207,12 +240,28 @@ export default function Placements() {
                   </Select>
                 </Td>
                 <Td>
-                  <IconButton
-                    icon={<EditIcon />} size="xs" variant="ghost"
-                    colorScheme="blue" aria-label="Edit"
-                    onClick={() => handleEdit(p)}
-                  />
-                </Td>
+					<HStack spacing={1}>
+
+						<IconButton
+							icon={<EditIcon />}
+							size="xs"
+							variant="ghost"
+							colorScheme="blue"
+							aria-label="Edit"
+							onClick={() => handleEdit(p)}
+						/>
+
+						<IconButton
+							icon={<DeleteIcon />}
+							size="xs"
+							variant="ghost"
+							colorScheme="red"
+							aria-label="Delete"
+							onClick={() => handleDelete(p.id)}
+						/>
+
+					</HStack>
+				</Td>
               </Tr>
             ))}
           </Tbody>
