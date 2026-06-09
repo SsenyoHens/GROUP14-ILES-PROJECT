@@ -120,20 +120,57 @@ function FieldsStep({
       <Grid templateColumns="1fr 1fr" gap={4} w="100%">
 
         {/* ── Common: Full Name ── */}
-        <GridItem colSpan={2}>
-          <FormControl isInvalid={!!errors.fullName}>
-            <FormLabel fontSize="xs" color="gray.600" textTransform="uppercase" letterSpacing="wide">
-              Full Name
-            </FormLabel>
-            <Input
-              size="sm" borderRadius="lg" bg="gray.50"
-              placeholder="As it appears on official documents"
-              _focus={{ bg: 'white', borderColor: 'brand.400' }}
-              {...register('fullName', { required: 'Full name is required' })}
-            />
-            <FormErrorMessage fontSize="xs">{errors.fullName?.message}</FormErrorMessage>
-          </FormControl>
-        </GridItem>
+        <FormControl isInvalid={!!errors.firstName}>
+          <FormLabel
+            fontSize="xs"
+            color="gray.600"
+            textTransform="uppercase"
+            letterSpacing="wide"
+          >
+            First Name
+          </FormLabel>
+
+          <Input
+            size="sm"
+            borderRadius="lg"
+            bg="gray.50"
+            placeholder="Enter first name"
+            _focus={{ bg: 'white', borderColor: 'brand.400' }}
+            {...register('firstName', {
+              required: 'First name is required',
+            })}
+          />
+
+          <FormErrorMessage fontSize="xs">
+            {errors.firstName?.message}
+          </FormErrorMessage>
+        </FormControl>
+
+        <FormControl isInvalid={!!errors.lastName}>
+          <FormLabel
+            fontSize="xs"
+            color="gray.600"
+            textTransform="uppercase"
+            letterSpacing="wide"
+          >
+            Last Name
+          </FormLabel>
+
+          <Input
+            size="sm"
+            borderRadius="lg"
+            bg="gray.50"
+            placeholder="Enter last name"
+            _focus={{ bg: 'white', borderColor: 'brand.400' }}
+            {...register('lastName', {
+              required: 'Last name is required',
+            })}
+          />
+
+          <FormErrorMessage fontSize="xs">
+            {errors.lastName?.message}
+          </FormErrorMessage>
+        </FormControl>
 
         {/* ── Student fields ── */}
         {role === 'student' && <>
@@ -164,7 +201,7 @@ function FieldsStep({
               <option value="2">Year 2</option>
               <option value="3">Year 3</option>
               <option value="4">Year 4</option>
-              <option value="1">Year 5</option>
+              <option value="5">Year 5</option>
             </Select>
             <FormErrorMessage fontSize="xs">{errors.yearOfStudy?.message}</FormErrorMessage>
           </FormControl>
@@ -466,12 +503,17 @@ function Register() {
     setLoading(true)
     setApiError('')
     try {
-      const { confirmPassword, fullName, ...rest } = data
+      const {
+        confirmPassword,
+        firstName,
+        lastName,
+        ...rest
+      } = data
 
-      // Split full name into first_name and last_name
-      const nameParts  = (fullName || '').trim().split(' ')
-      const first_name = nameParts[0] || ''
-      const last_name  = nameParts.slice(1).join(' ') || ''
+      const first_name = firstName.trim().toUpperCase()
+
+      const last_name = lastName.trim().toUpperCase()
+
 
       // Map frontend field names to backend field names
       const payload = {

@@ -28,6 +28,7 @@ export const placementService = {
   create:       (data)   => api.post('/placements/create/', data),
   update:       (id, d)  => api.put(`/placements/${id}/update/`, d),
   updateStatus: (id, s)  => api.patch(`/placements/${id}/status/`, { status: s }),
+  delete:       (id)     => api.delete(`/placements/${id}/delete/`),
 }
 
 // ── Weekly Logs ───────────────────────────────────────────────────────────────
