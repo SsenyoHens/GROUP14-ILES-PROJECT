@@ -185,6 +185,8 @@ class WeeklyLog(models.Model):
     supervisor_comment = models.TextField(
         blank=True,
         null=True
+
+
     )
 
     class Meta:

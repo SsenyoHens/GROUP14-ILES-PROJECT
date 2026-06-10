@@ -76,24 +76,41 @@ def student_detail(request, pk):
             }
 
     return Response({
-        "id":         student.id,
+        "id": student.id,
         "first_name": student.first_name,
-        "last_name":  student.last_name,
-        "email":      student.email,
-        "phone":      student.phone,
+        "last_name": student.last_name,
+        "email": student.email,
+        "phone": student.phone,
         "department": student.department,
+
         "profile": {
             "registration_number": profile.registration_number if profile else None,
-            "course":              profile.course               if profile else None,
-            "year_of_study":       profile.year_of_study        if profile else None,
+            "course": profile.course if profile else None,
+            "year_of_study": profile.year_of_study if profile else None,
         } if profile else {},
+
         "placement": placement,
+
         "log_stats": {
-            "total":     logs.count(),
+            "total": logs.count(),
             "submitted": logs.filter(status='submitted').count(),
-            "approved":  logs.filter(status='approved').count(),
-            "draft":     logs.filter(status='draft').count(),
-            "rejected":  logs.filter(status='rejected').count(),
+            "approved": logs.filter(status='approved').count(),
+            "draft": logs.filter(status='draft').count(),
+            "rejected": logs.filter(status='rejected').count(),
         },
+
+        "weekly_logs": [
+            {
+                "id": log.id,
+                "week_number": log.week_number,
+                "activities_done": log.activities_done,
+                "status": log.status,
+                "review_status": log.review_status,
+                "supervisor_comment": log.supervisor_comment,
+                "created_at": log.created_at,
+            }
+            for log in logs.order_by('-week_number')
+        ],
+
         "evaluations_count": evals.count(),
     })
