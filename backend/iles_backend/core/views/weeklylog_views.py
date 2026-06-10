@@ -62,8 +62,8 @@ def update_log(request, pk):
     if user.role == 'student':
         if log.student != user:
             return Response({"error": "Not authorized"}, status=403)
-        if log.status != 'draft':
-            return Response({"error": "Only draft logs can be edited"}, status=400)
+        if log.status not in ['draft', 'rejected']:
+            return Response({"error": "Only draft or rejected logs can be edited"}, status=400)
 
     elif user.role in ['academic_supervisor', 'workplace_supervisor']:
         allowed_fields = {'status', 'feedback'}
