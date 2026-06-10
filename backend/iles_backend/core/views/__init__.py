@@ -10,7 +10,7 @@ from core.views.placement_views  import (
     update_placement, update_placement_status,
 )
 from core.views.weeklylog_views  import (
-    view_logs, create_log, update_log, delete_log,
+    view_logs, review_log, create_log, update_log, delete_log,
     weekly_log_summary, weekly_log_stats, submit_log
 )
 from core.views.evaluation_views import (

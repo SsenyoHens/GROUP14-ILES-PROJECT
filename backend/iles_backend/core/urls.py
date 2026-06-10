@@ -13,7 +13,7 @@ from core.views import (
     view_placements, placement_detail, create_placement,
     update_placement, update_placement_status,
     # Weekly Logs
-    view_logs, create_log, update_log, delete_log,
+    view_logs, create_log, review_log, update_log, delete_log,
     weekly_log_summary, weekly_log_stats, submit_log,
     # Evaluations
     evaluation_list, evaluation_detail, create_evaluation,
@@ -74,6 +74,11 @@ urlpatterns = [
     path('evaluations/<int:pk>/',          evaluation_detail,  name='evaluation-detail'),
     path('evaluations/<int:pk>/update/',   update_evaluation,  name='update-evaluation'),
     path('evaluations/<int:pk>/submit/',   submit_evaluation,  name='submit-evaluation'),
+    path(
+        'logs/<int:pk>/review/',
+        review_log,
+        name='review-log'
+    ),
 
     # DASHBOARD
     path('dashboard/stats/',           dashboard_stats,    name='dashboard-stats'),

@@ -169,6 +169,23 @@ class WeeklyLog(models.Model):
     submitted_at    = models.DateTimeField(null=True, blank=True)
     created_at      = models.DateTimeField(auto_now_add=True)
     date            = models.DateField(auto_now_add=True)
+    
+    REVIEW_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    review_status = models.CharField(
+        max_length=20,
+        choices=REVIEW_STATUS_CHOICES,
+        default='pending'
+    )
+
+    supervisor_comment = models.TextField(
+        blank=True,
+        null=True
+    )
 
     class Meta:
         unique_together = ('student', 'week_number')

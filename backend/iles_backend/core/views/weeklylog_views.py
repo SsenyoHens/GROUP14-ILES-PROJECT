@@ -78,6 +78,33 @@ def update_log(request, pk):
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=400)
+    
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def review_log(request, pk):
+    try:
+        log = WeeklyLog.objects.get(pk=pk)
+    except WeeklyLog.DoesNotExist:
+        return Response(
+            {"error": "Log not found"},
+            status=404
+        )
+
+    log.review_status = request.data.get(
+        'review_status',
+        log.review_status
+    )
+
+    log.supervisor_comment = request.data.get(
+        'supervisor_comment',
+        log.supervisor_comment
+    )
+
+    log.save()
+
+    return Response({
+        "message": "Log reviewed successfully"
+    })    
 
 
 @api_view(['DELETE'])
