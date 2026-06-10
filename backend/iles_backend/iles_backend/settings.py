@@ -16,11 +16,12 @@ environ.Env.read_env(BASE_DIR / '.env')
 
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
-DEBUG = env.bool("DEBUG", default=False)
-ALLOWED_HOSTS = env.list(
-    "ALLOWED_HOSTS",
-    default=["127.0.0.1", "localhost", "group14-iles-project.onrender.com",]
-)
+DEBUG = os.getenv("DEBUG", "False") == "True"
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    ".onrender.com",
+]
 
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -70,6 +71,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5174",            
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
+    
+    "https://your-vercel-app.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True           
