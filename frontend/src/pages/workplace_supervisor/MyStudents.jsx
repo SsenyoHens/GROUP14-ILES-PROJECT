@@ -144,6 +144,55 @@ function StudentDrawer({ student, isOpen, onClose }) {
                 )}
 
                 {/* Log stats */}
+				{detail.weekly_logs?.length > 0 && (
+					<Box>
+						<Text
+							fontSize="xs"
+							fontWeight="600"
+							color="gray.400"
+							textTransform="uppercase"
+							letterSpacing="wider"
+							mb={3}
+						>
+							Weekly Logs
+						</Text>
+
+						<VStack spacing={3} align="stretch">
+							{detail.weekly_logs.map(log => (
+								<Box
+									key={log.id}
+									p={3}
+								bg="gray.50"
+								borderRadius="lg"
+								border="1px solid"
+								borderColor="gray.100"
+							>
+								<Flex justify="space-between">
+									<Text fontWeight="600">
+										Week {log.week_number}
+									</Text>
+
+								<Badge
+									colorScheme={
+										log.status === 'approved'
+											? 'green'
+											: log.status === 'rejected'
+											? 'red'
+											: 'orange'
+								}
+							>
+								{log.status}
+							</Badge>
+						</Flex>
+
+						<Text mt={2} fontSize="sm">
+							{log.activities_done}
+						</Text>
+					</Box>
+				))}
+			</VStack>
+		</Box>
+	)}
                 {detail.log_stats && (
                   <Box>
                     <Text fontSize="xs" fontWeight="600" color="gray.400"
