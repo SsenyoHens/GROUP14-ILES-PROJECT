@@ -13,8 +13,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 // Layout components 
 import Navbar                     from './components/Navbar'
 import Sidebar                    from './components/Sidebar'
-import StudentSidebar             from './components/StudentSidebar'
-import WorkplaceSupervisorSidebar from './components/WorkplacesupervisorSidebar'
+import StudentSidebar             from './components/studentsidebar'
+import WorkplaceSupervisorSidebar from './components/workplacesupervisorsidebar'
 import AcademicSupervisorSidebar  from './components/AcademicSupervisorSidebar'
 import Footer                     from './components/Footer'
 
@@ -33,11 +33,11 @@ import Reports        from './pages/admin/Reports'
 import UserAccounts   from './pages/admin/UserAccounts'
 
 // Academic Supervisor unique pages
-import AcademicDashboard    from './pages/academic_supervisor/Dashboard'
-import AcademicStudents     from './pages/academic_supervisor/Students'
-import AcademicEvaluations  from './pages/academic_supervisor/Evaluations'
-import AcademicReports      from './pages/academic_supervisor/Reports'
-import AcademicMyProfile    from './pages/academic_supervisor/MyProfile'
+import AcademicDashboard    from './pages/Academic_supervisor/Dashboard'
+import AcademicStudents     from './pages/Academic_supervisor/Students'
+import AcademicEvaluations  from './pages/Academic_supervisor/Evaluations'
+import AcademicReports      from './pages/Academic_supervisor/Reports'
+import AcademicMyProfile    from './pages/Academic_supervisor/MyProfile'
 
 // Student-intern portal pages
 import StudentDashboard from './pages/student_intern/Dashboard'
