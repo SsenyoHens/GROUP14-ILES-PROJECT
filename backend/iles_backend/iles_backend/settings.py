@@ -76,7 +76,14 @@ CORS_ALLOWED_ORIGINS = [
     "https://group-14-iles-project-5uw1.vercel.app",
 ]
 
-CORS_ALLOW_CREDENTIALS = False           
+CORS_ALLOW_CREDENTIALS = False
+
+
+####
+print("===== CORS SETTINGS LOADED =====")
+print("DEBUG =", DEBUG)
+print("CORS_ALLOW_ALL_ORIGINS =", CORS_ALLOW_ALL_ORIGINS)
+print("CORS_ALLOWED_ORIGINS =", CORS_ALLOWED_ORIGINS)           
 
 
 
