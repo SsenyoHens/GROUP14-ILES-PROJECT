@@ -65,7 +65,7 @@ MIDDLEWARE = [
 
 
 #CORS_ALLOW_ALL_ORIGINS = False #This is the must be set to False in production, but can be set to True during development for ease of testing.
-CORS_ALLOW_ALL_ORIGINS = False        
+CORS_ALLOW_ALL_ORIGINS = True        
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -76,7 +76,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://group-14-iles-project-5uw1.vercel.app",
 ]
 
-CORS_ALLOW_CREDENTIALS = True           
+CORS_ALLOW_CREDENTIALS = False           
 
 
 
