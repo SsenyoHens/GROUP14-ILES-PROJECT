@@ -52,9 +52,10 @@ INSTALLED_APPS = [
 
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -65,7 +66,7 @@ MIDDLEWARE = [
 
 
 #CORS_ALLOW_ALL_ORIGINS = False #This is the must be set to False in production, but can be set to True during development for ease of testing.
-CORS_ALLOW_ALL_ORIGINS = True         
+CORS_ALLOW_ALL_ORIGINS = True        
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -76,7 +77,14 @@ CORS_ALLOWED_ORIGINS = [
     "https://group-14-iles-project-5uw1.vercel.app",
 ]
 
-CORS_ALLOW_CREDENTIALS = True           
+CORS_ALLOW_CREDENTIALS = False
+
+
+####
+print("===== CORS SETTINGS LOADED =====")
+print("DEBUG =", DEBUG)
+print("CORS_ALLOW_ALL_ORIGINS =", CORS_ALLOW_ALL_ORIGINS)
+print("CORS_ALLOWED_ORIGINS =", CORS_ALLOWED_ORIGINS)           
 
 
 
