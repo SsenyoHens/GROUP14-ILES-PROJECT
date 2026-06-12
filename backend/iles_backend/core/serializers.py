@@ -121,6 +121,12 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     last_name  = serializers.CharField(source='user.last_name', read_only=True)
     role       = serializers.CharField(source='user.role', read_only=True)
 
+
+    def validate_registration_number(self, value):
+        if value:
+            value = value.upper().strip()
+        return value
+
     class Meta:
         model  = StudentProfile
         fields = [
@@ -196,37 +202,17 @@ class PlacementSerializer(serializers.ModelSerializer):
 
 class WeeklyLogSerializer(serializers.ModelSerializer):
     student_email = serializers.ReadOnlyField(source='student.email')
-    student_name = serializers.SerializerMethodField()
+    student_name  = serializers.SerializerMethodField()
 
     class Meta:
-        model = WeeklyLog
+        model  = WeeklyLog
         fields = [
-            'id',
-            'student',
-            'student_email',
-            'student_name',
-            'week_number',
-            'activities_done',
-            'challenges',
-            'skills_gained',
-            'strengths',
-            'plan_for_action',
-            'status',
-
-            # ADD THESE
-            'review_status',
-            'supervisor_comment',
-
-            'submitted_at',
-            'created_at',
+            'id', 'student', 'student_email', 'student_name',
+            'week_number', 'activities_done', 'challenges',
+            'skills_gained', 'strengths', 'plan_for_action',   
+            'status', 'submitted_at', 'created_at',
         ]
-
-        read_only_fields = [
-            'id',
-            'student',
-            'submitted_at',
-            'created_at',
-        ]
+        read_only_fields = ['id', 'student', 'submitted_at', 'created_at']
 
     def get_student_name(self, obj):
         return f"{obj.student.first_name} {obj.student.last_name}"
