@@ -90,10 +90,19 @@ def review_log(request, pk):
             status=404
         )
 
-    log.review_status = request.data.get(
+    review_status = request.data.get(
         'review_status',
         log.review_status
     )
+
+    # Update review status
+    log.review_status = review_status
+
+    # Keep main status in sync
+    if review_status == 'approved':
+        log.status = 'approved'
+    elif review_status == 'rejected':
+        log.status = 'rejected'
 
     log.supervisor_comment = request.data.get(
         'supervisor_comment',
@@ -103,8 +112,10 @@ def review_log(request, pk):
     log.save()
 
     return Response({
-        "message": "Log reviewed successfully"
-    })    
+        "message": "Log reviewed successfully",
+        "status": log.status,
+        "review_status": log.review_status
+    })
 
 
 @api_view(['DELETE'])
