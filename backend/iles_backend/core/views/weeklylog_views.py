@@ -79,6 +79,7 @@ def update_log(request, pk):
         return Response(serializer.data)
     return Response(serializer.errors, status=400)
     
+
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def review_log(request, pk):
@@ -135,6 +136,7 @@ def review_log(request, pk):
         "review_status": log.review_status,
         "supervisor_comment": log.supervisor_comment,
     })
+
 
 
 @api_view(['DELETE'])
