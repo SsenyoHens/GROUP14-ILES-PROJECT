@@ -90,20 +90,36 @@ def review_log(request, pk):
             status=404
         )
 
-    review_status = request.data.get(
-        'review_status',
-        log.review_status
-    )
+    # Only supervisors can review logs
+    if request.user.role not in ['academic_supervisor', 'workplace_supervisor']:
+        return Response(
+            {"error": "Only supervisors can review logs."},
+            status=403
+        )
+
+    # Only submitted logs can be reviewed
+    if log.status != 'submitted':
+        return Response(
+            {"error": "Only submitted logs can be approved or rejected."},
+            status=400
+        )
+
+    review_status = request.data.get('review_status')
+
+    # Validate review status
+    if review_status not in ['approved', 'rejected']:
+        return Response(
+            {"error": "review_status must be either 'approved' or 'rejected'."},
+            status=400
+        )
 
     # Update review status
     log.review_status = review_status
 
-    # Keep main status in sync
-    if review_status == 'approved':
-        log.status = 'approved'
-    elif review_status == 'rejected':
-        log.status = 'rejected'
+    # Keep main status synchronized
+    log.status = review_status
 
+    # Save supervisor comment if provided
     log.supervisor_comment = request.data.get(
         'supervisor_comment',
         log.supervisor_comment
@@ -113,8 +129,11 @@ def review_log(request, pk):
 
     return Response({
         "message": "Log reviewed successfully",
+        "log_id": log.id,
+        "week_number": log.week_number,
         "status": log.status,
-        "review_status": log.review_status
+        "review_status": log.review_status,
+        "supervisor_comment": log.supervisor_comment,
     })
 
 
