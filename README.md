@@ -1,14 +1,7 @@
 ILES — Internship Logging and Evaluation System
 
-«A digital platform for managing student internships, weekly activity logs, supervisor reviews, evaluations, and internship performance tracking.»
+A digital platform for managing student internships, weekly activity logs, supervisor reviews, evaluations, and internship performance tracking.
 
-""Frontend" (https://img.shields.io/badge/Frontend-React-61DAFB?logo=react&logoColor=white)" (https://react.dev/)
-""Backend" (https://img.shields.io/badge/Backend-Django-092E20?logo=django&logoColor=white)" (https://www.djangoproject.com/)
-""API" (https://img.shields.io/badge/API-Django%20REST%20Framework-red)" (https://www.django-rest-framework.org/)
-""Database" (https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql&logoColor=white)" (https://www.postgresql.org/)
-""Deployment" (https://img.shields.io/badge/Deployment-Vercel%20%2B%20Render-black)" (https://vercel.com/)
-
----
 
 📌 Overview
 
